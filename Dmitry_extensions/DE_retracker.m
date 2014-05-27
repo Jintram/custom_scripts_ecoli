@@ -241,7 +241,7 @@ for cellno = segments
     cell_ceny_i = mean(coord_vert_i);
     
     if strcmp(flag_1,'cell_num')
-    text(cell_cenx_i - 7,cell_ceny_i,num2str(cellno),'Color','k','FontWeight','bold','FontSize',8);%'BackgroundColor',[1 1 1],
+    text(cell_cenx_i - 7,cell_ceny_i,num2str(cellno),'Color','k','FontWeight','bold','FontSize',7,'BackgroundColor',[1 1 1]);
     end  
 end
 
