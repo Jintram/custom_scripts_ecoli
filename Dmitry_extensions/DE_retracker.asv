@@ -253,9 +253,8 @@ if strcmp(flag_1,'schnit_num')
     s = schnitzcells;
     %go through each schnit
     for ll = 1 : size(s,2)
-        % check if schnit appears in our frame, if so, label it
-        frame_idx = find(s(ll).frames == current_frame);
-        if ~(isempty(frame_idx))
+        % Loop 
+        for frame_idx = find(s(ll).frames == current_frame)
             % find its center (MW hack to make this work, should be in
             % Schnitz?- perhaps cropping? IDK.)
             % dirty fix MW TODO
