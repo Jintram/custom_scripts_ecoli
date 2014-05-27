@@ -29,7 +29,7 @@ figure(1);
 subplottight(1,3,1);
 
 % manually selecting regions
-imman = bwselect; % works on current axes
+%imman = bwselect; % works on current axes
 
 imshow(myimin,[]);
 subplottight(1,3,2);

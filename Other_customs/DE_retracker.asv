@@ -171,8 +171,14 @@ cla;
 %Lc_to_show = 0.5*double(Lc > 0);
 %colormap gray
 
-%Lc_color = label2rgb(Lc, @jet, 'c', 'shuffle');
-Lc_color = label2rgb(Lc, @jet, 'k');
+Lc_color = label2rgb(Lc, @lines, 'c', 'shuffle');
+
+myblacks = find(Lc==0);
+[myblacksr,myblacksc] = ind2sub(size(Lc),myblacks);
+%Lc_color(myblacksr,myblacksc,1:3)=[0,0,0];
+%Lc_colors(myblacksr,myblacksc,:)=0;
+for idx = [myblacksr;myblacksc]
+    disp(i);
 
 Lc_to_show = Lc_color;
 

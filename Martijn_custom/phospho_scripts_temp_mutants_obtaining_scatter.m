@@ -50,7 +50,7 @@ hold off;
 % =====
 
 % bins
-dx=2/10;
+dx=2/50;
 mybins=[0:dx:2];
 
 % hist
