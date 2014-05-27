@@ -12,9 +12,10 @@ function [new_list_num] = DE_retracker(p, current_frame)
 % 'f'     go +20 frames
 % 's'     go -1 frame
 % 'd'     go +1 frame
-% 'space' enables connection 1-1 cell (the same cell: 1 on the left -> 1 on the right graph)
+% 'w' enables connection 1-1 cell (the same cell: 1 on the left -> 1 on the right graph)
 % 'e' enables connection 1-2 cell (division: 1 on the left -> 2 on the right graph)
 % 'q'     to quit.  The updated list is saved even with improper quitting
+% 'space' to change view shcnit/cell
 % (which is closing the window by pressing cross).
 
 
@@ -30,28 +31,39 @@ figure('units','normalized','outerposition',[0.25/2 0.25/2 0.75 0.75]);
 [Lc_left, Lc_right] = make_graph(p, current_frame);
 
 global_list = [];
+switcher_cell_to_schnit = 1;
+
+
 
 for l = 1:10000;
     
-    name_track_file = [p.movieName '-djk-output-'...
+     name_track_file = [p.movieName '-djk-output-'...
         sprintf('%0.3d',current_frame) '-to-' sprintf('%0.3d',current_frame+1) '.txt'];
    
-    name_edited_track_file = [p.movieName '-djk-output-'...
-        sprintf('%0.3d',current_frame) '-to-' sprintf('%0.3d',current_frame+1) '-edited.txt'];
+%     name_edited_track_file = [p.movieName '-djk-output-'...
+%         sprintf('%0.3d',current_frame) '-to-' sprintf('%0.3d',current_frame+1) '-edited.txt'];
     
-    % if there is an edited txt file, load it and work with it:
-    if exist([p.tracksDir name_edited_track_file])==2
-        disp('loading edited tracking file');
-        list_old = load([p.tracksDir name_edited_track_file]); 
-    else
-        disp('loading original (old) tracking file');
-        list_old = load([p.tracksDir name_track_file]);
-
-    end
+    name_original_track_file = [p.movieName '-djk-output-'...
+        sprintf('%0.3d',current_frame) '-to-' sprintf('%0.3d',current_frame+1) '-original.txt'];   
    
-    disp('')
     
-    % global_list(current_frame).list = list_old;
+    
+    % make a backup copy of the machine-tracked list: "xxx-original.txt",
+    % if doesnt extist yet:
+    if ~(exist([p.tracksDir name_original_track_file])==2)
+        % load the list from the txt file, that is not "original"-labeled.
+        list_orig = load([p.tracksDir name_track_file]);
+        % save as "xxx-original.txt"
+        dlmwrite([p.tracksDir name_original_track_file], list_orig, 'delimiter',' ','newline', 'pc');
+    end
+        
+    disp('') 
+   
+    % let's load the tacking file (this line could be inserted into the
+    % if-statement above actually)
+    list_old = load([p.tracksDir name_track_file]);
+        
+    
 
     
     
@@ -61,7 +73,7 @@ for l = 1:10000;
     switch key1
         
         % connect 1 left 1 right (no division) button 'space'
-        case double(' ')
+        case double('w')
             
             [x_left, y_left] = ginput(1);
             [x_right, y_right] = ginput(1);            
@@ -112,6 +124,16 @@ for l = 1:10000;
             close;
             break
             
+        
+        case double(' ')
+            if switcher_cell_to_schnit
+                make_graph_with_shnitzcells(p, current_frame);
+            else
+                [Lc_left, Lc_right] = make_graph(p, current_frame);
+            end
+            %switch:
+            switcher_cell_to_schnit = ~switcher_cell_to_schnit;
+            
         % next frame    
         case double('s')
             current_frame = current_frame - 1;
@@ -141,7 +163,24 @@ end
 
 
 
+function make_graph_with_shnitzcells(p, current_frame)
 
+%load segmentations:
+seg_path = [p.segmentationDir p.movieName 'seg' sprintf('%0.3d',current_frame) '.mat'];
+load(seg_path);
+Lc_left = Lc;
+
+seg_path = [p.segmentationDir p.movieName 'seg' sprintf('%0.3d',current_frame + 1) '.mat'];
+load(seg_path);
+Lc_right = Lc;
+
+subplottight(1,2,1)
+plot_image(p, Lc_left, current_frame, 'schnit_num')
+
+subplottight(1,2,2)
+plot_image(p, Lc_right, current_frame + 1, 'schnit_num')
+
+end
 
 
 
@@ -158,26 +197,33 @@ load(seg_path);
 Lc_right = Lc;
 
 subplottight(1,2,1)
-plot_image(Lc_left, current_frame)
+plot_image(p, Lc_left, current_frame, 'cell_num')
 
 subplottight(1,2,2)
-plot_image(Lc_right, current_frame + 1)
+plot_image(p, Lc_right, current_frame + 1, 'cell_num')
 end
 
 
-function plot_image(Lc, current_frame)
+
+
+
+function plot_image(p, Lc, current_frame, flag_1)
 
 cla;
-%Lc_to_show = 0.5*double(Lc > 0);
-%colormap gray
 
-%Lc_color = label2rgb(Lc, @jet, 'c', 'shuffle');
-Lc_color = label2rgb(Lc, @jet, 'k');
+% choose colormap:
 
-Lc_to_show = Lc_color;
+% any label -> grey (0.5)
+% Lc_to_show = 0.5*double(Lc > 0);
+
+% label(i) -> jet(i,:)
+% Lc_to_show = label2rgb(Lc, @jet, 'k');%, 'shuffle');
+
+% label(i) -> hsv(i,:)
+Lc_to_show = label2rgb(Lc, @hsv, 'k');
+
 
 imshow(Lc_to_show);
-
 axis equal
 axis tight
 hold on
@@ -189,12 +235,38 @@ segments(segments == 0)=[];
 
 % find each segment:
 for cellno = segments
-        
+    
     [coord_vert_i,coord_hor_i] = find(Lc == cellno);
     cell_cenx_i = mean(coord_hor_i);
-    cell_ceny_i = mean(coord_vert_i);   
+    cell_ceny_i = mean(coord_vert_i);
     
-    text(cell_cenx_i - 5,cell_ceny_i,num2str(cellno),'BackgroundColor',[1 1 1],'Color',[0 0 0],'FontWeight','bold','FontSize',7);
+    if strcmp(flag_1,'cell_num')
+    text(cell_cenx_i - 7,cell_ceny_i,num2str(cellno),'Color','k','FontWeight','bold','FontSize',8);%'BackgroundColor',[1 1 1],
+    end  
+end
+
+if strcmp(flag_1,'schnit_num')
+    % load lineage:
+    lin_path = [p.tracksDir p.movieName '_lin.mat'];
+    load(lin_path);
+    s = schnitzcells;
+    %go through each schnit
+    for ll = 1 : size(s,2)
+        %check whether it belongs to this frame:
+        if any(s(ll).frames == current_frame)
+            % report its number
+             text(s(ll).cenx(s(ll).frames == current_frame) - 7,...
+                 s(ll).ceny(s(ll).frames == current_frame),...
+                 num2str(ll), 'Color','k','FontWeight','bold','FontSize',8);
+        end
+    end
+
+end
+
+if strcmp(flag_1,'cell_num')
+        text(1,10,'Cell numbers','Color','w','FontWeight','bold','FontSize',12);
+elseif strcmp(flag_1,'schnit_num')
+    text(1,10,'Schnit numbers','Color','w','FontWeight','bold','FontSize',12);
 end
 
 end
@@ -429,3 +501,14 @@ end
 
 
 
+function h = subplottight(n,m,i)
+    % MW: function that produces tight subplot    
+    % Source: [1]
+    [c,r] = ind2sub([m n], i);
+    ax = subplot('Position', [(c-1)/m, 1-(r)/n, 1/m, 1/n])
+    if(nargout > 0)
+      h = ax;
+    end
+    
+% [1] http://www.briandalessandro.com/blog/how-to-make-a-borderless-subplot-of-images-in-matlab/
+end
