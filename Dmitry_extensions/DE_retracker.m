@@ -257,7 +257,7 @@ if strcmp(flag_1,'schnit_num')
             % report its number
              text(s(ll).cenx(s(ll).frames == current_frame) - 7,...
                  s(ll).ceny(s(ll).frames == current_frame),...
-                 num2str(ll), 'Color','k','FontWeight','bold','FontSize',8);
+                 num2str(ll),'Color','k','FontWeight','bold','FontSize',7,'BackgroundColor',[1 1 1]);
         end
     end
 
