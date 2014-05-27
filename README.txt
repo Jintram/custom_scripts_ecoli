@@ -1,4 +1,8 @@
 
+IMPORTANT NOTE
+===
+Note that this structure allows changing each other's file on the repo. When you pull, and other people have edited your files, they might be overwritten (if comitted, reversibly, however). So be carefull with editing other people's files. Always do this in a separate branch, and deliberate with person in question when merging into the master.
+
 INTRODUCTION
 ===
 
