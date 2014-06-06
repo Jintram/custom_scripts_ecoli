@@ -99,60 +99,25 @@ hold off;
 
 %% Sliding window variance
 
-nr_bins = 10;
-mymap = colorGray(nr_bins);
-yvalue_means = [];
-yvalue_stds = [];
+nrpositions = 3;
+mylegendnames={};
+mymap = colorGray(nrpositions);
+fignumstart=1;
+figure(fignumstart); clf; figure(fignumstart+1); clf; figure(fignumstart+2); clf;
 
-% figure
-if plotting
-    figure(1);
-    clf;
-    hold on;
-end
+mylegendnames = [mylegendnames, 'Wildtype', 'WT fit'];
+datax=plotx_732_pos1;
+datay=ploty_732_pos1;
+sliding_window_stds_plot(datax,datay,fignumstart,mymap(1,:),1,1);
 
-% timewindows
-maxt=max(plotx_732_pos1);
-dt=maxt/nr_bins;
-mytwindows=[0:dt:maxt];
+mylegendnames = [mylegendnames, '\Delta{pykF}/\Delta{ppc} mutant ', 'mutant fit'];
+datax=plotx_735_pos8;
+datay=ploty_735_pos8;
+sliding_window_stds_plot(datax,datay,fignumstart,mymap(2,:),1,1);
 
-for idx_window = 1:(length(mytwindows)-1)
-  
-    disp(num2str(idx_window));
-    
-    % get data for this window
-    value_indices = find(plotx_732_pos1>mytwindows(idx_window) & plotx_732_pos1 < mytwindows(idx_window+1));
-    yvalues_window = ploty_732_pos1(value_indices);
-    
-    size(yvalues_window)
-    
-    % perform binning again (make fn for that!)
-    [yscores_window] = hist(yvalues_window,mybins);
-    
-    % normalizing - TODO needed/what about weighing ?!?!
-    A732=sum(yscores_window)*dx;
-    yscores_window=yscores_window./A732;
-    
-    % plotting
-    plot(mybins, yscores_window,'-','LineWidth',2,'color',mymap(idx_window,:));%,'color',colorAmolfGreen); 
-    
-    % get statistics
-    yvalue_means(end+1) = mean(yvalues_window);
-    yvalue_stds(end+1) = std(yvalues_window);
-    
-end
-
-yvalue_means
-yvalue_stds
-
-figure(2)
-plot(yvalue_stds)
-ylim([0,max(yvalue_stds)*1.1])
-
-
-
-
-
+figure(fignumstart); legend(mylegendnames(1:2:length(mylegendnames)),'Location','best');
+figure(fignumstart+1); legend(mylegendnames,'Location','best');
+figure(fignumstart+2); legend(mylegendnames,'Location','best');
 
 
 
