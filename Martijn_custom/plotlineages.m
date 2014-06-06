@@ -5,8 +5,8 @@
 %%
 
 timelim=[250 850];      % time range in [min]
-lineagenumbers=[3:5];%nicebranches;   % which lineages to plot
-specline=[6 ];            % highlighted lineage  (use [] if no lineage should be highlighted
+lineagenumbers=[3:5];   % nicebranches;   % which lineages to plot
+specline=[6];           % highlighted lineage  (use [] if no lineage should be highlighted
 
 
 % plot YFP production
