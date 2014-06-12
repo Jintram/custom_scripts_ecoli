@@ -1,7 +1,7 @@
 
 %% Settings
 
-some_colors.m;
+some_colors
 
 % Common settings
 myRootDir = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\'

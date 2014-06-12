@@ -1,5 +1,5 @@
 
-function [t_center,means,stds,N] = sliding_window_stds(nrybins,tvalues,yvalues,nrtbins,plotting,fignumstart,mylinecolor);
+function [t_center,means,stds,N,lgh1] = sliding_window_stds(nrybins,tvalues,yvalues,nrtbins,plotting,fignumstart,mylinecolor);
 % This function takes t values, y values as input.
 % It divides the data up in timewindows of width max(tvalues)/nrbins.
 % For each of these windows, the y values are binned according to ybins
@@ -9,6 +9,8 @@ function [t_center,means,stds,N] = sliding_window_stds(nrybins,tvalues,yvalues,n
 %
 % If plotting=1 then it will also plot the distributions it obtains.
 % t_center returns the centers of the time windows used.
+%
+% lgh1 is the line handle necessary to make a legend
 
 totaldy = max(yvalues)-min(yvalues);
 dy=totaldy/nrybins;
@@ -55,7 +57,7 @@ for idx_window = 1:(length(mytwindows)-1)
     
     % plotting
     if plotting
-        plot(ybins, yscores_window,'-','LineWidth',2,'color',mylinecolor);%,'color',colorAmolfGreen); 
+        lgh1 = plot(ybins, yscores_window,'-','LineWidth',2,'color',mylinecolor);%,'color',colorAmolfGreen); 
     end
     
     % get statistics

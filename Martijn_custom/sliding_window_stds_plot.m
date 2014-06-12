@@ -1,28 +1,31 @@
-function sliding_window_stds_plot(datax,datay,fignumstart,mylinecolor,showplots,divbymean)
+function [lgh1, lgh2, lgh3] = sliding_window_stds_plot(datax,datay,fignumstart,mylinecolor,showplots,divbymean)
     % Set nrybins and nrtbins in this function!
+    %
+    % lgh1, lgh2, lgh3 are line handles, which can be used to make a
+    % legend.
 
     % obtain statistics per time window
-    nrybins=50;
+    nrybins=30;
     nrtbins=10;
-    [t_center,means,stds,yvalue_n] = sliding_window_stds(nrybins,datax,datay,nrtbins,showplots,fignumstart,mylinecolor);
+    [t_center,means,stds,yvalue_n,lgh1] = sliding_window_stds(nrybins,datax,datay,nrtbins,showplots,fignumstart,mylinecolor);
 
     % Restcale stds by means
     if divbymean
-        stds_rescaled = stds./means;
+        stds = stds./means;
     end
     
     % make fits
     means_fitCoef1 = polyfit(t_center,means,1);
     means_fitted = means_fitCoef1(1)*t_center + means_fitCoef1(2);    
     
-    std_fitCoef1 = polyfit(t_center,stds_rescaled,1);
+    std_fitCoef1 = polyfit(t_center,stds,1);
     std_fitted = std_fitCoef1(1)*t_center + std_fitCoef1(2);
        
     % Plot means per timewindow
     % ===
     
     figure(fignumstart+1); hold on;
-    plot(t_center,means,'-o','LineWidth',3,'color',mylinecolor);
+    lgh2 = plot(t_center,means,'-o','LineWidth',3,'color',mylinecolor);
     plot(t_center,means_fitted,'-','LineWidth',3,'color','k');
     
     oldylim = ylim; newylim = [0, max(means)*1.1];
@@ -38,10 +41,10 @@ function sliding_window_stds_plot(datax,datay,fignumstart,mylinecolor,showplots,
     % ===
     
     figure(fignumstart+2); hold on;
-    plot(t_center,stds_rescaled,'-o','LineWidth',3,'color',mylinecolor);
+    lgh3 = plot(t_center,stds,'-o','LineWidth',3,'color',mylinecolor);
     plot(t_center,std_fitted,'-','LineWidth',3,'color','k');
     
-    oldylim = ylim; newylim = [0, max(stds_rescaled)*1.1];
+    oldylim = ylim; newylim = [0, max(stds)*1.1];
     if oldylim(2) < newylim(2) % set new ylim if adjustment needed
         ylim(newylim);
     end

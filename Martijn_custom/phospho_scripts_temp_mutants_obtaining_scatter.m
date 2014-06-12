@@ -1,4 +1,43 @@
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+% Newer version available, look at phospho_base_noise.m now!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 %% Settings
 
 some_colors;
@@ -17,6 +56,17 @@ s_all = DJK_selSchitzesToPlot(schnitzcells, 'P', @(x) 1); name_all = 'all';
 
 [plotx_735_pos8, ploty_735_pos8] = ...
     DJK_plot_scatterColor(p, s_all, 'muP11_all', 'time', 'gen', 'ylim', [0 4], 'selectionName', name_all, 'plotRegression', 0, 'onScreen', 1);
+
+% 733___
+p = DJK_initschnitz('pos8crop','2014-05-01','e.coli.AMOLF','rootDir',myRootDir, 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
+[p,schnitzcells] = DJK_compileSchnitzImproved_3colors(p,'quickMode',1);
+
+% select which Schnitzcells to take into account (all)
+s_all = DJK_selSchitzesToPlot(schnitzcells, 'P', @(x) 1); name_all = 'all';
+
+[plotx_733_pos8, ploty_733_pos8] = ...
+    DJK_plot_scatterColor(p, s_all, 'muP11_all', 'time', 'gen', 'ylim', [0 4], 'selectionName', name_all, 'plotRegression', 0, 'onScreen', 1);
+
 
 % 732___
 p = DJK_initschnitz('pos1crop','2014-05-01','e.coli.AMOLF','rootDir',myRootDir, 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
@@ -105,11 +155,19 @@ mymap = colorGray(nrpositions);
 fignumstart=1;
 figure(fignumstart); clf; figure(fignumstart+1); clf; figure(fignumstart+2); clf;
 
+% WT
 mylegendnames = [mylegendnames, 'Wildtype', 'WT fit'];
 datax=plotx_732_pos1;
 datay=ploty_732_pos1;
 sliding_window_stds_plot(datax,datay,fignumstart,mymap(1,:),1,1);
 
+% 733
+mylegendnames = [mylegendnames, '\Delta{pykF} mutant ', 'mutant fit'];
+datax=plotx_733_pos8;
+datay=ploty_733_pos8;
+sliding_window_stds_plot(datax,datay,fignumstart,mymap(2,:),1,1);
+
+% 735
 mylegendnames = [mylegendnames, '\Delta{pykF}/\Delta{ppc} mutant ', 'mutant fit'];
 datax=plotx_735_pos8;
 datay=ploty_735_pos8;

@@ -1,0 +1,21 @@
+function myPhosphoData=phospho_loadscatterdata(myPhosphoData,posname,posdate,groupname,ID,legendname);
+    % loads data in struct called myPhosphoData.
+        
+    disp(['Loading ' posdate,'/',posname]);
+    
+    %
+    p = DJK_initschnitz(posname,posdate,'e.coli.AMOLF','rootDir',myPhosphoData.myRootDir, 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
+    
+    %
+    [p,schnitzcells] = DJK_compileSchnitzImproved_3colors(p,'quickMode',1);
+    
+    % select which Schnitzcells to take into account (all)
+    s_all = DJK_selSchitzesToPlot(schnitzcells, 'P', @(x) 1); name_all = 'all';
+    
+    %
+    [myPhosphoData.(groupname).(ID).xvalues, myPhosphoData.(groupname).(ID).yvalues] = ...
+        DJK_plot_scatterColor(p, s_all, 'muP11_all', 'time', 'gen', 'ylim', [0 4], 'selectionName', name_all, 'plotRegression', 0, 'onScreen', 1);
+
+    myPhosphoData.myLegendNames = [myPhosphoData.myLegendNames, legendname];
+    
+end
