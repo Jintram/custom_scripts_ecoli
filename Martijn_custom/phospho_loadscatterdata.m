@@ -1,5 +1,7 @@
 function myPhosphoData=phospho_loadscatterdata(myPhosphoData,posname,posdate,groupname,ID,legendname);
     % loads data in struct called myPhosphoData.
+    %
+    % myPhosphoData=phospho_loadscatterdata(myPhosphoData,posname,posdate,groupname,ID,legendname);
         
     disp(['Loading ' posdate,'/',posname]);
     
@@ -14,7 +16,7 @@ function myPhosphoData=phospho_loadscatterdata(myPhosphoData,posname,posdate,gro
     
     %
     [myPhosphoData.(groupname).(ID).xvalues, myPhosphoData.(groupname).(ID).yvalues] = ...
-        DJK_plot_scatterColor(p, s_all, 'muP11_all', 'time', 'gen', 'ylim', [0 4], 'selectionName', name_all, 'plotRegression', 0, 'onScreen', 1);
+        DJK_plot_scatterColor(p, s_all, 'muP11_all', 'time', 'gen', 'ylim', [0 4], 'selectionName', name_all, 'plotRegression', 0, 'onScreen', 0);
 
     myPhosphoData.myLegendNames = [myPhosphoData.myLegendNames, legendname];
     

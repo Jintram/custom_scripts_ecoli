@@ -1,12 +1,12 @@
-function [lgh1, lgh2, lgh3] = sliding_window_stds_plot(datax,datay,fignumstart,mylinecolor,showplots,divbymean)
+function [lgh1, lgh2, lgh3, lgh4] = sliding_window_stds_plot(myPhosphoData,datax,datay,fignumstart,mylinecolor,showplots,divbymean,ID)
     % Set nrybins and nrtbins in this function!
     %
     % lgh1, lgh2, lgh3 are line handles, which can be used to make a
     % legend.
 
     % obtain statistics per time window
-    nrybins=30;
-    nrtbins=10;
+    nrybins=20; %30
+    nrtbins=1; %10
     [t_center,means,stds,yvalue_n,lgh1] = sliding_window_stds(nrybins,datax,datay,nrtbins,showplots,fignumstart,mylinecolor);
 
     % Restcale stds by means
@@ -20,6 +20,10 @@ function [lgh1, lgh2, lgh3] = sliding_window_stds_plot(datax,datay,fignumstart,m
     
     std_fitCoef1 = polyfit(t_center,stds,1);
     std_fitted = std_fitCoef1(1)*t_center + std_fitCoef1(2);
+    
+    x_values=[0:.01:2];
+    stdmean_fitCoef1 = polyfit(means,stds,1);
+    stdmean_fitted = stdmean_fitCoef1(1)*x_values + stdmean_fitCoef1(2);
        
     % Plot means per timewindow
     % ===
@@ -57,6 +61,26 @@ function [lgh1, lgh2, lgh3] = sliding_window_stds_plot(datax,datay,fignumstart,m
     else 
         title('Standard deviations');
         ylabel(['Standard deviation']);        
+    end;
+    
+    % Plot standard deviations vs. mu
+    % ===
+    
+    figure(fignumstart+3); 
+    hold on;
+    lgh4 = plot(means,stds,myPhosphoData.markers.(ID),'LineWidth',3,'color',mylinecolor);    
+    %plot(x_values,stdmean_fitted,'-','LineWidth',3,'color','k');
+    
+    axis([0,2,0,2])
+    
+    set(gca,'FontSize',20);
+    xlabel('Growth speed (dlb/hr)');    
+    if divbymean
+        ylabel(['Standard deviation / mean']);    
+        title('Growth speed vs noise');
+    else
+        ylabel(['Standard deviation']);    
+        title('Growth speed vs std. dev.');
     end;
     
 
