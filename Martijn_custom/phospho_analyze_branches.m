@@ -1,8 +1,147 @@
 % phoshpo_analyze_branches
 
-branchData = DJK_getBranches(p,s_all,'dataFields',{'time','muP11_all'});
 
-figure; clf; hold on;
-plot(branchData(1).time, branchData(1).muP11_all);
+%% determine which data (TODO: to be automized)
+% ===
+disp('Starting..');
 
-sliding_length_vs_noise
+% loop over my datastruct
+% first per strain
+strains = fieldnames(myPhosphoData);
+for str_idx = 1:length(strains)
+
+    currentstrain = char(strains(str_idx));   
+        
+    % then per replicate
+    reps = fieldnames(myPhosphoData.(currentstrain));
+    for rep_idx = 1:length(reps)
+        
+        currentrep = char(reps(rep_idx));
+        
+        % calculate branch data for each strain, rep
+        myPhosphoData = phospho_getbranchdata(myPhosphoData,currentstrain,currentrep);
+        
+        disp([currentstrain, ', rep ',currentrep,' done ..'])
+        
+    end   
+    
+end
+
+disp('All branchData done!')
+
+
+%% choose dataset to plot
+%===
+current_branchData = myPhosphoData.('s732').('r2').branchData;
+bac_nr = 150;
+
+% plot 
+%===
+
+%{
+figure(1); clf; hold on;
+plot(current_branchData(bac_nr).time, current_branchData(bac_nr).muP11_all, '-o', 'color',preferredcolors(1,:),'LineWidth',1);
+
+figure(2); clf; hold on;
+plot(current_branchData(bac_nr).time, current_branchData(bac_nr).length_fitNew, '-o', 'color',preferredcolors(1,:),'LineWidth',1);
+%}
+
+% normal scale
+figure(3); clf; hold on;
+set(gca,'FontSize',20);
+title('Length and speed');
+xlabel('Frames');
+ylabel('Length (um)');
+ylabel('Speed (doublings/hr)');
+plot([0,max(current_branchData(bac_nr).frame_nrs)],[0,0],'k-')
+plot(current_branchData(bac_nr).frame_nrs, current_branchData(bac_nr).muP11_all, '-o', 'color',preferredcolors(1,:),'LineWidth',1);
+plot(current_branchData(bac_nr).frame_nrs, current_branchData(bac_nr).length_fitNew, '-o', 'color',preferredcolors(2,:),'LineWidth',1);
+
+%% length semilog 
+figure(4); clf; 
+
+% main data
+fr = current_branchData(bac_nr).frame_nrs;
+lengths = current_branchData(bac_nr).length_fitNew;
+rates = current_branchData(bac_nr).muP11_all;
+
+[ax,hline1,hline2] = plotyy(fr,lengths,fr,rates,'semilogy','plot');
+
+hold on; % note this has to be AFTER first plots!
+
+axes(ax(2));
+lh = line([min(fr),max(fr)],[0,0])
+set(lh,'Color',preferredcolors(2,:))
+
+set(gca,'FontSize',20);                           
+set(ax,'FontSize',20)
+
+set(hline1,'LineStyle','-','Marker','o','Color',preferredcolors(1,:));
+set(hline2,'LineStyle','-','Marker','o','Color',preferredcolors(2,:));
+set(ax(1),'YColor',preferredcolors(1,:))
+set(ax(2),'YColor',preferredcolors(2,:))
+                           
+title('Length and speed');
+xlabel('Frames');
+ylabel(ax(1),'Length (um)','Color',preferredcolors(1,:));
+ylabel(ax(2),'Speed (doublings/hr)','FontSize',20,'Color',preferredcolors(2,:));
+
+ylim(ax(1),[-.5,5])
+ylim(ax(2),[-.5,5])
+
+xlhand = get(gca,'xlabel')
+set(xlhand,'string','Frames','fontsize',20)
+
+% Plot schnitz info also
+[uniq_schn,ia]=unique(current_branchData(bac_nr).schnitzNrs);
+schnitzswitchframes = fr(ia);
+
+mypos=4; 
+% % add line to give schnitzes
+% lh = line(schnitzswitchframes,ones(1,length(uniq_schn))*mypos);
+% set(lh, 'Marker','o');
+dx = 5;
+for idx = [1:length(uniq_schn)]
+    % % fixed location
+    % text(schnitzswitchframes(idx), mypos+eps, [num2str(uniq_schn(idx))],'FontSize',15);
+    % at y-value
+    text(schnitzswitchframes(idx)+dx, lengths(schnitzswitchframes(idx)), [num2str(uniq_schn(idx))],'FontSize',15,'Parent',ax(1));
+        
+    % % Frame nrs
+    % text(schnitzswitchframes(idx), mypos-eps,...
+    % ['fr=',num2str(schnitzswitchframes(idx))],'FontSize',15); 
+end
+
+
+
+% semilogy([0,max(branchData(bac_nr).frame_nrs)],[0,0],'k-')
+% semilogy(branchData(bac_nr).frame_nrs, branchData(bac_nr).muP11_all, '-o', 'color',preferredcolors(1,:),'LineWidth',1);
+% semilogy(branchData(bac_nr).frame_nrs, branchData(bac_nr).length_fitNew, '-o', 'color',preferredcolors(2,:),'LineWidth',1);
+
+%% Continue to plot crosscorrelations
+
+branch_groups_test = {myPhosphoData.('s735').('r1').branchData,myPhosphoData.('s735').('r2').branchData};
+DJK_plot_crosscorrelation_standard_error_store(myPhosphoData.('s735').('r1').p,branch_groups_test,'muP11_all', 'muP11_all','selectionName','mytestname','timeField','time','onScreen',1);
+
+
+
+
+
+
+
+
+% After we have data available in separate branches, we want to
+% calculate auto correlation.
+%{
+branches = DJK_addToBranches_noise(p, branchData,'dataFields',{'dR5_time'  'R_time'  'muP11_fitNew_atdR5' 'muP11_fitNew_atdR5_cycCor' 'dR5_cycCor'  'dG5_cycCor' 'dG5' 'dR5' });
+trimmed_branches = DJK_trim_branch_data(branches,4);
+branch_groups = DJK_divide_branch_data(trimmed_branches);
+
+DJK_plot_crosscorrelation_standard_error_store(p, branch_groups, 'noise_dG5_cycCor', 'noise_muP11_fitNew_atdR5_cycCor','selectionName',name_rm_branch,'timeField','R_time');
+%}
+
+
+
+
+
+

@@ -1,12 +1,13 @@
-function myPhosphoData=phospho_loadscatterdata(myPhosphoData,posname,posdate,groupname,ID,legendname);
+function [myPhosphoData, myPhosphoAuxiliary] = phospho_loaddata(myPhosphoData,myPhosphoAuxiliary,posname,posdate,groupname,ID,legendname);
     % loads data in struct called myPhosphoData.
     %
     % myPhosphoData=phospho_loadscatterdata(myPhosphoData,posname,posdate,groupname,ID,legendname);
         
-    disp(['Loading ' posdate,'/',posname]);
+    disp(['Loading ' myPhosphoAuxiliary.myRootDir,posdate,'/',posname]);
+    disp(['Legend name: ', legendname]);
     
     % define p "position"
-    p = DJK_initschnitz(posname,posdate,'e.coli.AMOLF','rootDir',myPhosphoData.myRootDir, 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
+    p = DJK_initschnitz(posname,posdate,'e.coli.AMOLF','rootDir', myPhosphoAuxiliary.myRootDir, 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
     
     % load
     [p,schnitzcells] = DJK_compileSchnitzImproved_3colors(p,'quickMode',1);
@@ -23,6 +24,6 @@ function myPhosphoData=phospho_loadscatterdata(myPhosphoData,posname,posdate,gro
     [myPhosphoData.(groupname).(ID).xvalues, myPhosphoData.(groupname).(ID).yvalues] = ...
         DJK_plot_scatterColor(p, s_all, 'muP11_all', 'time', 'gen', 'ylim', [0 4], 'selectionName', name_all, 'plotRegression', 0, 'onScreen', 0);
 
-    myPhosphoData.myLegendNames = [myPhosphoData.myLegendNames, legendname];
+    myPhosphoAuxiliary.myLegendNames = [myPhosphoAuxiliary.myLegendNames, legendname];
     
 end

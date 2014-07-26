@@ -1,4 +1,4 @@
-function [lgh1, lgh2, lgh3, lgh4] = sliding_window_stds_plot(myPhosphoData,datax,datay,fignumstart,mylinecolor,showplots,divbymean,ID)
+function [lgh1, lgh2, lgh3, lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,datax,datay,fignumstart,mylinecolor,showplots,divbymean,ID)
     % Set nrybins and nrtbins in this function!
     %
     % lgh1, lgh2, lgh3 are line handles, which can be used to make a
@@ -68,7 +68,7 @@ function [lgh1, lgh2, lgh3, lgh4] = sliding_window_stds_plot(myPhosphoData,datax
     
     figure(fignumstart+3); 
     hold on;
-    lgh4 = plot(means,stds,myPhosphoData.markers.(ID),'LineWidth',3,'color',mylinecolor);    
+    lgh4 = plot(means,stds,myPhosphoAuxiliary.markers.(ID),'LineWidth',3,'color',mylinecolor);    
     %plot(x_values,stdmean_fitted,'-','LineWidth',3,'color','k');
     
     axis([0,2,0,2])
