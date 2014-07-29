@@ -1,14 +1,24 @@
 
-%% Loading our structure from scratch
+%% Loading structure data from files
 
 % This is my directory structure
+% You can ignore this and set "fileToLoad" parameter below immediately
 myRootDir = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze'; % root folder of data
 positionDate = '2014-05-01'; % date data was taken, subdir in root
 positionName = 'pos1crop'; % multiple colonies are measured, this identifies position, is subdir of datedir
+% other datasets of wildtype 
+% 'pos1crop' '2014-05-01'
+% 'pos4crop', '2014_06_18' % this grows slowly though, unlike seen before
+% 'pos2crop', '2014_06_18'
 
 % You can edit the parameter below immediately
 % Path to schnitzcells file:
-fileToLoad = [myRootDir, '\', positionDate, '\',positionName,'\data\',positionName,'_lin.mat']
+%%%%%%%%%%%%%%% SET LOCATION OF ..-Schnitz.mat HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% e.g. fileToLoad = 'C:\Users\wehrens\Desktop\pos1crop-Schnitz.mat';
+fileToLoad = [myRootDir, '\', positionDate, '\',positionName,'\data\',positionName,'-Schnitz.mat']
+myRootDir = [myRootDir, '\', positionDate, '\',positionName,'\']
+%%%%%%%%%%%%% END SET LOCATION OF ..-Schnitz.mat HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 % Load the Schnitzcells datafile
 load(fileToLoad);
@@ -16,37 +26,51 @@ load(fileToLoad);
 % To visualize with checking software:
 % MW_manualcheckseg(p,'manualRange',[39:274],'override',1,'assistedCorrection',1);
 
-%% Plotting
-frame = 120
+%% Plotting the ellips fittings
+% Select which frame of the movie you'd like to see:
+frame = 120;
 
-figure(1)
-clf
-hold on;
+% Make figure
+figure(1); clf; hold on;
 
-xs=[];
-ys=[];
+% Not required - builds parameter with all coordinates of this frame
+xs=[]; ys=[];
 
-for idx_s = 1:length(schnitzcells)
+% Loop over the different schnitzcells. Each schnitzcells is an
+% "individual" cell from its own birth (division) to the birth of its
+% children (division). Schnitzcells are numbered by the rows of their
+% struct.
+for idx_s = 1:length(schnitzcells) % loop over all individuals
     
+    % Look whether this individual was recorded in this frame
     frame_idx = 0;
     frame_idx = find(schnitzcells(idx_s).frames==frame);
 
+        % If it was, then plot it to the figure
         if frame_idx ~= 0
 
-            x0 = schnitzcells(idx_s).rp_cenX_full(frame_idx)
-            y0 = schnitzcells(idx_s).rp_cenY_full(frame_idx)
+            % TODO: there's a bug in these coordinates?!
+            % x0 = schnitzcells(idx_s).rp_cenX_full(frame_idx)
+            % y0 = schnitzcells(idx_s).rp_cenY_full(frame_idx)
 
-            x0 = schnitzcells(idx_s).rp_cenX_crop(frame_idx)
-            y0 = -schnitzcells(idx_s).rp_cenY_crop(frame_idx)
+            % Retrieve coordinates for this individual
+            x0 = schnitzcells(idx_s).rp_cenX_crop(frame_idx);
+            y0 = -schnitzcells(idx_s).rp_cenY_crop(frame_idx);
             
-            ra = schnitzcells(idx_s).rp_length(frame_idx)/2
-            rb = schnitzcells(idx_s).rp_width(frame_idx)/2
+            % Get length and with of ellipse for this indivual
+            ra = schnitzcells(idx_s).rp_length(frame_idx)/2;
+            rb = schnitzcells(idx_s).rp_width(frame_idx)/2;
 
-            ang = schnitzcells(idx_s).rp_angle(frame_idx)/360*2*pi
+            % Get angle for individual
+            ang = schnitzcells(idx_s).rp_angle(frame_idx)/360*2*pi;
 
-            ellipse(ra,rb,ang,x0,y0)
+            % Plot individual as ellipse using library from internet
+            ellipse(ra,rb,ang,x0,y0);
+            % Plot individual's center
             plot(x0,y0,'o');
 
+            % not required - builds parameter with all coordinates of this
+            % frame
             xs= [xs, x0];
             ys= [ys, y0];
             
@@ -54,5 +78,23 @@ for idx_s = 1:length(schnitzcells)
 
 end
 
-xs
-ys
+%% Loading microscope and segmentation images
+% Note that positionName and myRootDir have to be set for this to work.
+imageDir = [myRootDir,'segmentation\']; % Directory w. segm. images
+fileNameSeg = [positionName, 'seg', num2str(frame), '.mat']; % Matlab name w. segmentation
+load([imageDir,fileNameSeg]);
+
+% Just to have nice colors, Lc contains the segmentation
+Lc_to_show = label2rgb(Lc, @jet, 'k');%, 'shuffle');
+axis tight
+
+figure(2); clf;
+subplottight(1,2,1);% same as subplot(1,2,1);
+imshow(phsub,[]);
+subplottight(1,2,2); %same as subplot(1,2,2);
+imshow(Lc_to_show,[]);
+
+
+
+
+
