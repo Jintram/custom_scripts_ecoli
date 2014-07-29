@@ -33,7 +33,7 @@ disp('All branchData done!')
 %% choose dataset to plot
 %===
 current_branchData = myPhosphoData.('s732').('r2').branchData;
-bac_nr = 150;
+branch_nr = 150;
 
 % Data where there are negative values:
 %{
@@ -59,17 +59,17 @@ title('Length and speed');
 xlabel('Frames');
 ylabel('Length (um)');
 ylabel('Speed (doublings/hr)');
-plot([0,max(current_branchData(bac_nr).frame_nrs)],[0,0],'k-')
-plot(current_branchData(bac_nr).frame_nrs, current_branchData(bac_nr).muP11_all, '-o', 'color',preferredcolors(1,:),'LineWidth',1);
-plot(current_branchData(bac_nr).frame_nrs, current_branchData(bac_nr).length_fitNew, '-o', 'color',preferredcolors(2,:),'LineWidth',1);
+plot([0,max(current_branchData(branch_nr).frame_nrs)],[0,0],'k-')
+plot(current_branchData(branch_nr).frame_nrs, current_branchData(branch_nr).muP11_all, '-o', 'color',preferredcolors(1,:),'LineWidth',1);
+plot(current_branchData(branch_nr).frame_nrs, current_branchData(branch_nr).length_fitNew, '-o', 'color',preferredcolors(2,:),'LineWidth',1);
 
 %% length semilog 
 figure(4); clf; 
 
 % main data
-fr = current_branchData(bac_nr).frame_nrs;
-lengths = current_branchData(bac_nr).length_fitNew;
-rates = current_branchData(bac_nr).muP11_all;
+fr = current_branchData(branch_nr).frame_nrs;
+lengths = current_branchData(branch_nr).length_fitNew;
+rates = current_branchData(branch_nr).muP11_all;
 
 [ax,hline1,hline2] = plotyy(fr,lengths,fr,rates,'semilogy','plot');
 
@@ -99,7 +99,7 @@ xlhand = get(gca,'xlabel')
 set(xlhand,'string','Frames','fontsize',20)
 
 % Plot schnitz info also
-[uniq_schn,ia]=unique(current_branchData(bac_nr).schnitzNrs);
+[uniq_schn,ia]=unique(current_branchData(branch_nr).schnitzNrs);
 schnitzswitchframes = fr(ia);
 
 mypos=4; 
