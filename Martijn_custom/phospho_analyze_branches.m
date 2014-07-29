@@ -35,6 +35,12 @@ disp('All branchData done!')
 current_branchData = myPhosphoData.('s732').('r2').branchData;
 bac_nr = 150;
 
+% Data where there are negative values:
+%{
+current_branchData = myPhosphoData.('s732').('r2').branchData;
+bac_nr = 150;
+%}
+
 % plot 
 %===
 
