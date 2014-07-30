@@ -4,6 +4,17 @@
 % mutants.
 
 
+% Set up / clear parameters
+% ===
+myPhosphoAuxiliary = {};
+myPhosphoData = {};
+
+% Common settings
+myPhosphoAuxiliary.myRootDir = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\'
+myPhosphoAuxiliary.myLegendNames = {}
+myPhosphoAuxiliary.markers.r1 = 'o'; % this can be done prettier I guess TODO
+myPhosphoAuxiliary.markers.r2 = 's';
+myPhosphoAuxiliary.markers.r3 = '^';
 
 % 732___
 [myPhosphoData, myPhosphoAuxiliary] = phospho_loaddata(myPhosphoData, myPhosphoAuxiliary, 'pos1crop', '2014-05-01','s732','r1','Wildtype'); 

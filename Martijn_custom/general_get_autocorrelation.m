@@ -1,4 +1,4 @@
-function [S, Sraw] = general_get_autocorrelation(y1,lambda)
+function [S, Sraw, w, NDtau] = general_get_autocorrelation(y1,lambda)
 % This function calculatates the autocorrelation for a vector with
 % y-values. It can weigh certain parts of this vector more or less, and 
 % will do so by weighing vector W. If w=ones(N_ttotal), this function will
@@ -27,10 +27,18 @@ for NDtau = 0:N
         if lambda==0
             w(NDtstar,NDtau+1)=1;
         else
-            % Get counts
+            % Get weighing, Daan method
+            if lambda(NDtstar) == 1
+                w(NDtstar,NDtau+1) = 1/lambda(NDtstar+NDtau);
+            else
+                w(NDtstar,NDtau+1) = .75/lambda(NDtstar+NDtau);
+            end
+            % Weighing, Nature Kiviet:
+            %{
             lambdat1 = lambda(NDtstar); % count at point 1
             lambdat2 = lambda(NDtstar+NDtau); % count at point 2
             w(NDtstar,NDtau+1)=1/(2*lambdat1)+1/(2*lambdat2); % weighing factor
+            %}
         end
     end
 end         
@@ -45,7 +53,7 @@ S = [];
 for NDtau = 0:length(mr_y1)
 
     S_NDtau = [];
-    ws = []; % TEST
+    %ws = []; % TEST
     
     % slide the window
     for NDtstar = 1:(length(mr_y1)-NDtau)
@@ -54,18 +62,23 @@ for NDtau = 0:length(mr_y1)
         S_NDtau(end+1) = mr_y1(NDtstar)*mr_y1(NDtstar+NDtau)*w(NDtstar,NDtau+1);
         
         % multiply two values TESTING
+        %{
         if lambda==0, lambdat1=1; else lambdat1=lambda(NDtstar); end
         if lambda==0, lambdat2=1; else lambdat2=lambda(NDtstar+NDtau); end
         S_NDtau(end+1) = (mr_y1(NDtstar)/lambdat1)*(mr_y1(NDtstar+NDtau)/lambdat2);
         ws(NDtstar) = 1/(lambdat1*lambdat2);
+        %}
     end
     
     % calculate average and record    
     S(NDtau+1) = sum(S_NDtau)/sum(w(:,NDtau+1)); % +1 b/c matlab starts indexing at 1
-    S(NDtau+1) = sum(S_NDtau)/mean(ws); % TESTING
+    %S(NDtau+1) = sum(S_NDtau)/mean(ws); % TESTING
     Sraw(NDtau+1)= sum(S_NDtau);
-    
+        
 end
+
+% For convenience only
+NDtau = 0:length(mr_y1);
 
 end
 

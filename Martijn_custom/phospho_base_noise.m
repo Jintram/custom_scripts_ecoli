@@ -12,19 +12,8 @@
 
 %% Settings and loading of data.
 
-% Clear parameters
-myPhosphoAuxiliary = {};
-myPhosphoData = {};
-
 % Load color scheme
 some_colors;
-
-% Common settings
-myPhosphoAuxiliary.myRootDir = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\'
-myPhosphoAuxiliary.myLegendNames = {}
-myPhosphoAuxiliary.markers.r1 = 'o'; % this can be done prettier I guess TODO
-myPhosphoAuxiliary.markers.r2 = 's';
-myPhosphoAuxiliary.markers.r3 = '^';
 
 %{
 for groupname={'s732','s733','s734','s735','s736'}
