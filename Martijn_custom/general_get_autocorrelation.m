@@ -81,7 +81,3 @@ end
 NDtau = 0:length(mr_y1);
 
 end
-
-
-
-
