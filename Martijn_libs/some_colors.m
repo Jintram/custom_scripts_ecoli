@@ -23,3 +23,7 @@ cumulus_nimbus = [12,84,207]./255;
 medical_red = [232,0,0]./255;
 
 preferredcolors = [colorAmolfBlue; colorAmolfDarkGreen; seduction; heroes; medical_red]
+
+
+% some markers
+somemarkers = ['os^x*']
