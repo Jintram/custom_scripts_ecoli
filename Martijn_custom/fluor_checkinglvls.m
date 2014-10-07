@@ -42,12 +42,15 @@ for theFile=myFileListing'
         figure(3), imshow(tresholdedImg);
        
         % get edges (just to show user)
-        outlineImg = edge(tresholdedImg, 'canny');       
-        %[myB,myL,myN,myA] = bwboundaries(tresholdedImg,4);
+        %outlineImg = edge(tresholdedImg, 'canny');       
+        [myB,myL,myN,myA] = bwboundaries(1-tresholdedImg);
         cellsAndOutlineImg = cat(3,myImg,myImg,myImg);        
-        [redCol,redRow]=find(outlineImg);
-        for idx=[1:length(redCol)]
-            cellsAndOutlineImg(redCol(idx),redRow(idx),:)=[1,0,0];
+        %[redCol,redRow]=find(outlineImg);        
+        for compIdx=[1:myN]
+        currentOutline=cell2mat(myB(compIdx));
+        for idx=[1:length(currentOutline)]            
+            cellsAndOutlineImg(currentOutline(idx,1),currentOutline(idx,2),:)=[1,0,0];
+        end
         end
         figure(4), imshow(cellsAndOutlineImg);
         
