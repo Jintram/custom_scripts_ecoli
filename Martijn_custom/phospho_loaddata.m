@@ -10,7 +10,9 @@ function [myPhosphoData, myPhosphoAuxiliary] = phospho_loaddata(myPhosphoData,my
     p = DJK_initschnitz(posname,posdate,'e.coli.AMOLF','rootDir', myPhosphoAuxiliary.myRootDir, 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
     
     % load
+    % ***
     [p,schnitzcells] = DJK_compileSchnitzImproved_3colors(p,'quickMode',1);
+    % ***
     % save into datastruct
     myPhosphoData.(groupname).(ID).p = p;
     
