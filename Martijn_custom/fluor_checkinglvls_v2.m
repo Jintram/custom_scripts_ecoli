@@ -1,10 +1,44 @@
+%
+% Fluor level check script.
+% MW 2014/10
+% ===
+%
+% This script allows you to quantify fluor levels of bacteria in a
+% microscope image. It loops over fluor files in a directory, and you need
+% to select a piece which represents the background of the image. From this
+% piece a treshold level is determined, and using this areas of the image 
+% are identified which are fluorescent. If these areas are large enough
+% they are assumed to be cells. For each of these cells the mean
+% fluorescence level is determined. The signal:noise ratio is then
+% determined from each cells using the area identified as background. 
+%
+% The Matlab script will then summarize this data for you in a plot, which
+% plots all individual cells, categorized by micr. images used. Averages 
+% and standard deviations are also calculated. Areas that are identified as
+% cells are also highlighted in both the phase contrast and fluor image.
+%
+% Example input: directory with files 
+% BF_30ms_2014-10-07-141019.tif
+% BF_30ms_2014-10-07-141128.tif
+% GFP_100ms_2014-10-07-141129.tif
+% GFP_100ms_2014-10-07-141020.tif
+%
+% Note that images are linked together by their datenum timestamp.
+%
+% Output: 
+% mydata.png
+% mydata.xls
+% mydata_mic-img-X.jpg
 
 % Setting _________________________________________________________________
 %myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\negcon732\';
-myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\454\6\';
+%myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-08_testicd\783\denser\';
+myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\453\1\';
 myPCPrefix = 'BF_';
 myFPPrefix = 'GFP_';
 ExportFilename = 'mydata';
+
+myTextSize=6;
 
 % margin to put into treshold value
 %tresholdMargin=1.0;
@@ -25,13 +59,18 @@ if ~(myFolder(end)=='\'), disp('YOU FORGOT THE TRAILING SLASH! (in param myFolde
 % Main script _____________________________________________________________
 
 % Loop over files in dir 
-for theFile=myFileListing'
-   
+ImagesAnalyzed=0;
+for theFile=myFileListing'       
+    
     myFileName=theFile.name;
     
     % and pick the fluor files
     if length(myFileName)>=length(myFPPrefix) % avoid obvious non-matches
     if strcmp(myFileName(1:length(myFPPrefix)),myFPPrefix)
+        
+        % admin
+        ImagesAnalyzed=ImagesAnalyzed+1;
+        
         % load image
         fluorPath=[myFolder myFileName];
         myImg=imread(fluorPath);
@@ -40,11 +79,16 @@ for theFile=myFileListing'
         myImg=(myImg-min(myImg(:)))./(max(myImg(:))-min(myImg(:)));
         % show image
         figure(1), imshow(myImg,[])
-        text(10,size(myImg,2)-30,fluorPath,'Color','w','BackgroundColor','k') 
+        text(10,size(myImg,2)-30,fluorPath,'Color','w','BackgroundColor','k','FontSize',myTextSize) 
         
         % select piece for background 
         disp('Select area to determine background.');
         myRect = getrect();
+        
+        % clear summary figure (note that getrect is the interaction w. the
+        % user)
+        figure(8); clf; hold on;
+        
         xmin=myRect(1); ymin=myRect(2); width=myRect(3); height=myRect(4);
         x1=xmin;y1=ymin;x2=xmin+width;y2=ymin+height;        
         bgLvlImg = myImg(y1:y2,x1:x2);
@@ -67,21 +111,21 @@ for theFile=myFileListing'
         myFilter = fspecial('average', 7)
         blurredImg = imfilter(myImg, myFilter);
         figure(99), imshow(blurredImg);        
-        text(10,size(blurredImg,2)-30,fluorPath,'Color','w','BackgroundColor','k') 
+        text(10,size(blurredImg,2)-30,fluorPath,'Color','w','BackgroundColor','k','FontSize',myTextSize) 
         tresholdedImg = im2bw(blurredImg,[],myTreshold);
         figure(3), imshow(tresholdedImg);
-        text(10,size(tresholdedImg,2)-30,fluorPath,'Color','w','BackgroundColor','k') 
+        text(10,size(tresholdedImg,2)-30,fluorPath,'Color','w','BackgroundColor','k','FontSize',myTextSize) 
        
         % get edges (just to show user)
         outlineImg = edge(tresholdedImg, 'canny'); % faster then bwboundaries
         %[myB,myL,myN,myA] = bwboundaries(tresholdedImg,4);
-        cellsAndOutlineImg = cat(3,myImg,myImg,myImg);        
+        cellsOutlineImg = cat(3,myImg,myImg,myImg);        
         [redCol,redRow]=find(outlineImg);
         for idx=[1:length(redCol)]
-            cellsAndOutlineImg(redCol(idx),redRow(idx),:)=[1,0,0];
+            cellsOutlineImg(redCol(idx),redRow(idx),:)=[1,0,0];
         end
-        figure(4), imshow(cellsAndOutlineImg);        
-        text(10,size(cellsAndOutlineImg,2)-30,fluorPath,'Color','w','BackgroundColor','k') 
+        figure(4), imshow(cellsOutlineImg);        
+        text(10,size(cellsOutlineImg,2)-30,fluorPath,'Color','w','BackgroundColor','k','FontSize',myTextSize) 
         
         % Find and show also phase contrast image to user
         % ===
@@ -96,9 +140,20 @@ for theFile=myFileListing'
             if length(myPhaseFileName)>=length(myPCPrefix)
             if strcmp(myPhaseFileName(1:length(myPCPrefix)),myPCPrefix)
             % but now also about same time taken fluor image
-            if(thePhaseFile.datenum-theFile.datenum)<timeMargin
+            if(theFile.datenum-thePhaseFile.datenum)<timeMargin
+                acceptedDifference=theFile.datenum-thePhaseFile.datenum
                 phasePath = [myFolder myPhaseFileName];
                 phaseImage = imread(phasePath);
+                % normalize image
+                phaseImage=double(phaseImage);
+                phaseImage=(phaseImage-min(phaseImage(:)))./(max(phaseImage(:))-min(phaseImage(:)));
+                PhaseOutlineImg = cat(3,phaseImage,phaseImage,phaseImage);        
+                % Also make on with red lines
+                    for idx=[1:length(redCol)]
+                        PhaseOutlineImg(redCol(idx),redRow(idx),:)=[1,0,0];
+                    end
+                    %figure(200), imshow(PhaseOutlineImg,[]);        
+                    %text(myTextSize,size(PhaseAndOutlineImg,2)-30,fluorPath,'Color','w','BackgroundColor','k')
                 break;
             end    
             end
@@ -106,7 +161,7 @@ for theFile=myFileListing'
                 
         end
         figure(5), imshow(phaseImage,[]);        
-        text(10,size(phaseImage,2)-30,phasePath,'Color','w','BackgroundColor','k') 
+        text(10,size(phaseImage,2)-30,phasePath,'Color','w','BackgroundColor','k','FontSize',myTextSize) 
         
         % Now analyze the file
         % ===
@@ -125,8 +180,9 @@ for theFile=myFileListing'
         CC = bwconncomp(tresholdedImg);
         
         % make img to show data labels in
-        labeledImg = cellsAndOutlineImg;
-        figure(8), imshow(labeledImg,[]);
+        labeledImg = cellsOutlineImg;
+        figure(8); subplottight(1,2,1); 
+        imshow(labeledImg,[]);        
         
         % loop over found objects (i.e. cells)
         multipleMeansFluor = []; allTxtCoordsI = []; allTxtCoordsJ = [];
@@ -146,10 +202,11 @@ for theFile=myFileListing'
                 % text
                 allTxtCoordsI=[allTxtCoordsI,i(end)];
                 allTxtCoordsJ=[allTxtCoordsJ,j(end)];
-                text(j(end),i(end),num2str(meanFluor),'Color','y')%,'BackgroundColor','k')                 
+                text(j(end),i(end),num2str(meanFluor),'Color','y','FontSize',myTextSize)%,'BackgroundColor','k')                 
             end
         end
-        text(10,30,['meanBackground=' num2str(meanBackground)],'Color','r')
+        text(10,30,['meanBackground=' num2str(meanBackground)],'Color','r','FontSize',myTextSize)
+        text(10,size(labeledImg,2)-30,fluorPath,'Color','w','BackgroundColor','k','FontSize',myTextSize) 
         
         % output means to user
         % ===
@@ -170,7 +227,14 @@ for theFile=myFileListing'
         
         allMultipleSignalNoise{end+1}=MultipleSignalNoise;
         
-        %break; % TODO REMOVE JUST FOR TESTING        
+        % Finish plot with summary images
+        % ===
+        hFig = figure(8); subplottight(1,2,2);
+        imshow(PhaseOutlineImg,[]);
+        text(10,size(PhaseOutlineImg,2)-30,phasePath,'Color','w','BackgroundColor','k','FontSize',myTextSize);
+        %break; % TODO REMOVE JUST FOR TESTING  
+        myFilePath = [myFolder ExportFilename '_mic-img-' num2str(ImagesAnalyzed) '.jpg']
+        saveas(hFig,myFilePath)
                
     end
     end   
@@ -185,6 +249,11 @@ xlswrite(myFilePath,dirMeanMultipleSignalToNoise,'sheet1','C3');
 xlswrite(myFilePath,{'Std signal to noise'},'sheet1','B4');
 xlswrite(myFilePath,dirStdMultipleSignalToNoise,'sheet1','C4');
 
+% Make histogram of data
+% ===
+figure(102), [count, binLocations] = hist(myImg(:),50);
+plot(binLocations,count ,'-');
+title(myFolder);
 
 % Plotting code
 % ===
@@ -219,10 +288,7 @@ set(hFig, 'Units', 'centimeters', 'PaperPosition', ...
 
 saveas(hFig,myFigFilePath);
 
-% Make histogram of data
-figure(102), [count, binLocations] = hist(myImg(:),50);
-plot(binLocations,count ,'-');
-title(myFolder);
+
 
 % Build database whilst working
 % ===
