@@ -1,6 +1,7 @@
 
 % Setting _________________________________________________________________
-myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\negcon732\';
+%myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\negcon732\';
+myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\454\6\';
 myPCPrefix = 'BF_';
 myFPPrefix = 'GFP_';
 ExportFilename = 'mydata';
@@ -18,6 +19,8 @@ myFileListing = dir(myFolder);
 dirMeanMultipleSignalToNoise = [];
 dirStdMultipleSignalToNoise = [];
 allMultipleSignalNoise = {};
+
+if ~(myFolder(end)=='\'), disp('YOU FORGOT THE TRAILING SLASH! (in param myFolder)'), break, end
 
 % Main script _____________________________________________________________
 
@@ -146,8 +149,10 @@ for theFile=myFileListing'
                 text(j(end),i(end),num2str(meanFluor),'Color','y')%,'BackgroundColor','k')                 
             end
         end
-
+        text(10,30,['meanBackground=' num2str(meanBackground)],'Color','r')
+        
         % output means to user
+        % ===
         meanBackground
         meanFluor
         signalToNoise = meanFluor/meanBackground
@@ -181,20 +186,29 @@ xlswrite(myFilePath,{'Std signal to noise'},'sheet1','B4');
 xlswrite(myFilePath,dirStdMultipleSignalToNoise,'sheet1','C4');
 
 
+% Plotting code
+% ===
 
 some_colors;
 hFig=figure(100), clf, hold on;
 spacing=.1;
 for i =[1:length(allMultipleSignalNoise)]
     figure(100),plot(allMultipleSignalNoise{i},ones(length(allMultipleSignalNoise{i}),1)+spacing*(i-1),['x' mycolors(i)])
+    figure(100),plot(dirMeanMultipleSignalToNoise(i),1+spacing*(i-1),['x' 'k'],'LineWidth',3)
 end
+
+plot(mean(dirMeanMultipleSignalToNoise),1-spacing,['v' 'k'],'LineWidth',3)
+set(hFig, 'Units', 'pixels')
+
+infoText=['mean over imgs=' num2str(mean(dirMeanMultipleSignalToNoise)) ' +/- ' num2str(std(dirMeanMultipleSignalToNoise)) ' (std)'];
+
 ylim([1-spacing,1+spacing*(length(allMultipleSignalNoise))]);
 xlim([limMinRatio,limMaxRatio])
-title(myFolder)
+title({myFolder,infoText})
 
 myFigFilePath = [myFolder ExportFilename '.png'];
 
-mySize=[3,15];
+mySize=[4,15];
 pos = get(hFig, 'Position');
 set(hFig, 'Units', 'centimeters', 'Position', ...
    [2,2, ...
@@ -205,7 +219,23 @@ set(hFig, 'Units', 'centimeters', 'PaperPosition', ...
 
 saveas(hFig,myFigFilePath);
 
+% Make histogram of data
+figure(102), [count, binLocations] = hist(myImg(:),50);
+plot(binLocations,count ,'-');
+title(myFolder);
 
+% Build database whilst working
+% ===
+
+if ~exist('databaseValuesMeanSignalNoise'), databaseValuesMeanSignalNoise=[] ,else
+    databaseValuesMeanSignalNoise(end+1)=mean(dirMeanMultipleSignalToNoise);
+end
+if ~exist('databaseValuesStdSignalNoise'), databaseValuesStdSignalNoise=[] ,else
+    databaseValuesStdSignalNoise(end+1)=std(dirMeanMultipleSignalToNoise);
+end
+if ~exist('databaseValuesNames'), databaseValuesNames={} ,else
+    databaseValuesNames{end+1}=myFolder;
+end
 
 
 
