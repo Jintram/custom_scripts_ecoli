@@ -1,13 +1,13 @@
 
 % Setting _________________________________________________________________
-myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\453\1\';
+myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\negcon732\';
 myPCPrefix = 'BF_';
 myFPPrefix = 'GFP_';
 ExportFilename = 'mydata';
 
 % margin to put into treshold value
 %tresholdMargin=1.0;
-myTresholdPercentile=97;
+myTresholdPercentile=90; % 97 for normal data, XX for negcon
 minCellSize=100;
 timeMargin = 5/(24*60*60); % to determine accompanyning fluor img
 limMinRatio = .9; limMaxRatio = 3.0;
@@ -37,7 +37,7 @@ for theFile=myFileListing'
         myImg=(myImg-min(myImg(:)))./(max(myImg(:))-min(myImg(:)));
         % show image
         figure(1), imshow(myImg,[])
-        text(10,size(phaseImage,2)-30,fluorPath,'Color','w','BackgroundColor','k') 
+        text(10,size(myImg,2)-30,fluorPath,'Color','w','BackgroundColor','k') 
         
         % select piece for background 
         disp('Select area to determine background.');
@@ -52,22 +52,22 @@ for theFile=myFileListing'
         myRect = getrect();
         xmin=myRect(1); ymin=myRect(2); width=myRect(3); height=myRect(4);
         x1=xmin;y1=ymin;x2=xmin+width;y2=ymin+height;        
-        tresholdLvlImg = myImg(y1:y2,x1:x2);        
+        tresholdLvlImg = myImg(y1:y2,x1:x2);
         %figure(2), imshow(tresholdLvlImg);
         %}
         
         % get treshold background lvl                
         %myTreshold = tresholdMargin*max(tresholdLvlImg(:))
-        myTreshold = prctile(tresholdLvlImg(:),myTresholdPercentile);
+        myTreshold = prctile(bgLvlImg(:),myTresholdPercentile);
                 
         % transform img
         myFilter = fspecial('average', 7)
         blurredImg = imfilter(myImg, myFilter);
         figure(99), imshow(blurredImg);        
-        text(10,size(phaseImage,2)-30,fluorPath,'Color','w','BackgroundColor','k') 
+        text(10,size(blurredImg,2)-30,fluorPath,'Color','w','BackgroundColor','k') 
         tresholdedImg = im2bw(blurredImg,[],myTreshold);
         figure(3), imshow(tresholdedImg);
-        text(10,size(phaseImage,2)-30,fluorPath,'Color','w','BackgroundColor','k') 
+        text(10,size(tresholdedImg,2)-30,fluorPath,'Color','w','BackgroundColor','k') 
        
         % get edges (just to show user)
         outlineImg = edge(tresholdedImg, 'canny'); % faster then bwboundaries
@@ -78,7 +78,7 @@ for theFile=myFileListing'
             cellsAndOutlineImg(redCol(idx),redRow(idx),:)=[1,0,0];
         end
         figure(4), imshow(cellsAndOutlineImg);        
-        text(10,size(phaseImage,2)-30,fluorPath,'Color','w','BackgroundColor','k') 
+        text(10,size(cellsAndOutlineImg,2)-30,fluorPath,'Color','w','BackgroundColor','k') 
         
         % Find and show also phase contrast image to user
         % ===
@@ -194,14 +194,14 @@ title(myFolder)
 
 myFigFilePath = [myFolder ExportFilename '.png'];
 
-size=[100,500];
+mySize=[3,15];
 pos = get(hFig, 'Position');
-set(hFig, 'Units', 'pixels', 'Position', ...
-   [pos(1), pos(2)+pos(4)-size(1), ...
-   size(2), size(1)]);
-set(hFig, 'Units', 'pixels', 'PaperPosition', ...
-   [pos(1), pos(2)+pos(4)-size(1), ...
-   size(2), size(1)]);
+set(hFig, 'Units', 'centimeters', 'Position', ...
+   [2,2, ...
+   mySize(2), mySize(1)]);
+set(hFig, 'Units', 'centimeters', 'PaperPosition', ...
+   [2,2, ...
+   mySize(2), mySize(1)]);
 
 saveas(hFig,myFigFilePath);
 
