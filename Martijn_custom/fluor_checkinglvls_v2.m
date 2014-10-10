@@ -31,28 +31,38 @@
 % mydata_mic-img-X.jpg
 
 % Setting _________________________________________________________________
-%myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\negcon732\';
-%myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-08_testicd\783\denser\';
-myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\453\1\';
+% Make this setting such that it can be set before execution of the script.
+if ~exist('myFolder')
+    %myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\negcon732\';
+    %myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-08_testicd\783\denser\';
+    myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\467\1\';
+end
 myPCPrefix = 'BF_';
 myFPPrefix = 'GFP_';
 ExportFilename = 'mydata';
 
-myTextSize=6;
+myTextSize=8;
 
 % margin to put into treshold value
 %tresholdMargin=1.0;
-myTresholdPercentile=90; % 97 for normal data, XX for negcon
+myTresholdPercentile=90; % 97 for normal data, 90 for negcon
 minCellSize=100;
 timeMargin = 5/(24*60*60); % to determine accompanyning fluor img
 limMinRatio = .9; limMaxRatio = 3.0;
+limAbsoluteDifference=100;
 
 % Preparation _____________________________________________________________
 myFileListing = dir(myFolder);
 
+multipleImgMin=[];
+multipleImgMax=[];
+
 dirMeanMultipleSignalToNoise = [];
 dirStdMultipleSignalToNoise = [];
+dirMeanMultipleSignalMinusNoise = [];
+dirStdMultipleSignalMinusNoise = [];
 allMultipleSignalNoise = {};
+allMultipleSignalMinusNoise = {};
 
 if ~(myFolder(end)=='\'), disp('YOU FORGOT THE TRAILING SLASH! (in param myFolder)'), break, end
 
@@ -76,7 +86,9 @@ for theFile=myFileListing'
         myImg=imread(fluorPath);
         % normalize image
         myImg=double(myImg);
-        myImg=(myImg-min(myImg(:)))./(max(myImg(:))-min(myImg(:)));
+        myImgMin=min(myImg(:)); multipleImgMin(end+1)=myImgMin; % also save
+        myImgMax=max(myImg(:)); multipleImgMax(end+1)=myImgMax; % also save     
+        myImg=(myImg-myImgMin)./(myImgMax-myImgMin);
         % show image
         figure(1), imshow(myImg,[])
         text(10,size(myImg,2)-30,fluorPath,'Color','w','BackgroundColor','k','FontSize',myTextSize) 
@@ -105,8 +117,12 @@ for theFile=myFileListing'
         
         % get treshold background lvl                
         %myTreshold = tresholdMargin*max(tresholdLvlImg(:))
-        myTreshold = prctile(bgLvlImg(:),myTresholdPercentile);
-                
+        %myTreshold = prctile(bgLvlImg(:),myTresholdPercentile);
+        % manual prctile to avoid licencing issues
+        sortedbgLvlImgValues=sort(bgLvlImg(:));
+        prctileidx=round(length(sortedbgLvlImgValues)*myTresholdPercentile/100);
+        myTreshold=sortedbgLvlImgValues(prctileidx);
+        
         % transform img
         myFilter = fspecial('average', 7)
         blurredImg = imfilter(myImg, myFilter);
@@ -210,22 +226,34 @@ for theFile=myFileListing'
         
         % output means to user
         % ===
+        % overall means
         meanBackground
         meanFluor
         signalToNoise = meanFluor/meanBackground
         
+        % mean and std between cell means
         meanmultipleMeansFluor = mean(multipleMeansFluor)        
-        stdmultipleMeansFluor = std(multipleMeansFluor)
+        stdmultipleMeansFluor = std(multipleMeansFluor)                
         
-        MultipleSignalNoise = multipleMeansFluor./meanBackground;
+        % signal:noise and signal-noise for cells
+        multipleSignalNoise = multipleMeansFluor./meanBackground;
+        mulitipleSignalMinusNoise = multipleMeansFluor-meanBackground;
         
+        % mean and std of signal:noise and signal-noise
         meanMultipleSignalToNoise = mean(multipleMeansFluor./meanBackground)
         stdMultipleSignalToNoise = std(multipleMeansFluor./meanBackground)
+        meanMultipleSignalMinusNoise = mean(multipleMeansFluor-meanBackground)
+        stdMultipleSignalMinusNoise = std(multipleMeansFluor-meanBackground)
         
-        dirMeanMultipleSignalToNoise=[dirMeanMultipleSignalToNoise,meanMultipleSignalToNoise];
-        dirStdMultipleSignalToNoise=[dirStdMultipleSignalToNoise,stdMultipleSignalToNoise];
+        % store above in arrays w. entry for each img file
+        dirMeanMultipleSignalToNoise(end+1) = meanMultipleSignalToNoise;
+        dirStdMultipleSignalToNoise(end+1) = stdMultipleSignalToNoise;
+        dirMeanMultipleSignalMinusNoise(end+1) = meanMultipleSignalMinusNoise;
+        dirStdMultipleSignalMinusNoise(end+1) = stdMultipleSignalMinusNoise;
         
-        allMultipleSignalNoise{end+1}=MultipleSignalNoise;
+        % raw data of cellular means (to make plot)
+        allMultipleSignalNoise{end+1}=multipleSignalNoise;
+        allMultipleSignalMinusNoise{end+1}=mulitipleSignalMinusNoise;
         
         % Finish plot with summary images
         % ===
@@ -233,7 +261,7 @@ for theFile=myFileListing'
         imshow(PhaseOutlineImg,[]);
         text(10,size(PhaseOutlineImg,2)-30,phasePath,'Color','w','BackgroundColor','k','FontSize',myTextSize);
         %break; % TODO REMOVE JUST FOR TESTING  
-        myFilePath = [myFolder ExportFilename '_mic-img-' num2str(ImagesAnalyzed) '.jpg']
+        myFilePath = [myFolder ExportFilename '_mic-img-' num2str(ImagesAnalyzed) '.jpg'];
         saveas(hFig,myFilePath)
                
     end
@@ -241,8 +269,15 @@ for theFile=myFileListing'
 
 end
 
+% Calculate delta value in original units
+dirMeanMultipleSignalMinusNoise.*(multipleImgMax-multipleImgMin)+multipleImgMin
+
+
+% Check whether something was analyzed, otherwise break analysis
+if ImagesAnalyzed==0, disp('NO IMAGES FOUND TO ANALYZE!'); break; end
+
 % Export data to Excel
-myFilePath = [myFolder ExportFilename '.xls']
+myFilePath = [myFolder ExportFilename '.xls'];
 xlswrite(myFilePath,{myFolder},'sheet1','B2');
 xlswrite(myFilePath,{'Mean signal to noise'},'sheet1','B3');
 xlswrite(myFilePath,dirMeanMultipleSignalToNoise,'sheet1','C3');
@@ -255,7 +290,7 @@ figure(102), [count, binLocations] = hist(myImg(:),50);
 plot(binLocations,count ,'-');
 title(myFolder);
 
-% Plotting code
+% Plotting code, signal to noise
 % ===
 
 some_colors;
@@ -267,15 +302,16 @@ for i =[1:length(allMultipleSignalNoise)]
 end
 
 plot(mean(dirMeanMultipleSignalToNoise),1-spacing,['v' 'k'],'LineWidth',3)
+
 set(hFig, 'Units', 'pixels')
 
 infoText=['mean over imgs=' num2str(mean(dirMeanMultipleSignalToNoise)) ' +/- ' num2str(std(dirMeanMultipleSignalToNoise)) ' (std)'];
 
 ylim([1-spacing,1+spacing*(length(allMultipleSignalNoise))]);
 xlim([limMinRatio,limMaxRatio])
-title({myFolder,infoText})
+title({myFolder,infoText,''})
 
-myFigFilePath = [myFolder ExportFilename '.png'];
+myFigFilePath = [myFolder ExportFilename '_signalToNoise.png'];
 
 mySize=[4,15];
 pos = get(hFig, 'Position');
@@ -288,7 +324,47 @@ set(hFig, 'Units', 'centimeters', 'PaperPosition', ...
 
 saveas(hFig,myFigFilePath);
 
+% Plotting code, signal MINUS noise
+% ===
 
+% convert back from normalized img values
+if 1
+    for i = [1:length(allMultipleSignalMinusNoise)]
+        allMultipleSignalMinusNoise{i}=allMultipleSignalMinusNoise{i}.*(multipleImgMax(i)-multipleImgMin(i))+multipleImgMin(i);
+    end
+    dirMeanMultipleSignalMinusNoise=dirMeanMultipleSignalMinusNoise.*(multipleImgMax-multipleImgMin)+multipleImgMin;
+end
+
+hFig=figure(300), clf, hold on;
+spacing=.1;
+for i =[1:length(allMultipleSignalMinusNoise)]
+    plot(allMultipleSignalMinusNoise{i},ones(length(allMultipleSignalMinusNoise{i}),1)+spacing*(i-1),['x' mycolors(i)])
+    plot(dirMeanMultipleSignalMinusNoise(i),1+spacing*(i-1),['x' 'k'],'LineWidth',3)
+end
+
+plot(mean(dirMeanMultipleSignalMinusNoise),1-spacing,['v' 'k'],'LineWidth',3)
+set(hFig, 'Units', 'pixels')
+
+infoText=['mean over imgs=' num2str(mean(dirMeanMultipleSignalMinusNoise)) ' +/- ' num2str(std(dirStdMultipleSignalMinusNoise)) ' (std)'];
+
+% set limits
+ylim([1-spacing,1+spacing*(length(allMultipleSignalMinusNoise))]);
+xlim([0,limAbsoluteDifference])
+
+title({myFolder,infoText})
+
+myFigFilePath = [myFolder ExportFilename '_signalMinusNoise.png'];
+
+mySize=[4,15];
+pos = get(hFig, 'Position');
+set(hFig, 'Units', 'centimeters', 'Position', ...
+   [2,2, ...
+   mySize(2), mySize(1)]);
+set(hFig, 'Units', 'centimeters', 'PaperPosition', ...
+   [2,2, ...
+   mySize(2), mySize(1)]);
+
+saveas(hFig,myFigFilePath);
 
 % Build database whilst working
 % ===
@@ -303,7 +379,8 @@ if ~exist('databaseValuesNames'), databaseValuesNames={} ,else
     databaseValuesNames{end+1}=myFolder;
 end
 
-
+% Save whole analysis to file
+save([myFolder 'complete_analysis_' date '.mat']);
 
 
 
