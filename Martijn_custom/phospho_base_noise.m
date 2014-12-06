@@ -72,6 +72,10 @@ figure(fignumstart+3); legend(lines4, theLegendNames,'Location','best');
 
 % Process data
 
+% TODO: should be updated such that looping goes automatically, and
+% phospho_mu_vs_noise shouldn't need to require anything else but
+% myPhosphoData, myPhosphoAuxiliary and strain and repetition.
+
 % 732 data
 myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos1crop','2014-05-01','s732','r1','Wildtype');
 myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos4crop','2014_06_18','s732','r2','Wildtype');
@@ -157,7 +161,7 @@ plot(x_values,std_fitted_735,'-','LineWidth',2,'color',colorAmolfDarkGreen);
 plot(x_values,std_fitted_all,'-','LineWidth',2,'color','k');
 
 % add legend
-theLegendNames = unique(myPhosphoAuxiliary.myLegendNames); % b/c repetitions not in list of lines, get unique names.
+theLegendNames = unique(myPhosphoAuxiliary.myLegendNames, 'stable'); % b/c repetitions not in list of lines, get unique names.
 figure(4); legend(lines4, theLegendNames,'Location','best');
 
 % Plot stds
