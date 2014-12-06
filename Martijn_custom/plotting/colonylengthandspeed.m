@@ -6,6 +6,10 @@
 % and then plots this. It uses a struct with multiple schnitzcell
 % structures as input.
 %
+% Instructions
+% ===
+% Requires Phospho_load_all_data to be executed first.
+%
 % MW 2014/12
 %
 %
@@ -18,7 +22,7 @@ strains = fieldnames(myPhosphoData)
 for str_idx = 1:numel(strains)
 
     current_strain = char(strains(str_idx));
-    repetitions = fieldnames(myPhosphoData.(current_strain))
+    repetitions = fieldnames(myPhosphoData.(current_strain));
     
     % Loop over repetitions done for that strain
     for rep_idx = 1:numel(repetitions)
@@ -58,13 +62,17 @@ figure(1); clf;
 set(gca,'FontSize',20);
 LineHandlesForLegend = [];
 
+theLegendNames = unique(myPhosphoAuxiliary.myLegendNames, 'stable'); % b/c repetitions not in list of lines, get unique names.
+
 % Use same loop as above for plotting
 % Loop over strains contained by myPhosphoData
 strains = fieldnames(myPhosphoData)
 for str_idx = 1:numel(strains)
 
     current_strain = char(strains(str_idx));
-    repetitions = fieldnames(myPhosphoData.(current_strain))
+    repetitions = fieldnames(myPhosphoData.(current_strain));
+    
+    disp(['Now plotting ' current_strain ', or ' theLegendNames(str_idx)]);
     
     % Loop over repetitions done for that strain
     for rep_idx = 1:numel(repetitions)
@@ -86,8 +94,12 @@ for str_idx = 1:numel(strains)
     
 end
 
-theLegendNames = unique(myPhosphoAuxiliary.myLegendNames); % b/c repetitions not in list of lines, get unique names.
+% legend
 figure(1); legend(LineHandlesForLegend, theLegendNames,'Location','best');
+% labels
+title('Total colony length');
+xlabel('Time (min)');
+ylabel('Length ({\mu}m)');
 
 
 
