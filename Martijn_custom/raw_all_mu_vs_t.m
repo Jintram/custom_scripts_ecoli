@@ -8,11 +8,11 @@ alltimes = ...
     [schnitzcells.time];
 
 allmus = ...
-    [schnitzcells.muP11_all];
+    [schnitzcells.muP11_fitNew_all];
 
 % Scatterplot
 figure(1);
 clf();
-plot(alltimes,allmus,'x')
+plot(alltimes,allmus,'-x')
 xlabel('t')
 ylabel('\mu')

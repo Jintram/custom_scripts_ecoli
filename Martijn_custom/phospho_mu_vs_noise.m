@@ -1,11 +1,11 @@
-function myPhosphoData = phospho_mu_vs_noise(myPhosphoData,posname,posdate,groupname,ID,legendname)
+function myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,posname,posdate,groupname,ID,legendname)
 
 % Config settigns ---------------------------------------------------------
 MIN_NR_FRAMES = 20
 % -------------------------------------------------------------------------
 
 % loading
-p = DJK_initschnitz(posname,posdate,'e.coli.AMOLF','rootDir',myPhosphoData.myRootDir, 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');    
+p = DJK_initschnitz(posname,posdate,'e.coli.AMOLF','rootDir',myPhosphoAuxiliary.myRootDir, 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');    
 [p,schnitzcells] = DJK_compileSchnitzImproved_3colors(p,'quickMode',1);
 
 %s_all = DJK_selSchitzesToPlot(schnitzcells, 'P', @(x) 1); name_all = 'all';

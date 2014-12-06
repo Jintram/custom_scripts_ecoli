@@ -73,22 +73,22 @@ figure(fignumstart+3); legend(lines4, theLegendNames,'Location','best');
 % Process data
 
 % 732 data
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'pos1crop','2014-05-01','s732','r1','Wildtype');
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'pos4crop','2014_06_18','s732','r2','Wildtype');
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'pos2crop','2014_06_18','s732','r3','Wildtype');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos1crop','2014-05-01','s732','r1','Wildtype');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos4crop','2014_06_18','s732','r2','Wildtype');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos2crop','2014_06_18','s732','r3','Wildtype');
 
 % 733 data
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'pos1crop','2014-05-02','s733','r1','{fbp} mutant');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos1crop','2014-05-02','s733','r1','{fbp} mutant');
 
 % 734 data
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'pos1crop','2014-05-02','s734','r1','{fbp} mutant');
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'pos2crop','2014-05-02','s734','r2','{fbp} mutant');
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'pos4crop','2014-05-02','s734','r3','{fbp} mutant');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos1crop','2014-05-02','s734','r1','{fbp} mutant');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos2crop','2014-05-02','s734','r2','{fbp} mutant');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos4crop','2014-05-02','s734','r3','{fbp} mutant');
 
 % 735 data
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'pos8crop', '2014-05-02','s735','r1','{pykF}/{ppc} mutant');
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'pos2crop', '2014_06_22','s735','r2','{pykF}/{ppc} mutant');
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'pos3crop', '2014_06_22','s735','r3','{pykF}/{ppc} mutant');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos8crop', '2014-05-02','s735','r1','{pykF}/{ppc} mutant');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos2crop', '2014_06_22','s735','r2','{pykF}/{ppc} mutant');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos3crop', '2014_06_22','s735','r3','{pykF}/{ppc} mutant');
 
 % Create fit lines
 x_values = [0:0.01:2];
