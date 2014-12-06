@@ -37,17 +37,22 @@ if ~exist('myFolder')
     %myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-08_testicd\783\denser\';
     myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\467\1\';
 end
-myPCPrefix = 'BF_';
-myFPPrefix = 'GFP_';
+if ~exist('myPCPrefix') | ~exist('myFPPrefix')
+    myPCPrefix = 'BF_';
+    myFPPrefix = 'GFP_';
+    disp('% myPCPrefix and myFPPrefix set to default');
+end
+if ~exist('timeMargin')
+    timeMargin = 5/(24*60*60); % to determine accompanyning fluor img, 1st nr is seconds
+end
 ExportFilename = 'mydata';
 
 myTextSize=8;
 
 % margin to put into treshold value
 %tresholdMargin=1.0;
-myTresholdPercentile=90; % 97 for normal data, 90 for negcon
+myTresholdPercentile=80; % 97 for normal data, 90 for negcon
 minCellSize=100;
-timeMargin = 5/(24*60*60); % to determine accompanyning fluor img
 limMinRatio = .9; limMaxRatio = 3.0;
 limAbsoluteDifference=100;
 
@@ -75,8 +80,11 @@ for theFile=myFileListing'
     myFileName=theFile.name;
     
     % and pick the fluor files
-    if length(myFileName)>=length(myFPPrefix) % avoid obvious non-matches
-    if strcmp(myFileName(1:length(myFPPrefix)),myFPPrefix)
+    %if length(myFileName)>=length(myFPPrefix) % avoid obvious non-matches
+    %if strcmp(myFileName(1:length(myFPPrefix)),myFPPrefix)
+    myFileName, regexptranslate('wildcard',myFPPrefix)
+    regexp(myFileName, regexptranslate('wildcard',myFPPrefix))
+    if ~isempty(regexp(myFileName, regexptranslate('wildcard',myFPPrefix)))
         
         % admin
         ImagesAnalyzed=ImagesAnalyzed+1;
@@ -153,18 +161,28 @@ for theFile=myFileListing'
             myPhaseFileName=thePhaseFile.name;
 
             % again, select one with prefix
-            if length(myPhaseFileName)>=length(myPCPrefix)
-            if strcmp(myPhaseFileName(1:length(myPCPrefix)),myPCPrefix)
+            %if length(myPhaseFileName)>=length(myPCPrefix)
+            %if strcmp(myPhaseFileName(1:length(myPCPrefix)),myPCPrefix)
+            if ~isempty(regexp(myPhaseFileName, regexptranslate('wildcard',myPCPrefix)))
             % but now also about same time taken fluor image
-            if(theFile.datenum-thePhaseFile.datenum)<timeMargin
+            if ((theFile.datenum-thePhaseFile.datenum)<timeMargin) && ...
+                    ((theFile.datenum-thePhaseFile.datenum)>-timeMargin)
                 acceptedDifference=theFile.datenum-thePhaseFile.datenum
                 phasePath = [myFolder myPhaseFileName];
                 phaseImage = imread(phasePath);
                 % normalize image
                 phaseImage=double(phaseImage);
                 phaseImage=(phaseImage-min(phaseImage(:)))./(max(phaseImage(:))-min(phaseImage(:)));
-                PhaseOutlineImg = cat(3,phaseImage,phaseImage,phaseImage);        
                 % Also make on with red lines
+                % ==
+                % If dimensions don't match, resize outlineImg and
+                % recalculate outline
+                if ( length(phaseImage)/length(myImg) ) ~= 1
+                    resized_outlineImg = imresize(outlineImg, length(phaseImage)/length(myImg));
+                    [redCol,redRow]=find(resized_outlineImg);
+                end
+                % Make red border lines in phase image
+                PhaseOutlineImg = cat(3,phaseImage,phaseImage,phaseImage);                        
                     for idx=[1:length(redCol)]
                         PhaseOutlineImg(redCol(idx),redRow(idx),:)=[1,0,0];
                     end
@@ -172,7 +190,6 @@ for theFile=myFileListing'
                     %text(myTextSize,size(PhaseAndOutlineImg,2)-30,fluorPath,'Color','w','BackgroundColor','k')
                 break;
             end    
-            end
             end
                 
         end
@@ -265,7 +282,6 @@ for theFile=myFileListing'
         saveas(hFig,myFilePath)
                
     end
-    end   
 
 end
 
@@ -305,7 +321,8 @@ plot(mean(dirMeanMultipleSignalToNoise),1-spacing,['v' 'k'],'LineWidth',3)
 
 set(hFig, 'Units', 'pixels')
 
-infoText=['mean over imgs=' num2str(mean(dirMeanMultipleSignalToNoise)) ' +/- ' num2str(std(dirMeanMultipleSignalToNoise)) ' (std)'];
+infoText=['mean over imgs=' num2str(mean(dirMeanMultipleSignalToNoise)) ' +/- ' num2str(std(dirMeanMultipleSignalToNoise)) ' (std), tresh=' num2str(myTresholdPercentile) ' (percentile)'];
+
 
 ylim([1-spacing,1+spacing*(length(allMultipleSignalNoise))]);
 xlim([limMinRatio,limMaxRatio])
@@ -345,7 +362,7 @@ end
 plot(mean(dirMeanMultipleSignalMinusNoise),1-spacing,['v' 'k'],'LineWidth',3)
 set(hFig, 'Units', 'pixels')
 
-infoText=['mean over imgs=' num2str(mean(dirMeanMultipleSignalMinusNoise)) ' +/- ' num2str(std(dirStdMultipleSignalMinusNoise)) ' (std)'];
+infoText=['mean over imgs=' num2str(mean(dirMeanMultipleSignalMinusNoise)) ' +/- ' num2str(std(dirStdMultipleSignalMinusNoise)) ' (std), tresh=' num2str(myTresholdPercentile) ' (percentile)'];
 
 % set limits
 ylim([1-spacing,1+spacing*(length(allMultipleSignalMinusNoise))]);
