@@ -1,4 +1,8 @@
 function myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,posname,posdate,groupname,ID,legendname)
+% function myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,posname,posdate,groupname,ID,legendname)
+% 
+% Calculates the_means, the_stds and the_noises, and adds that to
+% myPhosphoData.
 
 % Config settigns ---------------------------------------------------------
 MIN_NR_FRAMES = 20
