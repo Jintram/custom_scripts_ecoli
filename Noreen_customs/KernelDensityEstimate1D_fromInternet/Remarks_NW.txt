@@ -1,0 +1,3 @@
+http://www.mathworks.com/matlabcentral/fileexchange/14034-kernel-density-estimator
+
+maltab file exchange id: #14034

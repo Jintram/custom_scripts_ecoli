@@ -1,11 +1,8 @@
-%mydir='D:\ExperimentalDataTodo\2012-04-13shading\flatfield1000ms\';
-%mydir='D:\ExperimentalDataTodo\2012-04-16fluoflatfield\cfp1000\';
-%mydir='D:\ExperimentalDataTodo\2013-02-28Shading\flat50ms\';
-mydir='D:\ExperimentalDataTodo\ShadingFlatfield\Flatfield_Micr2\2014-06-23\200ms_bin2\';
+mydir='D:\ExperimentalDataTodo\ShadingFlatfield\2014-11-11 Flatfield\Flatfield_050ms_bin1\';
 d=dir([mydir '*tif*']);
 %mydir='D:\ExperimentalDataTodo\Flatfield\Flatfieldprobwrong\';
 %d=dir([mydir '*100ms*tif*']);
-binning=2;
+binning=1;
 
 %get image size
 dummyimage=imread([mydir d(1).name]);

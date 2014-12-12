@@ -5,12 +5,12 @@
 % ------------------------
 
 % *** RAW SHADING IMAGES ******
-mydir='D:\ExperimentalDataTodo\ShadingFlatfield\Shading_Micr2\2014-06-23\mCherry_lowconc_20ms_onlytest\';
-d_gfp=dir([mydir '*MC*tif*']);
+mydir='D:\ExperimentalDataTodo\ShadingFlatfield\2014-11-11 Shading\YFP_050ms\';
+d_gfp=dir([mydir '*titl*tif*']);
 % *** LOAD FINAL FLATFIELD IMAGE (might adjust with  illum time) & REPLACE ******
 %load 'D:\SchnitzcellsCurrentVersion\Schnitzcells\fluo_correction_images\Correction_10MHz_GFP_2013_12_18' *flat* replace
 % **** WHICH SHADING IMAGES TO SELECT FOR AVERAGING ***
-chooseimages=[1:3];
+chooseimages=[1:10];
 
 % *** RENAME SHADING AND SAVE MANUALLY WITH FLATFIELD & REPLACE
 

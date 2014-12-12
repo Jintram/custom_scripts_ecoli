@@ -36,7 +36,8 @@ PLOTCONDVARCOV=1;
 close all
 % ***********
 
-schnitzUseName='schnitzcells_malt20120508pos2_full';  %schnitzcells selection
+schnitzUseName='schnitzcells_acetate20120620pos2_full';  %schnitzcells selection
+%schnitzUseName='schnitzcells';
 %schnitzUseName='schnitzcells2012_06_17_ASC631';  %schnitzcells selection
 %field1='dY5_len_smooth3_dt_subtr';    % production rates, maybe concentrations
 %field2='dC5_len_smooth3_dt_subtr';    % production rates, maybe concentrations
@@ -44,16 +45,16 @@ schnitzUseName='schnitzcells_malt20120508pos2_full';  %schnitzcells selection
 %field1='dY5_len_dt_subtr';  % production rates, maybe concentrations
 %field2='dC5_len_dt_subtr';  % production rates, maybe concentrations
 %field3='muP15_fitNew_subtr'; %growth rate!
-%field1='dY5_sum_dt_subtr';
-%field2='dC5_sum_dt_subtr';
-%field3='muP15_fitNew_subtr';
+%field1='dY5_sum_dt_cycCor';
+%field2='dC5_sum_dt_cycCor';
+%field3='muP11_fitNew_cycCor';
 
 field1='dC5_cycCor';  
 field2='dY5_cycCor';
 field3='muP15_fitNew_cycCor'; 
 
-%field1='dC5_sum_dt_s_cycCor';  
-%field2='dY5_sum_dt_s_cycCor';
+%field1='dR5_sum_dt_s_cycCor';  
+%field2='dG5_sum_dt_s_cycCor';
 %field3='muP15_fitNew_cycCor'; 
 %field1='dR5_sum_dt_s_cycCor';  
 %field2='dG5_sum_dt_s_cycCor';
@@ -81,11 +82,13 @@ eval(['schnitzUse=' schnitzUseName ';']);
 mymatrix=zeros(0,3); % field1 - field2 - field3 (mu) (can include weights here)
 
 % loop over all schnitzes
+disp('Make sure you have the wanted useForPlot settings!')
 for i=1:length(schnitzUse)
     s=schnitzUse(i);
     % use only schnitzes with useForPlot=1
-   % if ~existfield(s,'useForPlot') | s.useForPlot==1 %blubb
-    if s.useForPlot==1
+    if ~existfield(s,'useForPlot') | s.useForPlot==1 %blubb
+        
+   % if s.useForPlot==1
         % check if fields actually contain data (length>0)
         % Note: e.g. prod.rates and mu do not always have same array length
         % (rates can be 1 shorter for late data)
@@ -637,7 +640,7 @@ if PLOTCONDVARCOV
     %plot(MuVec,CondVar_f1minf2/mean(CondVar_f1minf2),'.-','Color',[0 0.8 1])
     plot(MuVec,CondVar_f1minf2,'.-','Color',[0 0.8 1])
     plot(MuVec,CondVar_Norm,'.-m')
-    legend('CondVar','CondVar normed <f1|mu><f2|mu>')
+    legend('CondVar (same as red line in prev. plot)','CondVar normed w average of bin: <f1|mu><f2|mu>')
     %title('Conditional Variance (Var(f1-f2|mu). Intr noise. Normed to mean=1')
     title('Conditional Variance (Var(f1-f2|mu). Intr noise. no norm')
     xlabel(['mu (binfrac:' num2str(SpecialMuBinCondValues)])

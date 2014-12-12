@@ -7,7 +7,7 @@
 % **NOTE: pay attention to when a backslash (\) is needed! ********
 
 % maindir: main experimental folder: \root\date\
-maindir='D:\ExperimentalDataTodo\2014-06-18xx\';
+maindir='\\biofysicasrv\Users2\Walker\Experiments\ElowitzExtrinsicNoise\2011-10-19\';
 % useCrop: decides about which position folders to use. if 'poscrop' folders
 % are to be usd: =1. if 'pos' folders: =0
 useCrop=1;
@@ -17,8 +17,9 @@ useCrop=1;
 % ** classical options: **
 % subfolder ='\images\';
 % subfolder ='\segmentation\png\';
-subfolder ='\analysis\schnitzcells\';
+ subfolder ='\analysis\schnitzcells\';
 % subfolder ='\analysis\fluor_r\RfromFluor\';
+%subfolder ='\analysis\fluor_g\g5\';
 
 % TOCOME: specify if only a subset of files (containing a certain string) 
 % from this folder should be copied into new folder
@@ -48,6 +49,7 @@ addPosName=1;
 % combinedFolder = 'AllPositions_LastSegmentationImage';
  combinedFolder = 'AllPositions_AverageTraces';
 % combinedFolder = 'AllPositions_AllFluoR6Images';
+% combinedFolder = 'AllPositions_LastFluoImages';
 
 % get all 'pos' folders (and files e.g. ('pos.STG')
 allposdir=dir([maindir 'pos*']);
@@ -101,16 +103,18 @@ for runpos=1:length(posfolders)
         end
     else
        filerun=length(subdirfiles);
-       if strcmp(subdirfiles(filerun).name,'.')==0 & strcmp(subdirfiles(filerun).name,'..')==0
-                if addPosName==1
-                    newCompletePathName = [ saveDir posfolders{runpos} '_' subdirfiles(filerun).name];
-                else
-                    newCompletePathName = [ saveDir subdirfiles(filerun).name];
-                end
-            copyfile([completePathSubfolder subdirfiles(filerun).name], newCompletePathName);
-            disp(['Copied file: ' subdirfiles(filerun).name])
-            end
-        end
+       if filerun>0
+           if strcmp(subdirfiles(filerun).name,'.')==0 & strcmp(subdirfiles(filerun).name,'..')==0
+                    if addPosName==1
+                        newCompletePathName = [ saveDir posfolders{runpos} '_' subdirfiles(filerun).name];
+                    else
+                        newCompletePathName = [ saveDir subdirfiles(filerun).name];
+                    end
+                copyfile([completePathSubfolder subdirfiles(filerun).name], newCompletePathName);
+                disp(['Copied file: ' subdirfiles(filerun).name])
+           end
+       end
+    end
    
 end
 

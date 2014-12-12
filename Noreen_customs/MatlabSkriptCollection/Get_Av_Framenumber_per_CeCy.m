@@ -4,8 +4,8 @@
 
 % if useForPlot is set, only cells which have =1 will be considered.
 
-myschnitzcells=s_rm_fitTime;
-myschnitzcellsname='s_rm_fitTime';
+myschnitzcells=schnitzcells;%s_rm_fitTime;
+myschnitzcellsname='schnitzcells';%'s_rm_fitTime';
 
 
 

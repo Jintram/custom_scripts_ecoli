@@ -1,3 +1,7 @@
+% IMPORTANT:
+% CHANGE THE #BINS, PERIODICITY, NOISE SUBTRACTION (CONC) BELOW WITHIN THE
+% SCRIPT
+
 %% RATES YFP CFP
 ph=[];
 yfp=[];
@@ -208,10 +212,10 @@ grid on
 
 % ***************  ADJUST ***************************
 % choose if abs value (normalized) or noise (mean subtracted) is used
-yfpconcuse=yfpconc;  %BLUBB!!
-cfpconcuse=cfpconc;
-%yfpconcuse=noiseyfpconc;
-%cfpconcuse=noisecfpconc;
+%yfpconcuse=yfpconc;  %BLUBB!!
+%cfpconcuse=cfpconc;
+yfpconcuse=noiseyfpconc;
+cfpconcuse=noisecfpconc;
 % ***************************************************
 
 %idx=find(frames<61 & frames>54); % choose framerange

@@ -60,7 +60,7 @@ ExcludeFirstStep=0;  % if=1, the step xjump must not occur at first datapoint (m
                      %  cell cannot yet have doubled genome at yfp position
                      %  + maturation time (only exception simultaneous
                      %  multiple replication forks at fast growth)
-MinMinutes=25;        % minimal amount of minutes after division which is 
+MinMinutes=0;        % minimal amount of minutes after division which is 
                      % admitted as gene dbl time (somewhat redundant to ExcludeFirstStep).
                      % Theoretically, the first ca 25min there is no
                      % YFP-dbl possible (single replication fork)
