@@ -7,7 +7,7 @@
 % **NOTE: pay attention to when a backslash (\) is needed! ********
 
 % maindir: main experimental folder: \root\date\
-maindir='\\biofysicasrv\Users2\Walker\Experiments\ElowitzExtrinsicNoise\2011-10-19\';
+maindir='D:\ExperimentalDataTodo\XX\';
 % useCrop: decides about which position folders to use. if 'poscrop' folders
 % are to be usd: =1. if 'pos' folders: =0
 useCrop=1;

@@ -4,7 +4,11 @@
 % of total covariance resp. variance
 % extr noise: Cov(C,Y|mu)= Cov(<C|mu>,<Y|mu>) + <Cov(C,Y|mu>) = explained + unexplained
 % intr noise: Var(C-Y)   = Var(<C-Y|mu>)      + <Var(C-Y|mu)> = explained + unexplained
-
+%
+% It's based on BINNING. Alternative function (which will be the prefered
+% method is NoiseDecomposition_viaKDE2.m (KDE method). Use binning to show
+% robustness to method.
+%
 % ************************************************************
 % This function is very similar to "ExtrNoise_ExplainedByMu.m" but there
 % are two differences:
@@ -32,9 +36,9 @@
 % ************************************************************************
 % 
 clear myschnitzname
- %myschnitzname='Maltose full 2012-05-08 pos2';  % Adjust
- myschnitzname='Maltose full 2012-04-24 pos5';  % Adjust
-% load(['\\biofysicasrv\Users2\Walker\ExtrinsicNoise\Data_Collection\Data\' myschnitzname '.mat']);
+ myschnitzname='Maltose full 2012-05-08 pos2';  % Adjust
+ %myschnitzname='Maltose constitutive 2014-11-13 pos6';  % Adjust
+ load(['\\biofysicasrv\Users2\Walker\ExtrinsicNoise\Data_Collection\Data\' myschnitzname '.mat']);
 %
 
 
@@ -49,8 +53,8 @@ clear myschnitzname
 PLOTMUHIST=0;   % mu histogram
 PLOTCONDVALUESEXTR=0;   % extr noise: <C|mu> vs mu plots (same for Y and Cov)
 PLOTCONDVALUESINTR=0;   % intr noise: <Y-C|mu> vs mu plots (same for Var)
-PLOTBINDEPENDENCE=1;    % explained fraction vs # bins used
-PLOTCONDVARCOV=0;       % BLUBB TO IMPROVE, see at end of file
+PLOTBINDEPENDENCE=0;    % explained fraction vs # bins used
+PLOTCONDVARCOV=0       % BLUBB TO IMPROVE, see at end of file
 %close all % (de)activate for new/overwriting figures
 
 % Data used [careful: in old version class was 'char' now it's 'double']
@@ -112,7 +116,7 @@ SpecialMuBinCondValues=[0.22]; %extract all conditional value arrays (e.g. <yfp|
 %NumberMuBins=[2:10 12:2:20 25:5:40 50:10:100 ceil(length(dY5_cycCor)/6) ceil(length(dY5_cycCor)/5) ...
 %    ceil(length(dY5_cycCor)/4) ceil(length(dY5_cycCor)/3) ceil(length(dY5_cycCor)/2) ceil(length(dY5_cycCor)/1)];%[5 10 15 20 25 30];    % # of bins for mu. centered around median of the bin.
                     % can be vector
-NumberMuBins=[2:20 23:3:100];%unique(ceil(length(field1)./[1:200 210:10:2000]));    % # of bins for mu. centered around median of the bin.
+NumberMuBins=15;%unique(ceil(length(field1)./[2:200 210:10:1000]));    % # of bins for mu. centered around median of the bin.
 SpecialNumberBinsCondValues=1600; %extract all conditional value arrays (e.g. <yfp|mu>) for specific # mu-bins
                 % into extra variables for better handling. This # bins has to be included in 'NumberMuBins'
 % *************************************************************************
@@ -799,10 +803,10 @@ clear  meanf1data meanf2data run xdata vardata covdata
 %clf; hold on;
 %set(gcf,'WindowStyle','docked')
 %plot(matBinDependence(:,2),matBinDependence(:,3),'.-' , 'LineWidth',2,'MarkerSize',15)
-%%xlim([0 40])
+%xlim([0 40])
 %xlabel('#bins')
 %ylabel('frac_explained','Interpreter','None');
-%%set(gca, 'XDir','reverse')
+% %set(gca, 'XDir','reverse')
 %yy=get(gca,'ylim');
 %if yy(2)>0  % for 'normal' data always the case
 %     set(gca,'ylim',[0 yy(2)]);
