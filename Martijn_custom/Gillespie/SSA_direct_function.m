@@ -1,45 +1,51 @@
-function X = SSA_direct_function(s,prop,x0,T_Array)
+function X = SSA_direct_function(stoichiometry,prop,speciesCounts0,probeTimeArray)
 %SSA_direct_function Calculates gillespie simulation.
 %   SSA_direct_function gives the trajectory X of reactions 
 %
-% Written by Johannes Keegstra
+% Written by Johannes Keegstra, adpated by Martijn Wehrens
 % 2015/02
 
-X=NaN(2,length(T_Array));
+% Prepare output vector
+X = NaN(2,length(probeTimeArray));
 
-%run loop
-t=0;
-x=x0;
-iii=1;
-while t<(max(T_Array))
+% Prepare initial state
+time = 0;
+speciesCounts = speciesCounts0;
+idx3 = 1;
+X(:,idx3) = speciesCounts0;
+
+% Simulation loop
+while time < (max(probeTimeArray))
     
-    w=prop(x);
+    % Calculate propensity matrix
+    propensityMatrix = prop(speciesCounts);
     
-    taumin=-log(rand(1,1))/sum(w); %the first reaction that occurs is a random variable.
-    ra=rand(1,1)*sum(w);
-    i=1;
-    while sum(w(1:i))<ra
-        i=i+1;
+    % Get time to first rxn by assuming k=sum_i(k_i), exponential fn
+    % Determine tau stochastically
+    taumin = -log(rand(1,1))/sum(propensityMatrix); 
+    
+    % Determine which reaction fires stochastically
+    randomnr = rand(1,1)*sum(propensityMatrix); 
+    rxnToFire=1;
+    while sum(propensityMatrix(1:rxnToFire)) < randomnr
+        rxnToFire=rxnToFire+1;
     end
     
-    X(:,1)=x;
-    
-    %if no reaction occurs, proceed to next time step.
-    if t>T_Array(iii);
-    iii=iii+1;
-    X(:,iii)=x;
-    
+    % If we landed in the next step, record and proceed
+    if time > probeTimeArray(idx3);
+        idx3=idx3+1;
+        X(:,idx3)=speciesCounts;
     end
+        
+    % Progress time
+    time=time+taumin;
     
-    
-    
-    
-    
-    t=t+taumin;
-    if t>(max(T_Array));
+    % If end of simulation not reached, update speciescounts according 
+    % sto
+    if time>(max(probeTimeArray));
           break
     else
-           x=x+s(:,i); %update reactions.
+           speciesCounts=speciesCounts+stoichiometry(:,rxnToFire); %update reactions.
     end
     
   
