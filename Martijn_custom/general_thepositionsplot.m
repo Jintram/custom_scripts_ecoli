@@ -1,9 +1,11 @@
 
 % obtain positions
+% ===
 
-% posiion file
+% position file
 %myFile = 'F:\A_Tans0_step1_incoming_not_backed_up\2014-01-31\positionlist_2014-01-31.pos';
 myFile = 'F:\A_Tans0_step1_incoming_not_backed_up\2014-01-23 - evening\positionlist_2014-01-23_evening.pos';
+%myFile = 'F:\A_Tans2_step4c_failed_entirely\2014-01-24 - morning\positionlist_2014-01-24_morning.pos'
 
 % read position file
 contents = fileread(myFile);
@@ -32,7 +34,8 @@ for i=1:numel(contents)
 end
 
 % make plot
-          
+% ===          
+
 figure, plot(xvalues,yvalues,'o','MarkerSize',7,'LineWidth',3);
 xlabel('X');
 ylabel('Y');
