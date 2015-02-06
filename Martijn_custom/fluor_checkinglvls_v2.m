@@ -29,6 +29,24 @@
 % mydata.png
 % mydata.xls
 % mydata_mic-img-X.jpg
+%
+% Running the file
+% ===
+% Simply set parameters:
+% Parameters that can be set externally
+% - myFolder
+% - manualLim
+% - myPCPrefix and myFPPrefix
+% - timeMargin
+%
+% And run: 
+% fluor_checkinglvls_v2
+%
+% TODOs/note:
+% - THE BACKGROUND VALUE IS DISTORTED BECAUSE I NORMALIZE THE IMAGE!
+% - This script does not perform corrections to the fluor images.
+
+disp('NOTE: Keep in mind fluor images are not corrected for lighting effects.')
 
 % Setting _________________________________________________________________
 % Make this setting such that it can be set before execution of the script.
@@ -62,10 +80,14 @@ myFileListing = dir(myFolder);
 multipleImgMin=[];
 multipleImgMax=[];
 
+dirMeanValues = [];
+
 dirMeanMultipleSignalToNoise = [];
 dirStdMultipleSignalToNoise = [];
 dirMeanMultipleSignalMinusNoise = [];
 dirStdMultipleSignalMinusNoise = [];
+
+dirMultipleSignal={};
 allMultipleSignalNoise = {};
 allMultipleSignalMinusNoise = {};
 
@@ -260,13 +282,16 @@ for theFile=myFileListing'
         meanMultipleSignalToNoise = mean(multipleMeansFluor./meanBackground)
         stdMultipleSignalToNoise = std(multipleMeansFluor./meanBackground)
         meanMultipleSignalMinusNoise = mean(multipleMeansFluor-meanBackground)
-        stdMultipleSignalMinusNoise = std(multipleMeansFluor-meanBackground)
+        stdMultipleSignalMinusNoise = std(multipleMeansFluor-meanBackground)        
         
         % store above in arrays w. entry for each img file
+        dirMultipleSignal{end+1}=multipleMeansFluor;
         dirMeanMultipleSignalToNoise(end+1) = meanMultipleSignalToNoise;
         dirStdMultipleSignalToNoise(end+1) = stdMultipleSignalToNoise;
         dirMeanMultipleSignalMinusNoise(end+1) = meanMultipleSignalMinusNoise;
         dirStdMultipleSignalMinusNoise(end+1) = stdMultipleSignalMinusNoise;
+        % also store mean lvls in array
+        dirMeanValues(end+1) = meanBackground;
         
         % raw data of cellular means (to make plot)
         allMultipleSignalNoise{end+1}=multipleSignalNoise;
@@ -383,7 +408,39 @@ set(hFig, 'Units', 'centimeters', 'PaperPosition', ...
 
 saveas(hFig,myFigFilePath);
 
-% Build database whilst working
+%% EXTRA PLOT XXXXXXXXXXXXX
+% ===
+
+figure(301), clf;
+set(gca,'FontSize',20);
+
+% Administration for plotting
+N = numel(dirMeanValues);
+dy = 1/(N+1);
+lefty = dy; righty = 1-dy;
+ylocs = linspace(lefty,righty,N);
+
+plot(dirMeanValues,ylocs,'ok','LineWidth',3);
+hold on;
+for i = 1:numel(dirMultipleSignal)
+    plot(dirMultipleSignal{i},ones(1,numel(dirMultipleSignal{i})).*ylocs(i),'xb');
+    plot(mean(dirMultipleSignal{i}),ylocs(i),'ob','LineWidth',3);
+end
+
+if exist('manualLim') % option to set ylim manually
+    myLim = manualLim;
+else
+    myLim = max(  cell2mat( [dirMultipleSignal] )  )*1.2;
+end
+xlim([0,myLim]);
+ylim([lefty-dy,righty+dy]);
+set(gca,'YTickLabel','');
+
+ylabel('Colonies')
+xlabel('Intensity')
+title(([myFolder sprintf('\n this should be done on non-normalized data!')]),'FontSize',13)
+
+%% Build database whilst working
 % ===
 
 if ~exist('databaseValuesMeanSignalNoise'), databaseValuesMeanSignalNoise=[] ,else
