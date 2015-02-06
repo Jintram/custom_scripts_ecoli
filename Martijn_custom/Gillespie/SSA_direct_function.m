@@ -1,4 +1,4 @@
-function X = SSA_direct_function(stoichiometry,prop,speciesCounts0,probeTimeArray)
+function X = SSA_direct_function(stoichiometry,prop,speciesCounts0,probeTimeArray,Nspecies)
 %SSA_direct_function Calculates gillespie simulation.
 %   SSA_direct_function gives the trajectory X of reactions 
 %
@@ -6,7 +6,7 @@ function X = SSA_direct_function(stoichiometry,prop,speciesCounts0,probeTimeArra
 % 2015/02
 
 % Prepare output vector
-X = NaN(2,length(probeTimeArray));
+X = NaN(Nspecies,length(probeTimeArray));
 
 % Prepare initial state
 time = 0;
@@ -14,8 +14,15 @@ speciesCounts = speciesCounts0;
 idx3 = 1;
 X(:,idx3) = speciesCounts0;
 
+% For message
+reverseStr='';
+% Performance
+maxprobeTimeArray = max(probeTimeArray);
+totalSteps = numel(probeTimeArray); % TODO
+% Track performance
+totalTimePassed = 0;
 % Simulation loop
-while time < (max(probeTimeArray))
+while time < maxprobeTimeArray
     
     % Calculate propensity matrix
     propensityMatrix = prop(speciesCounts);
@@ -33,8 +40,22 @@ while time < (max(probeTimeArray))
     
     % If we landed in the next step, record and proceed
     if time > probeTimeArray(idx3);
+        % track performance
+        timepassed = toc;
+        
+        % actual algorithm
         idx3=idx3+1;
         X(:,idx3)=speciesCounts;
+
+       % print progress to user
+       totalTimePassed = totalTimePassed + timepassed;
+       ETA = (totalTimePassed/idx3) * (totalSteps-idx3);
+       msg = sprintf('Processed time %.2f/%.2f s or %d/%d steps in %.2f minutes (ETA %.2f mins)', time, maxprobeTimeArray, idx3, totalSteps, totalTimePassed/60, ETA/60);
+       fprintf([reverseStr, msg]);
+       reverseStr = repmat(sprintf('\b'), 1, length(msg));
+       
+       % track performance
+       tic;
     end
         
     % Progress time
