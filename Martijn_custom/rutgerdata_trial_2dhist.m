@@ -89,3 +89,28 @@ figure(7)
 % surf(allpks)
 imagesc(xCenters,yCenters,allpks')
 
+% Watershedding?? 
+% ===
+% Doesn't work really. Perhaps using y-line localmax peaks as seeds would
+% improve it, but that'd take too much time.
+
+negMatrix = -myLogSurface+max(myLogSurface(:));
+L = watershed(negMatrix);
+
+figure(10)
+subplot(1,2,1)
+imshow(negMatrix)
+Lrgb = label2rgb(L);
+subplot(1,2,2)
+imshow(Lrgb)
+
+
+
+
+
+
+
+
+
+
+
