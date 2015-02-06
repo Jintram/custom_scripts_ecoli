@@ -5,14 +5,22 @@ function myPhosphoData = phospho_getbranchdata(myPhosphoData,strain,rep)
     p = myPhosphoData.(strain).(rep).p;
     s_all = myPhosphoData.(strain).(rep).s_all;
 
+    if isfield(s_all,'mu11_fitNew_all')
+        myPhosphoData.(strain).(rep).theMuField = 'mu11_fitNew_all';
+    elseif isfield(s_all,'muP11_all')
+        myPhosphoData.(strain).(rep).theMuField = 'muP11_all'
+    else
+        disp('This is a problem, myPhosphoData, error #1');
+    end
+    
     % note that old data has field 'frames' instead of 'frame_nrs'
     if isfield(s_all,'frames')
-        myPhosphoData.(strain).(rep).branchData = DJK_getBranches(p,s_all,'dataFields',{'time','muP11_all','length_fitNew','frames'});
+        myPhosphoData.(strain).(rep).branchData = DJK_getBranches(p,s_all,'dataFields',{'time',myPhosphoData.(strain).(rep).theMuField,'length_fitNew','frames'});
         for idx = 1:length(myPhosphoData.(strain).(rep).branchData)
             myPhosphoData.(strain).(rep).branchData(idx).frame_nrs = myPhosphoData.(strain).(rep).branchData.frames;
         end
     else
-        myPhosphoData.(strain).(rep).branchData = DJK_getBranches(p,s_all,'dataFields',{'time','muP11_all','length_fitNew','frame_nrs'});
+        myPhosphoData.(strain).(rep).branchData = DJK_getBranches(p,s_all,'dataFields',{'time',myPhosphoData.(strain).(rep).theMuField,'length_fitNew','frame_nrs'});
     end
     
     %{

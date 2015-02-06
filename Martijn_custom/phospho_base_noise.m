@@ -28,6 +28,7 @@ phospho_load_all_data % for convenience: edit phospho_load_all_data
 
 
 %% Plot mean, std.dev. and noise over time ________________________________
+% Per colony
 divbymean = 1;
 
 nrpositions = 3;
@@ -38,26 +39,28 @@ lines1=[];lines2=[];lines3=[]; lines4=[];% stores line handles for legends
 
 % Plot all 
 % 732___
-[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s732').('r1').xvalues,myPhosphoData.('s732').('r1').yvalues,fignumstart,preferredcolors(1,:),1,divbymean,'r1');
+% (Different plots are made in the sliding_window_stds_plot function.)
+[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s732').('r1').xvalues,myPhosphoData.('s732').('r1').yvalues,fignumstart,somemarkers(1),preferredcolors(1,:),1,divbymean,'r1');
 lines1 = [lines1 lgh1]; lines2 = [lines2 lgh2]; lines3 = [lines3 lgh3]; lines4 = [lines4 lgh4]; % add first line to list
-[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s732').('r2').xvalues,myPhosphoData.('s732').('r2').yvalues,fignumstart,preferredcolors(1,:),1,divbymean,'r2');
-[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s732').('r3').xvalues,myPhosphoData.('s732').('r3').yvalues,fignumstart,preferredcolors(1,:),1,divbymean,'r3');
+[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s732').('r2').xvalues,myPhosphoData.('s732').('r2').yvalues,fignumstart,somemarkers(1),preferredcolors(1,:),1,divbymean,'r2');
+[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s732').('r3').xvalues,myPhosphoData.('s732').('r3').yvalues,fignumstart,somemarkers(1),preferredcolors(1,:),1,divbymean,'r3');
 
 % Data on other mutant (733)
-[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s733').('r1').xvalues,myPhosphoData.('s733').('r1').yvalues,fignumstart,preferredcolors(2,:),1,divbymean,'r1');
+[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s733').('r1').xvalues,myPhosphoData.('s733').('r1').yvalues,fignumstart,somemarkers(2),preferredcolors(2,:),1,divbymean,'r1');
 lines1 = [lines1 lgh1]; lines2 = [lines2 lgh2]; lines3 = [lines3 lgh3]; lines4 = [lines4 lgh4]; % add first line to list
+[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s733').('r2').xvalues,myPhosphoData.('s733').('r2').yvalues,fignumstart,somemarkers(2),preferredcolors(2,:),1,divbymean,'r2');
 
 % 734___
-[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s734').('r1').xvalues,myPhosphoData.('s734').('r1').yvalues,fignumstart,preferredcolors(3,:),1,divbymean,'r1');
+[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s734').('r1').xvalues,myPhosphoData.('s734').('r1').yvalues,fignumstart,somemarkers(3),preferredcolors(3,:),1,divbymean,'r1');
 lines1 = [lines1 lgh1]; lines2 = [lines2 lgh2]; lines3 = [lines3 lgh3]; lines4 = [lines4 lgh4]; % add first line to list
-[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s734').('r2').xvalues,myPhosphoData.('s734').('r2').yvalues,fignumstart,preferredcolors(3,:),1,divbymean,'r2');
-[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s734').('r3').xvalues,myPhosphoData.('s734').('r3').yvalues,fignumstart,preferredcolors(3,:),1,divbymean,'r3');
+[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s734').('r2').xvalues,myPhosphoData.('s734').('r2').yvalues,fignumstart,somemarkers(3),preferredcolors(3,:),1,divbymean,'r2');
+[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s734').('r3').xvalues,myPhosphoData.('s734').('r3').yvalues,fignumstart,somemarkers(3),preferredcolors(3,:),1,divbymean,'r3');
 
 % 735___
-[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s735').('r1').xvalues,myPhosphoData.('s735').('r1').yvalues,fignumstart,preferredcolors(4,:),1,divbymean,'r1');
+[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s735').('r1').xvalues,myPhosphoData.('s735').('r1').yvalues,fignumstart,somemarkers(4),preferredcolors(4,:),1,divbymean,'r1');
 lines1 = [lines1 lgh1]; lines2 = [lines2 lgh2]; lines3 = [lines3 lgh3]; lines4 = [lines4 lgh4]; % add first line to list
-[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s735').('r2').xvalues,myPhosphoData.('s735').('r2').yvalues,fignumstart,preferredcolors(4,:),1,divbymean,'r2');
-[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s735').('r3').xvalues,myPhosphoData.('s735').('r3').yvalues,fignumstart,preferredcolors(4,:),1,divbymean,'r3');
+[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s735').('r2').xvalues,myPhosphoData.('s735').('r2').yvalues,fignumstart,somemarkers(4),preferredcolors(4,:),1,divbymean,'r2');
+[lgh1,lgh2,lgh3,lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,myPhosphoData.('s735').('r3').xvalues,myPhosphoData.('s735').('r3').yvalues,fignumstart,somemarkers(4),preferredcolors(4,:),1,divbymean,'r3');
 
 
 % add legend
@@ -65,8 +68,10 @@ theLegendNames = unique(myPhosphoAuxiliary.myLegendNames,'stable'); % b/c repeti
 figure(fignumstart); legend(lines1, theLegendNames,'Location','best');
 figure(fignumstart+1); legend(lines2, theLegendNames,'Location','best');
 figure(fignumstart+2); legend(lines3, theLegendNames,'Location','best');
-figure(fignumstart+3); legend(lines4, theLegendNames,'Location','best');
+figure(fignumstart+3); legend(lines4, theLegendNames,'Location','NorthEast');
 
+% Some markup for "article" writing course
+figure(fignumstart+3), xlim([0.3 1.2]), ylim([0 .7]), 
 
 %% Create (mu,noise) plot with Schnitzes as datapoints ____________________
 
@@ -76,93 +81,99 @@ figure(fignumstart+3); legend(lines4, theLegendNames,'Location','best');
 % phospho_mu_vs_noise shouldn't need to require anything else but
 % myPhosphoData, myPhosphoAuxiliary and strain and repetition.
 
-% 732 data
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos1crop','2014-05-01','s732','r1','Wildtype');
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos4crop','2014_06_18','s732','r2','Wildtype');
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos2crop','2014_06_18','s732','r3','Wildtype');
+% 732 data (,'Wildtype')
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'s732','r1');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'s732','r2');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'s732','r3');
 
-% 733 data
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos1crop','2014-05-02','s733','r1','{fbp} mutant');
+% 733 data (pykF)
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'s733','r1');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'s733','r2');
 
-% 734 data
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos1crop','2014-05-02','s734','r1','{fbp} mutant');
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos2crop','2014-05-02','s734','r2','{fbp} mutant');
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos4crop','2014-05-02','s734','r3','{fbp} mutant');
+% 734 data (fbp)
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'s734','r1');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'s734','r2');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'s734','r3');
 
-% 735 data
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos8crop', '2014-05-02','s735','r1','{pykF}/{ppc} mutant');
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos2crop', '2014_06_22','s735','r2','{pykF}/{ppc} mutant');
-myPhosphoData = phospho_mu_vs_noise(myPhosphoData,myPhosphoAuxiliary,'pos3crop', '2014_06_22','s735','r3','{pykF}/{ppc} mutant');
+% 735 data (pykF/ppc)
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'s735','r1');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'s735','r2');
+myPhosphoData = phospho_mu_vs_noise(myPhosphoData,'s735','r3');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Note that here we need to inspect trend INSIDE colonies, so we cannot
+% group colonies together!
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Create fit lines
-x_values = [0:0.01:2];
+x_values = [0:0.2:2];
 % 732
-all_means_732 = [myPhosphoData.('s732').('r1').the_means,myPhosphoData.('s732').('r2').the_means,myPhosphoData.('s732').('r3').the_means];
-all_stds_732 = [myPhosphoData.('s732').('r1').the_stds,myPhosphoData.('s732').('r2').the_stds,myPhosphoData.('s732').('r3').the_stds];
-all_noises_732 = [myPhosphoData.('s732').('r1').the_noises,myPhosphoData.('s732').('r2').the_noises,myPhosphoData.('s732').('r3').the_noises];
-std_fitCoef1_732 = polyfit(all_means_732,all_noises_732,1);
+std_fitCoef1_732 = polyfit(myPhosphoData.('s732').('r1').the_means,myPhosphoData.('s732').('r1').the_noises,1);
 std_fitted_732 = std_fitCoef1_732(1)*x_values + std_fitCoef1_732(2);
 % 733
-all_means_733 = [myPhosphoData.('s733').('r1').the_means];
-all_stds_733 = [myPhosphoData.('s733').('r1').the_stds];
-all_noises_733 = [myPhosphoData.('s733').('r1').the_noises];
-std_fitCoef1_733 = polyfit(all_means_733,all_noises_733,1);
+std_fitCoef1_733 = polyfit(myPhosphoData.('s733').('r1').the_means,myPhosphoData.('s733').('r1').the_noises,1);
 std_fitted_733 = std_fitCoef1_733(1)*x_values + std_fitCoef1_733(2);
 % 734
-all_means_734 = [myPhosphoData.('s734').('r1').the_means,myPhosphoData.('s734').('r2').the_means,myPhosphoData.('s734').('r3').the_means];
-all_stds_734 = [myPhosphoData.('s734').('r1').the_stds,myPhosphoData.('s734').('r2').the_stds,myPhosphoData.('s734').('r3').the_stds];
-all_noises_734 = [myPhosphoData.('s734').('r1').the_noises,myPhosphoData.('s734').('r2').the_noises,myPhosphoData.('s734').('r3').the_noises];
-std_fitCoef1_734 = polyfit(all_means_734,all_noises_734,1);
+std_fitCoef1_734 = polyfit(myPhosphoData.('s734').('r1').the_means,myPhosphoData.('s734').('r1').the_noises,1);
 std_fitted_734 = std_fitCoef1_734(1)*x_values + std_fitCoef1_734(2);
 % 735
-all_means_735 = [myPhosphoData.('s735').('r1').the_means,myPhosphoData.('s735').('r2').the_means,myPhosphoData.('s735').('r3').the_means];
-all_stds_735 = [myPhosphoData.('s735').('r1').the_stds,myPhosphoData.('s735').('r2').the_stds,myPhosphoData.('s735').('r3').the_stds];
-all_noises_735 = [myPhosphoData.('s735').('r1').the_noises,myPhosphoData.('s735').('r2').the_noises,myPhosphoData.('s735').('r3').the_noises];
-std_fitCoef1_735 = polyfit(all_means_735,all_noises_735,1);
+std_fitCoef1_735 = polyfit(myPhosphoData.('s735').('r1').the_means,myPhosphoData.('s735').('r1').the_noises,1);
 std_fitted_735 = std_fitCoef1_735(1)*x_values + std_fitCoef1_735(2);
 % Overall fit
+%{
 all_means = [all_means_732,all_means_734,all_means_735];
 all_noises = [all_noises_732,all_noises_734,all_noises_735];
 std_fitCoef1_all = polyfit(all_means,all_noises,1);
 std_fitted_all = std_fitCoef1_all(1)*x_values + std_fitCoef1_all(2);
+%}
 
 
 % Plot data
 
 nrpositions = 3;
 mymap = colorGray(nrpositions);
-figure(5); clf; hold on;
+h = figure(5); clf; hold on;
+set(h, 'Position', [100, 100, 800+100, 600+100])
 set(gca,'FontSize',20);
-title('Growth speed vs. noise (1 point = 1 ''individual'')');
+%title('Growth speed vs. noise (1 point = 1 ''individual'')');
 xlabel('\mu (doublings/hr)');
-ylabel('std. dev. / mean');
+ylabel('Noise'); % == std. dev. / mean
 %axis([0 2 0 2])
 lines4=[];
 
 % Plot all 
 % 732
-lgh4 = plot(all_means_732,all_noises_732,'o','color',colorAmolfBlue)
+plot(myPhosphoData.('s732').('r1').the_means,myPhosphoData.('s732').('r1').the_noises,'.','color',preferredcolors(1,:),'MarkerSize',7)
+lgh4 = plot(x_values,std_fitted_732,'--','LineWidth',4,'color',preferredcolors(1,:),'Marker',somemarkers(1)); % fit line
 lines4 = [lines4 lgh4];  % legend line
-plot(x_values,std_fitted_732,'-','LineWidth',2,'color',colorAmolfBlue);
 % 733
-lgh4 = plot(all_means_733,all_noises_733,'o','color',colorAmolfYellow)
+plot(myPhosphoData.('s733').('r1').the_means,myPhosphoData.('s733').('r1').the_noises,'.','color',preferredcolors(2,:),'MarkerSize',7)
+lgh4 = plot(x_values,std_fitted_733,'--','LineWidth',4,'color',preferredcolors(2,:),'Marker',somemarkers(2)); % fit line
 lines4 = [lines4 lgh4]; % legend line
-plot(x_values,std_fitted_733,'-','LineWidth',2,'color',colorAmolfYellow);
 % 734
-lgh4 = plot(all_means_734,all_noises_734,'o','color',colorAmolfYellow)
+plot(myPhosphoData.('s734').('r1').the_means,myPhosphoData.('s734').('r1').the_noises,'.','color',preferredcolors(3,:),'MarkerSize',7)
+lgh4 = plot(x_values,std_fitted_734,'--','LineWidth',4,'color',preferredcolors(3,:),'Marker',somemarkers(3)); % fit line
 lines4 = [lines4 lgh4]; % legend line
-plot(x_values,std_fitted_734,'-','LineWidth',2,'color',colorAmolfYellow);
 % 735
-lgh4 = plot(all_means_735,all_noises_735,'o','color',colorAmolfDarkGreen)
+plot(myPhosphoData.('s735').('r1').the_means,myPhosphoData.('s735').('r1').the_noises,'.','color',preferredcolors(4,:),'MarkerSize',7)
+lgh4 = plot(x_values,std_fitted_735,'--','LineWidth',4,'color',preferredcolors(4,:),'Marker',somemarkers(4)); % fit line
 lines4 = [lines4 lgh4]; % legend line
-plot(x_values,std_fitted_735,'-','LineWidth',2,'color',colorAmolfDarkGreen);
+
+% edit limits 
+%[all_means_732 all_means_733 all_means_734 all_means_735]
 
 % Overall fit
-plot(x_values,std_fitted_all,'-','LineWidth',2,'color','k');
+%plot(x_values,std_fitted_all,'--','LineWidth',4,'color',[.5 .5 .5]);
 
 % add legend
 theLegendNames = unique(myPhosphoAuxiliary.myLegendNames, 'stable'); % b/c repetitions not in list of lines, get unique names.
-figure(4); legend(lines4, theLegendNames,'Location','best');
+figure(5); legend(lines4, theLegendNames,'Location','best');
+
+h = findobj(gca,'Type','line')
+x=get(h,'Xdata'),allx=x{:}
+y=get(h,'Ydata'),ally=y{:}
+xlim([0 max(allx)] )
+ylim([0 max(ally)*1.05])
 
 % Plot stds
 % ===
@@ -174,7 +185,7 @@ nrpositions = 3;
 mymap = colorGray(nrpositions);
 figure(fignr); clf; hold on;
 set(gca,'FontSize',20);
-title('Growth speed vs. noise (1 point = 1 ''individual'')');
+%title('Growth speed vs. noise (1 point = 1 ''individual'')');
 xlabel('\mu (doublings/hr)');
 ylabel('std. dev.');
 %axis([0 2 0 2])

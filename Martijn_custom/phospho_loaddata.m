@@ -28,15 +28,15 @@ function [myPhosphoData, myPhosphoAuxiliary] = phospho_loaddata(myPhosphoData,my
     
     % 
     if isfield(s_all,'muP11_all')
-        mymufield = 'muP11_all'
+         myPhosphoData.(groupname).(ID).muFieldName = 'muP11_all'
     elseif isfield(s_all,'muP11_fitNew_all')
-        mymufield = 'muP11_fitNew_all'
+         myPhosphoData.(groupname).(ID).muFieldName = 'muP11_fitNew_all'
     else
         disp('Error!')
     end
         
     [myPhosphoData.(groupname).(ID).xvalues, myPhosphoData.(groupname).(ID).yvalues] = ...
-        DJK_plot_scatterColor(p, s_all, mymufield, 'time', 'gen', 'ylim', [0 4], 'selectionName', name_all, 'plotRegression', 0, 'onScreen', 0);
+        DJK_plot_scatterColor(p, s_all,  myPhosphoData.(groupname).(ID).muFieldName, 'time', 'gen', 'ylim', [0 4], 'selectionName', name_all, 'plotRegression', 0, 'onScreen', 0);
 
     myPhosphoAuxiliary.myLegendNames = [myPhosphoAuxiliary.myLegendNames, legendname];
     
