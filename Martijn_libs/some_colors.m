@@ -7,6 +7,7 @@ colorAmolfDarkGreen = [0/255 181/255 60/255];
 colorAmolfYellow = [218/255 242/255 0/255];
 
 mycolors = ['ymcrgbwk'];
+mycolors = [mycolors mycolors mycolors mycolors mycolors]; % expand in ugly way
 
 % from premeditated colorscheme (colorlovers.com):
 % http://www.colourlovers.com/palette/394589/premeditated
@@ -22,8 +23,13 @@ hypothesis = [228,231,0]./255; % inconvenient yellow
 cumulus_nimbus = [12,84,207]./255;
 medical_red = [232,0,0]./255;
 
-preferredcolors = [colorAmolfBlue; colorAmolfDarkGreen; seduction; heroes; medical_red];
+preferredcolors = [[0 0 0]; colorAmolfBlue; colorAmolfDarkGreen; seduction; heroes; medical_red];
 
 
 % some markers
-somemarkers = ['os^x*'];
+somemarkers = ['os^v*x'];
+
+
+
+
+

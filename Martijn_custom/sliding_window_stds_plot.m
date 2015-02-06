@@ -1,4 +1,4 @@
-function [lgh1, lgh2, lgh3, lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,datax,datay,fignumstart,mylinecolor,showplots,divbymean,ID)
+function [lgh1, lgh2, lgh3, lgh4] = sliding_window_stds_plot(myPhosphoData,myPhosphoAuxiliary,datax,datay,fignumstart, mymarker, mylinecolor,showplots,divbymean,ID)
     % Set nrybins and nrtbins in this function!
     %
     % lgh1, lgh2, lgh3 are line handles, which can be used to make a
@@ -67,8 +67,9 @@ function [lgh1, lgh2, lgh3, lgh4] = sliding_window_stds_plot(myPhosphoData,myPho
     % ===
     
     figure(fignumstart+3); 
+    set(fignumstart+3, 'Position', [100 100 800+100 600+100]);
     hold on;
-    lgh4 = plot(means,stds,myPhosphoAuxiliary.markers.(ID),'LineWidth',3,'color',mylinecolor);    
+    lgh4 = plot(means,stds,mymarker,'LineWidth',3,'color',mylinecolor,'MarkerSize',15);    
     %plot(x_values,stdmean_fitted,'-','LineWidth',3,'color','k');
     
     axis([0,2,0,2])
@@ -76,11 +77,11 @@ function [lgh1, lgh2, lgh3, lgh4] = sliding_window_stds_plot(myPhosphoData,myPho
     set(gca,'FontSize',20);
     xlabel('Growth speed (dlb/hr)');    
     if divbymean
-        ylabel(['Standard deviation / mean']);    
-        title('Growth speed vs noise');
+        ylabel(['Noise']);    
+        %title('Growth speed vs noise');
     else
         ylabel(['Standard deviation']);    
-        title('Growth speed vs std. dev.');
+        %title('Growth speed vs std. dev.');
     end;
     
 
