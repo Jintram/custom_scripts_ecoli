@@ -20,7 +20,7 @@ reverseStr='';
 maxprobeTimeArray = max(probeTimeArray);
 totalSteps = numel(probeTimeArray); % TODO
 % Track performance
-totalTimePassed = 0;
+totalTimePassed = 0; tic;
 % Simulation loop
 while time < maxprobeTimeArray
     
