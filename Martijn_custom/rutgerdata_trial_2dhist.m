@@ -1,6 +1,9 @@
 
 % MW 2015/01
 
+load('D:\Local_Playground\RR_asymmetry_pattern_all.mat');
+data = A;
+
 % PARAMETER SETTINGS
 % ==
 Nbins=30;
@@ -104,13 +107,50 @@ Lrgb = label2rgb(L);
 subplot(1,2,2)
 imshow(Lrgb)
 
+%% Kernel density estimation
+SMOOTHING = 20;
 
+figure; clf;
+[bandwidth,density,X,Y]=kde2d(A);
+mydensity=density;
+%{
+for i=[1:10]
+    mydensity = log(mydensity+1);
+end
+%}
+contour(X,Y,mydensity);
+%colormap hot, hold on, alpha(.8)
+%set(gca, 'color', 'blue');
+%plot(data(:,1),data(:,2),'w.','MarkerSize',5)
 
+x1=X(1,:);
+y1=Y(:,1)';
 
+% find peaks in y-direction (doesn't really work for KDE)
+%==
+allpks=zeros(size(mydensity)); 
+for i=1:size(mydensity,1)
+    % Pick slice in y-direction
+    slice=mydensity(:,i);
+    % Smooth it
+    smoothedslice = smooth(slice,SMOOTHING);
+    % Plot it
+    %figure(6), hold on, plot(smoothedslice)
+    
+    % find peaks, put them in allpeaks matrix (holds locations peaks)
+    % 1 = peak location
+    [currentpks,currentlocs] = findpeaks(smoothedslice);
+    currentPeaks = zeros(size(mydensity,2),1);
+    currentPeaks(currentlocs)=1;
+    allpks(i,:) = currentPeaks;
+end
 
+% Plot peaks that were found
+figure
+% surf(allpks)
+imagesc(x1,y1,allpks')
 
-
-
+figure, plot(smooth(mydensity(:,150),20));
 
 
 
