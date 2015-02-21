@@ -36,9 +36,9 @@ end
 % parents.
 % First pick some colours for the young guns:
 nrYoungGuns = numel(youngSchnitzes);
-YoungGunColors = distinguishable_colors(nrYoungGuns);
+YoungGunColors = distinguishable_colors(nrYoungGuns, [0,0,0]);
 % Now label each schnitz for its relatedness to the final offspring
-IncestColor = cell(size(schnitzcells));
+IncestColor = zeros(size(schnitzcells,2),3);
 for i = 1:numel(YoungestOffspringForSchnitz)   
     % only create a color for it when a youngest offspring has been
     % determined
@@ -52,9 +52,9 @@ for i = 1:numel(YoungestOffspringForSchnitz)
     % Get all colors of the ancestry
     allYoungColors = YoungGunColors(colorIdx,:);
     if size(allYoungColors,1) > 1        
-        IncestColor{i} = mean(allYoungColors);
+        IncestColor(i,:) = mean(allYoungColors);
     else
-        IncestColor{i} = allYoungColors;
+        IncestColor(i,:) = allYoungColors;
     end;
 end
 
@@ -69,24 +69,40 @@ for fr = myRange
     
   % load the seg file (contains segmented and phase img)
   name= [p.segmentationDir,p.movieName,'seg',str3(fr)];
-  load(name);
+  load(name);        
+   
+  % Get some info on this frame
+  % ===
+  [theSchnitzes,cellTimePoints,cellLengths,timemin,timemax,lengthmin,lengthmax,mapIndexes] = ...
+      givemeschnitzinfoforframe(p, schnitzcells, fr);
   
-  % 
-  p.showPerim = 1;
-  outim = PN_imshowlabel(p, Lc,0,0,0,'phaseImage',phsub); % note i'm feeding the same img as "previous" img
+  % create a colormap for this frame
+  % this means we need to find out for each shcnitz the number by which it
+  % is known in this frame.
+  myCustomColorMap = ones(size(schnitzcells,2)+1,3);
+  myCustomColorMap(1,:) = [0,0,0]; % note that way this works is that the 
+                                   % value 0 is mapped to the first element
+  for i = 1:numel(mapIndexes)
+      myCustomColorMap(mapIndexes(i)+1,:) = IncestColor(theSchnitzes(i),:);
+  end
   
+  mapIndexes
+    
+  % make image of cells
+  %p.showPerim = 1;
+  outim = PN_imshowlabel(p, Lc,0,0,0,'customColors',myCustomColorMap);%,'phaseImage',); % note i'm feeding the same img as "previous" img
   % crop img
   %outim = imcrop(outim, [395   225   650   650]);
   
+  % Plot image of cells and length plot
+  % ===
+  
+  %  image of cells
   h=figure(1), subplottight(1,2,1)
   imshow(outim,[])
   text(20,20,['frame ' sprintf('%05d', fr)],'Color','k','FontWeight','bold','BackgroundColor','white');  
   
-  % Now also plot length
-  % ===
-  
-  [theSchnitzes,cellTimePoints,cellLengths,timemin,timemax,lengthmin,lengthmax] =  [theSchnitzes,cellTimePoints,cellLengths,timemin,timemax,lengthmin,lengthmax] =  givemeschnitzinfoforframe(p, schnitzcells, fr);
-  
+  % their lengths in a plot
   subplot(1,2,2), hold on 
   for j = 1:numel(theSchnitzes)
       
@@ -99,6 +115,8 @@ for fr = myRange
   title('Cell lengths','FontSize',15)
   xlabel('Frame number','FontSize',15)
   ylabel('Cell length ({\mu}m)','FontSize',15)
+  
+  
   
   saveas(h, ['D:\Local_Playground\mymovietest\movietest_lengths_' sprintf('%05d',fr) '.jpg']);
   

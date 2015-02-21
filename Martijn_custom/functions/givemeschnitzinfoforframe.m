@@ -1,10 +1,25 @@
 
-function [theSchnitzes,cellTimePoints,cellLengths,timemin,timemax,lengthmin,lengthmax] =  givemeschnitzinfoforframe(p, schnitzcells, fr)
-% function [cellTimePoints,cellLengths] =  givemelengthsforframe(p, schnitzcells, fr)
+function [theSchnitzes,cellTimePoints,cellLengths,timemin,timemax,lengthmin,lengthmax,mapIndexes] =  givemeschnitzinfoforframe(p, schnitzcells, fr)
+% function [theSchnitzes,cellTimePoints,cellLengths,timemin,timemax,lengthmin,lengthmax] =  givemeschnitzinfoforframe(p, schnitzcells, fr)
+%
 % Returns [time, lengths] of all schnitzes in the given frame, at the
 % time of that frame.
+% INPUT:
+% p                 our standard input parameter
+% schnitzcells      our standard schnitz datastruct
+% fr                framenumber you're interested in
+%
+% OUTPUT
+% theSchnitzes      schnitzes that are member of this frame
+% cellTimePoints    the timepoints at which the different found schnitzes live
+% cellLengths       idem for lenghts
+% timemin           min value of cellTimePoints
+% timemax           max ""
+% lengthmin         min value of cellLengths
+% lengthmax         max ""
+% mapIndexes        the indexes of the schnitzes in the current frame
 
-cellTimePoints=[]; cellLengths=[]; theSchnitzes=[];
+cellTimePoints=[]; cellLengths=[]; theSchnitzes=[]; mapIndexes=[];
 for i = 1:numel(schnitzcells)
     
     % backwards compatibility
@@ -21,6 +36,7 @@ for i = 1:numel(schnitzcells)
         cellTimePoints(end+1) = schnitzcells(i).time(hit);
         cellLengths(end+1)    = schnitzcells(i).length_fitNew(hit); % check whether this is correct length
         theSchnitzes(end+1)   = i;
+        mapIndexes(end+1)     = schnitzcells(i).cellno(hit);
     end
     
     % Note that this code is redundant:
