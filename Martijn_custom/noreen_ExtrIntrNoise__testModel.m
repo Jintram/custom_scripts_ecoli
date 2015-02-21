@@ -4,7 +4,7 @@
 % noise sources working different observables, some observables sharing
 % noise sources.
 
-N = 3512
+N = 999999
 
 % There are 5 noise sources
 amplitudeMu     = 2; % editable parameters
@@ -62,8 +62,8 @@ ylabel('Fluor C')
 %RmuC = corr(observableMu,observableC)
 
 % Slopes:
-rMuY = corr(observableMu,observableY) / (std(observableMu)*std(observableY))
-rMuC = corr(observableMu,observableC) / (std(observableMu)*std(observableC))
+rMuY = corr(observableMu,observableY) % corr automatically normalizes by (std(observableMu)*std(observableY))
+rMuC = corr(observableMu,observableC) % corr automatically normalizes by (std(observableMu)*std(observableC))
 
 % And theoretically:
 theoRMuY = noiseMuYCGainY / noiseMuYCGainMu
