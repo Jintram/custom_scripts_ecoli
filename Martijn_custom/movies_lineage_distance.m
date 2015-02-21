@@ -10,6 +10,8 @@ p = DJK_initschnitz('pos8crop','2014-05-01','e.coli.AMOLF','rootDir','F:\A_Tans1
 % For plotting lengths
 [p,schnitzcells] = DJK_compileSchnitzImproved_3colors(p,'quickMode',1);
 
+% THIS CODE DOES EXACTLY THE OPOSITE!
+%{ 
 % Now obtain the schnitzes that are living at the end of the movie
 lastFrame = myRange(end);
 [youngSchnitzes,cellTimePoints,cellLengths,timemin,timemax,lengthmin,lengthmax] =  ...
@@ -62,6 +64,9 @@ for i = 1:numel(YoungestOffspringForSchnitz)
         IncestColor(i,:) = allYoungColors;
     end;
 end
+%}
+aColorMap = distinguishable_colors(numel(schnitzcells), [0,0,0]);
+
 
 % figure
 h=figure(1), set(h, 'Position', [0,0,800,500]);
@@ -89,7 +94,7 @@ for fr = myRange
       colorsAncestry = []; currentAncestor = i; done = 0;
       relatedness = 1;
       while ~done
-          colorsAncestry(end+1,:) = IncestColor(currentAncestor,:).*relatedness;
+          colorsAncestry(end+1,:) = aColorMap(currentAncestor,:).*relatedness;
           currentAncestor = schnitzcells(currentAncestor).P;
           if (isempty(currentAncestor) || (currentAncestor == 0))
               done = 1;
