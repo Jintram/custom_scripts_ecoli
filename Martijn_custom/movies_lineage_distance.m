@@ -12,7 +12,9 @@ lastFrame = myRange(end);
 
 % Relating all schnitzes to their final offspring can best be done going 
 % backwards into the lineage.
-YoungestOffspringForSchnitz = cell(size(schnitzcells));
+YoungestOffspringForSchnitz = cell(size(schnitzcells)); % This list, with 
+                % index i, contains the youngest schnitzes (i.e. end of 
+                % lineage) that are grand-grand-..-children of schnitz i.
 for youngGun = youngSchnitzes 
     % go back into ancestry until we have already seen this ancestor in
     % another search
@@ -33,6 +35,28 @@ end
 % Now we make a colormap for each schnitz, comprising of a mix color of its
 % parents.
 % First pick some colours for the young guns:
+nrYoungGuns = numel(youngSchnitzes);
+YoungGunColors = distinguishable_colors(nrYoungGuns);
+% Now label each schnitz for its relatedness to the final offspring
+IncestColor = cell(size(schnitzcells));
+for i = 1:numel(YoungestOffspringForSchnitz)   
+    % only create a color for it when a youngest offspring has been
+    % determined
+    if isempty(YoungestOffspringForSchnitz{i}) break; end;
+
+    % youngSchnitzes is a list of schnitznumbers, this search locates
+    % the indices of that list for all schnitzes that are in 
+    % YoungestOffspringForSchnitz{i}.
+    colorIdx = find(ismember(youngSchnitzes,YoungestOffspringForSchnitz{i}));
+        
+    % Get all colors of the ancestry
+    allYoungColors = YoungGunColors(colorIdx,:);
+    if size(allYoungColors,1) > 1        
+        IncestColor{i} = mean(allYoungColors);
+    else
+        IncestColor{i} = allYoungColors;
+    end;
+end
 
 % figure
 h=figure(1), set(h, 'Position', [0,0,800,500]);
