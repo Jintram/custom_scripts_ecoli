@@ -1,6 +1,11 @@
 
-p = DJK_initschnitz('pos8crop','2014-05-01','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
+% Settings
+% ===
+ANCESTORDILUTION = .75; % How much color mixing dies out from subsequent ancestry
 myRange=[39:130]
+
+% Load schnitz stuff
+p = DJK_initschnitz('pos8crop','2014-05-01','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
 
 % For plotting lengths
 [p,schnitzcells] = DJK_compileSchnitzImproved_3colors(p,'quickMode',1);
@@ -33,7 +38,7 @@ for youngGun = youngSchnitzes
 end
 
 % Now we make a colormap for each schnitz, comprising of a mix color of its
-% parents.
+% offspring.
 % First pick some colours for the young guns:
 nrYoungGuns = numel(youngSchnitzes);
 YoungGunColors = distinguishable_colors(nrYoungGuns, [0,0,0]);
@@ -62,6 +67,7 @@ end
 h=figure(1), set(h, 'Position', [0,0,800,500]);
 
 % loop over the frames
+h=figure(1); 
 for fr = myRange
     
   % Plot the image
@@ -76,17 +82,37 @@ for fr = myRange
   [theSchnitzes,cellTimePoints,cellLengths,timemin,timemax,lengthmin,lengthmax,mapIndexes] = ...
       givemeschnitzinfoforframe(p, schnitzcells, fr);
   
+  % Now we edit color map such that sisters look like their mothers, and a
+  % bit less like their grandmothers, etc.
+  ancestryMap = ones(size(schnitzcells,2)+1,3);
+  for i = theSchnitzes
+      colorsAncestry = []; currentAncestor = i; done = 0;
+      relatedness = 1;
+      while ~done
+          colorsAncestry(end+1,:) = IncestColor(currentAncestor,:).*relatedness;
+          currentAncestor = schnitzcells(currentAncestor).P;
+          if (isempty(currentAncestor) || (currentAncestor == 0))
+              done = 1;
+          end
+          relatedness = relatedness.*ANCESTORDILUTION;
+      end
+      if size(colorsAncestry,1) > 1
+          ancestryMap(i,:) = sum(colorsAncestry)./sum(ANCESTORDILUTION.^[0:numel(colorsAncestry)-1]);        
+      else
+          ancestryMap(i,:) = colorsAncestry;
+      end
+  end
+  
+  % ABOVE BREAKS IT, BECAUSE IT IS DONE PER FRAME??
+  
   % create a colormap for this frame
   % this means we need to find out for each shcnitz the number by which it
-  % is known in this frame.
-  myCustomColorMap = ones(size(schnitzcells,2)+1,3);
+  % is known in this frame.  
   myCustomColorMap(1,:) = [0,0,0]; % note that way this works is that the 
                                    % value 0 is mapped to the first element
   for i = 1:numel(mapIndexes)
-      myCustomColorMap(mapIndexes(i)+1,:) = IncestColor(theSchnitzes(i),:);
-  end
-  
-  mapIndexes
+      myCustomColorMap(mapIndexes(i)+1,:) = ancestryMap(theSchnitzes(i),:);
+  end    
     
   % make image of cells
   %p.showPerim = 1;
@@ -98,12 +124,12 @@ for fr = myRange
   % ===
   
   %  image of cells
-  h=figure(1), subplottight(1,2,1)
-  imshow(outim,[])
+  subplottight(1,2,1);
+  imshow(outim,[]);
   text(20,20,['frame ' sprintf('%05d', fr)],'Color','k','FontWeight','bold','BackgroundColor','white');  
   
   % their lengths in a plot
-  subplot(1,2,2), hold on 
+  subplot(1,2,2), hold on ;
   for j = 1:numel(theSchnitzes)
       
     %plot(ones(numel(cellLengths),1).*fr, cellLengths, 'o','Color',ind2rgb(j,cmap))
@@ -121,6 +147,8 @@ for fr = myRange
   saveas(h, ['D:\Local_Playground\mymovietest\movietest_lengths_' sprintf('%05d',fr) '.jpg']);
   
 end
+
+msgbox('Done');
 
 %{
 figure(1), imshow(Lc,[])
