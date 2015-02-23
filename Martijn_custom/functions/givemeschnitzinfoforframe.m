@@ -1,5 +1,5 @@
 
-function [theSchnitzes,cellTimePoints,cellLengths,timemin,timemax,lengthmin,lengthmax,mapIndexes] =  givemeschnitzinfoforframe(p, schnitzcells, fr)
+function [theSchnitzes,cellTimePoints,cellLengths,timemin,timemax,lengthmin,lengthmax,mapIndexes,output] =  givemeschnitzinfoforframe(p, schnitzcells, fr)
 % function [theSchnitzes,cellTimePoints,cellLengths,timemin,timemax,lengthmin,lengthmax] =  givemeschnitzinfoforframe(p, schnitzcells, fr)
 %
 % Returns [time, lengths] of all schnitzes in the given frame, at the
@@ -20,6 +20,7 @@ function [theSchnitzes,cellTimePoints,cellLengths,timemin,timemax,lengthmin,leng
 % mapIndexes        the indexes of the schnitzes in the current frame
 
 cellTimePoints=[]; cellLengths=[]; theSchnitzes=[]; mapIndexes=[];
+output = {}; totalHits = 0;
 for i = 1:numel(schnitzcells)
     
     % backwards compatibility
@@ -32,13 +33,23 @@ for i = 1:numel(schnitzcells)
     hit = find(fr==schnitzcells(i).frame_nrs);
     if ~isempty(hit)        
                 
+        totalHits = totalHits + 1;
+        
         % store that data in an array
         cellTimePoints(end+1) = schnitzcells(i).time(hit);
         cellLengths(end+1)    = schnitzcells(i).length_fitNew(hit); % check whether this is correct length
         theSchnitzes(end+1)   = i;
         mapIndexes(end+1)     = schnitzcells(i).cellno(hit);
+        
+        % all info that's possible for that schnitz:
+        myFieldnames = fieldnames(schnitzcells(i));
+        for fieldno=1:numel(myFieldnames)
+            if ismatrix(schnitzcells(i).(myFieldnames{fieldno})) && numel(schnitzcells(i).(myFieldnames{fieldno}))>=hit % note this is somewhat pathological when numel = 1            
+                output{totalHits}.(myFieldnames{fieldno}) = schnitzcells(i).(myFieldnames{fieldno})(hit);
+            end
+        end
     end
-    
+       
     % Note that this code is redundant:
     timemin=min([schnitzcells(:).time]);
     timemax=max([schnitzcells(:).time]);
