@@ -3,15 +3,17 @@
 % ===
 MAXGROWTHRATE = 2; % (dbls/hr)
 ANCESTORDILUTION = .75; % How much color mixing dies out from subsequent ancestry
-myRange=[39:200] % 39-200 is in 2015-05-01/pos8crop 
+myRange=[39:275]; % 39-200 is in 2015-05-01/pos8crop 
 
-SMALLESTCELL = 0; % y-axis for cell length
-BIGGESTCELL  = 6;
+SMALLESTCELL = 0; % y-axis for cell speed
+BIGGESTCELL  = 3;
 
 % Load schnitz stuff
-p = DJK_initschnitz('pos8crop','2014-05-01','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
+theName = ['pos1crop','2014-05-01']; p = DJK_initschnitz('pos1crop','2014-05-01','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
+%theName = ['pos4crop','2014_06_18']; p = DJK_initschnitz('pos4crop','2014_06_18','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
+%theName = ['pos2crop','2014_06_18']; p = DJK_initschnitz('pos2crop','2014_06_18','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
 
-% For plotting lengths
+% Load the schnitzcells
 [p,schnitzcells] = DJK_compileSchnitzImproved_3colors(p,'quickMode',1);
 
 % Now obtain the schnitzes that are living at the end of the movie
@@ -102,6 +104,8 @@ for fr = myRange
     disp(['Analyzing range ' num2str(min(myRange)) '-' num2str(max(myRange)) ', now at frame '  num2str(fr)]);
 end    
 
+msgbox('Done');
+
 %% Loop again, coloring them and creating plots
 %==
 
@@ -186,7 +190,7 @@ for fr = myRange
     imshow(imOutlines,[]);
     text(20,20,['frame ' sprintf('%05d', fr)],'Color','k','FontWeight','bold','BackgroundColor','white');  
 
-    saveas(h, ['D:\Local_Playground\mymovietest\movietest_cells_' sprintf('%05d',fr) '.jpg']);
+    saveas(h, ['D:\Local_Playground\mymovietest\' theName '\movietest_cells_' sprintf('%05d',fr) '.jpg']);
 
     % their lengths in a plot
     change_current_figure(2); h = 2;
@@ -210,28 +214,37 @@ end
 
 msgbox('Done');
 
-%% Determine correlations between all cell pairs
+%% Determine correlations between all cell pairs in growth rate
 % ===
 NEIGHBORDISTANCE = 75; % not sure which units this is, prob. pixels
+RELATEDNESSCUTOFF = 1; % 1 = sisters, 2 = same granny, etc
 
 correlationsPerFrame = []; allpairsN = []; 
 correlationsPerFrameNeighbors = [];neighborN = [];
+correlationsPerFrameSisters = []; sisterN = [];
+correlationsPerFrameUnrelatedNeighbors = []; unrelatedNeighborN = [];
 for fr = myRange
-        
-    theLengths = DATA(fr).cellLengths;
-    % theoretically, all length pairs should not have a correlation
-    theLengths=theLengths./mean(theLengths); % normalize
-    theLengths=theLengths-mean(theLengths);
-    N=numel(theLengths); nrPairs = N*(N-1); n = 0;
-    pairsOfLengths = zeros(nrPairs,2);
-    pairsOfLengthsNeighbors = [];
-    for i = 1:(N)
-        for j = 1:N %i:N
+    
+    allrelations = []; % TODO remove
+    
+    theGrowthRates = [];
+    for i=1:numel(DATA(fr).output)
+        theGrowthRates(end+1) = DATA(fr).output{i}.muP11_fitNew_all;
+    end % TODO this should be possible in one command?
+    
+    % theoretically, all pairs should not have a correlation in growth rate
+    theGrowthRates=theGrowthRates./mean(theGrowthRates); % normalize
+    theGrowthRates=theGrowthRates-mean(theGrowthRates);
+    N=numel(theGrowthRates); nrPairs = N*(N-1)/2; n = 0;
+    pairsOfAll = zeros(nrPairs,2);
+    pairsOfNeighbors = []; pairsOfRelated = []; pairsOfUnrelatedNeighbors = [];
+    for i = 1:(N-1)
+        for j = (i+1):N %i:N
 
             if i~=j        
                 n = n + 1;
                 % All pairs
-                pairsOfLengths(n,:) = [theLengths(i),theLengths(j)];
+                pairsOfAll(n,:) = [theGrowthRates(i),theGrowthRates(j)];
                 
                 % Create distance criterium subset
                 % obtain distance between bacteria
@@ -239,12 +252,26 @@ for fr = myRange
                     (DATA(fr).output{i}.cenx_cent - DATA(fr).output{j}.cenx_cent)^2+ ...
                     (DATA(fr).output{i}.ceny_cent - DATA(fr).output{j}.ceny_cent)^2  ...
                                 );
-                            
+                       
+                % create pairs of neighbors
                 if distance<NEIGHBORDISTANCE                    
-                    pairsOfLengthsNeighbors = [pairsOfLengthsNeighbors; theLengths(i),theLengths(j)];
+                    pairsOfNeighbors = [pairsOfNeighbors; theGrowthRates(i),theGrowthRates(j)];
                     % disp(['hit in fr ' num2str(fr)]);
-                end                            
-                % 
+                end
+                
+                % create pairs of sisters, note self-interaction is
+                % excluded above
+                relatedness = distancelca(p, schnitzcells, DATA(fr).theSchnitzes(i), DATA(fr).theSchnitzes(j), RELATEDNESSCUTOFF+1);                
+                allrelations(end+1) = relatedness; % TODO remove
+                if relatedness<=RELATEDNESSCUTOFF 
+                    pairsOfRelated = [pairsOfRelated; theGrowthRates(i),theGrowthRates(j)];
+                end
+                
+                % neighbors but not related
+                if (distance<NEIGHBORDISTANCE) && (relatedness>RELATEDNESSCUTOFF || isnan(relatedness))
+                    pairsOfUnrelatedNeighbors = [pairsOfUnrelatedNeighbors; theGrowthRates(i),theGrowthRates(j)];
+                end
+                
                 
                 
             end
@@ -252,21 +279,47 @@ for fr = myRange
         end    
     end
 
-    % Store correlations;
-    correlationsPerFrame(end+1) = corr(pairsOfLengths(:,1),pairsOfLengths(:,2),'type','Pearson');
-    if size(pairsOfLengthsNeighbors,1) == 0
-        correlationsPerFrameNeighbors = NaN;
+    % Store correlations for all pairs
+    correlationsPerFrame(end+1) = corr(pairsOfAll(:,1),pairsOfAll(:,2),'type','Pearson');
+    
+    % Calculate and store correlations for neighbouring cells
+    if size(pairsOfNeighbors,1) == 0
+        correlationsPerFrameNeighbors(end+1) = NaN;
     else
-        correlationsPerFrameNeighbors(end+1) = corr(pairsOfLengthsNeighbors(:,1),pairsOfLengthsNeighbors(:,2),'type','Pearson');
+        correlationsPerFrameNeighbors(end+1) = corr(pairsOfNeighbors(:,1),pairsOfNeighbors(:,2),'type','Pearson');
     end
     
-    allpairsNforFrame = numel(pairsOfLengths); 
+    % Calculate and store correlations for sister cells
+    if size(pairsOfRelated,1) == 0
+        correlationsPerFrameSisters(end+1) = NaN;
+    else
+        correlationsPerFrameSisters(end+1) = corr(pairsOfRelated(:,1),pairsOfRelated(:,2),'type','Pearson');
+    end
+    
+    
+    % Calculate and store correlations for sister cells
+    if size(pairsOfUnrelatedNeighbors,1) == 0
+        correlationsPerFrameUnrelatedNeighbors(end+1) = NaN;
+    else
+        correlationsPerFrameUnrelatedNeighbors(end+1) = corr(pairsOfUnrelatedNeighbors(:,1),pairsOfUnrelatedNeighbors(:,2),'type','Pearson');
+    end
+    
+    % counting the pairs
+    allpairsNforFrame = size(pairsOfAll,1); 
     allpairsN(end+1) = allpairsNforFrame;
     
-    neighborNforFrame = numel(pairsOfLengthsNeighbors);
+    neighborNforFrame = size(pairsOfNeighbors,1);
     neighborN(end+1) = neighborNforFrame;
     
+    sisterNforFrame = size(pairsOfRelated,1);
+    sisterN(end+1) = sisterNforFrame;
+    
+    unrelatedNeighborsNforFrame = size(pairsOfUnrelatedNeighbors,1);
+    unrelatedNeighborN(end+1) = unrelatedNeighborsNforFrame;
+    
     disp(['Selected ' num2str(neighborNforFrame) '/' num2str(allpairsNforFrame) ' as neighbors']);
+    disp(['Selected ' num2str(sisterNforFrame) '/' num2str(allpairsNforFrame) ' as related']);
+    disp(['Selected ' num2str(unrelatedNeighborsNforFrame) '/' num2str(allpairsNforFrame) ' as unrelated neighbors']);
     
     
     % Now select pairs that have certain distance
@@ -282,21 +335,128 @@ for fr = myRange
     
 end
 
+msgbox('Done');
+
+
 %% plot
-figure (3); 
-subplot(1,2,1); hold on;
+figure (3); clf;
+subplot(1,3,1); hold on;
 plot([min(myRange),max(myRange)],[0,0],'k');
 l1=plot(myRange,correlationsPerFrame,'k','Linewidth',2);
 l2=plot(myRange,correlationsPerFrameNeighbors,'b','Linewidth',2);
+l3=plot(myRange,correlationsPerFrameSisters,'r','Linewidth',2);
+l4=plot(myRange,correlationsPerFrameUnrelatedNeighbors,'g','Linewidth',2);
 ylim([-1,1]);
 xlim([min(myRange),max(myRange)])
+xlabel('Frame #'); ylabel('Correlation');
 %legend(l1,'All pairs');
 
-subplot(1,2,2); hold on;
+subplot(1,3,2); hold on;
+plot([min(neighborN),max(neighborN)],[0,0],'-k');
+l1=plot(neighborN,correlationsPerFrameNeighbors,'bs','Linewidth',2);
+l2=plot(sisterN,correlationsPerFrameSisters,'r^','Linewidth',2);
+l3=plot(unrelatedNeighborN,correlationsPerFrameUnrelatedNeighbors,'vg','Linewidth',2);
+l4=plot(allpairsN,correlationsPerFrame,'ko','Linewidth',4);
+ylim([-1,1]);
+xlabel('Number of pairs considered'); ylabel('Correlation');
+xlim([min(neighborN),max(neighborN)])
+legend([l1,l2,l3,l4],{'neighbors', 'sisters', 'unrelated neighbors', 'all'})
+
+subplot(1,3,3); hold on;
 l1=plot(myRange,allpairsN,'k--','Linewidth',3);
-l2=plot(myRange,neighborN,'b.','Linewidth',3);
+l2=plot(myRange,neighborN,'b-','Linewidth',3);
+l3=plot(myRange,sisterN,'r-','Linewidth',3);
+l4=plot(myRange,unrelatedNeighborN,'g-','Linewidth',3);
+xlabel('Number of pairs considered'); ylabel('Correlation');
 xlim([min(myRange),max(myRange)])
+xlabel('Frame #'); ylabel('Number of pairs considered');
 %legend(l1,'All pairs');
+
+% Calculate mean lines; for neighbors
+theMeansNeighbors = []; theStdsNeighbors = [];
+uniqueSortedNeighborN = sort(unique(neighborN));
+for i = uniqueSortedNeighborN
+    theMeansNeighbors(end+1) = mean(correlationsPerFrameNeighbors(neighborN(:)==i))
+    theStdsNeighbors(end+1) = std(correlationsPerFrameNeighbors(neighborN(:)==i))
+end
+% Calculate mean lines; for sisters
+theMeansSisters = []; theStdsSisters = [];
+uniqueSortedsisterN = sort(unique(sisterN));
+for i = uniqueSortedsisterN
+    theMeansSisters(end+1) = mean(correlationsPerFrameSisters(sisterN(:)==i))
+    theStdsSisters(end+1) = std(correlationsPerFrameSisters(sisterN(:)==i))
+end
+% Calculate mean lines; for unrelated neighbors
+theMeansUnrelatedNeighbors = []; theStdsUnrelatedNeighbors = [];
+uniqueSortedUnrelatedNeighborN = sort(unique(unrelatedNeighborN));
+for i = uniqueSortedUnrelatedNeighborN
+    theMeansUnrelatedNeighbors(end+1) = mean(correlationsPerFrameUnrelatedNeighbors(unrelatedNeighborN(:)==i))
+    theStdsUnrelatedNeighbors(end+1) = std(correlationsPerFrameUnrelatedNeighbors(unrelatedNeighborN(:)==i))
+end
+% Calculate mean lines; for all pairs
+theMeansAllPairs = []; theStdsAllPairs = [];
+uniqueSortedallpairsN = sort(unique(allpairsN));
+for i = uniqueSortedallpairsN
+    theMeansAllPairs(end+1) = mean(correlationsPerFrame(allpairsN(:)==i))
+    theStdsAllPairs(end+1) = std(correlationsPerFrame(allpairsN(:)==i))
+end
+
+figure(4), clf,  hold on;
+xlim([min([uniqueSortedNeighborN, uniqueSortedsisterN,uniqueSortedUnrelatedNeighborN ]),max([uniqueSortedNeighborN, uniqueSortedsisterN,uniqueSortedUnrelatedNeighborN ])]);
+ylim([-1,1])
+l1=errorbar(uniqueSortedNeighborN,theMeansNeighbors,theStdsNeighbors,'ob','Linewidth',2)
+errorbar_tick(l1)
+l2=errorbar(uniqueSortedsisterN,theMeansSisters,theStdsSisters,'or','Linewidth',2)
+errorbar_tick(l2)
+l3=errorbar(uniqueSortedUnrelatedNeighborN,theMeansUnrelatedNeighbors,theStdsUnrelatedNeighbors,'og','Linewidth',2)
+errorbar_tick(l3)
+l4=errorbar(uniqueSortedallpairsN,theMeansAllPairs,theStdsAllPairs,'ok','Linewidth',2)
+errorbar_tick(l4)
+legend([l1,l2,l3,l4],{'neighbors','sisters','unrelated neighbors','all pairs'},'Location','southeast')
+plot([min([uniqueSortedNeighborN, uniqueSortedsisterN,uniqueSortedUnrelatedNeighborN ]),max([uniqueSortedNeighborN, uniqueSortedsisterN,uniqueSortedUnrelatedNeighborN ])],[0,0],'-k')
+title('Correlations between pairs')
+xlabel('Number of pairs considered')
+ylabel('Correlation (normalized)')
+set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal')
+set(gca,'FontSize',15)
+
+figure(5); clf; hold on;
+xlim([min([uniqueSortedallpairsN ]),max([uniqueSortedallpairsN ])]);
+ylim([-1,1])
+l4=errorbar(uniqueSortedallpairsN,theMeansAllPairs,theStdsAllPairs,'ok','Linewidth',2)
+errorbar_tick(l4)
+plot([min([uniqueSortedallpairsN ]),max([uniqueSortedallpairsN ])],[0,0],'-k')
+title('Correlations between all pairs')
+xlabel('Number of pairs considered')
+ylabel('Correlation (normalized)')
+set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal')
+set(gca,'FontSize',15)
+
+% Mean values
+% Calculate mean lines; for neighbors
+theMeanNeighbors = mean(correlationsPerFrameNeighbors(neighborN(:)>1000))
+theStdNeighbors = std(correlationsPerFrameNeighbors(neighborN(:)>1000))
+
+% Calculate mean lines; for sisters
+theMeanSisters = mean(correlationsPerFrameSisters(sisterN(:)>1000))
+theStdSisters = std(correlationsPerFrameSisters(sisterN(:)>1000))
+
+% Calculate mean lines; for unrelated neighbors
+theMeanUnrelatedNeighbors = mean(correlationsPerFrameUnrelatedNeighbors(unrelatedNeighborN(:)>1000))
+theStdUnrelatedNeighbors = std(correlationsPerFrameUnrelatedNeighbors(unrelatedNeighborN(:)>1000))
+
+% Calculate mean lines; for all pairs
+theMeanAllPairs = mean(correlationsPerFrame(allpairsN(:)>1000))
+theStdAllPairs = std(correlationsPerFrame(allpairsN(:)>1000))
+
+figure(6); clf;
+barwitherr([theStdNeighbors,theStdSisters,theStdUnrelatedNeighbors,theStdAllPairs],[theMeanNeighbors,theMeanSisters,theMeanUnrelatedNeighbors,theMeanAllPairs])
+Labels = {'Neighbors', 'Related', 'Unr. neighbor', 'All pairs'};
+set(gca, 'XTick', 1:4, 'XTickLabel', Labels);
+set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal')
+set(gca,'FontSize',15)
+ylabel('Correlation (normalized)')
+title('Correlations between cell pairs in a colony')
 
 %% 
 myFrame = 130;
