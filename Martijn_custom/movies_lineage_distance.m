@@ -10,7 +10,7 @@ BIGGESTCELL  = 3;
 
 % Load schnitz stuff
 theName = ['pos1crop','2014-05-01']; p = DJK_initschnitz('pos1crop','2014-05-01','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
-%theName = ['pos4crop','2014_06_18']; p = DJK_initschnitz('pos4crop','2014_06_18','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
+theName = ['pos4crop','2014_06_18']; p = DJK_initschnitz('pos4crop','2014_06_18','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
 %theName = ['pos2crop','2014_06_18']; p = DJK_initschnitz('pos2crop','2014_06_18','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
 
 % Load the schnitzcells
@@ -339,6 +339,8 @@ msgbox('Done');
 
 
 %% plot
+DESIREDNPAIRSFORSTATS = 10;
+
 figure (3); clf;
 subplot(1,3,1); hold on;
 plot([min(myRange),max(myRange)],[0,0],'k');
@@ -434,24 +436,24 @@ set(gca,'FontSize',15)
 
 % Mean values
 % Calculate mean lines; for neighbors
-theMeanNeighbors = mean(correlationsPerFrameNeighbors(neighborN(:)>1000))
-theStdNeighbors = std(correlationsPerFrameNeighbors(neighborN(:)>1000))
+theMeanNeighbors = mean(correlationsPerFrameNeighbors(neighborN(:)>DESIREDNPAIRSFORSTATS))
+theStdNeighbors = std(correlationsPerFrameNeighbors(neighborN(:)>DESIREDNPAIRSFORSTATS))
 
 % Calculate mean lines; for sisters
-theMeanSisters = mean(correlationsPerFrameSisters(sisterN(:)>1000))
-theStdSisters = std(correlationsPerFrameSisters(sisterN(:)>1000))
+theMeanSisters = mean(correlationsPerFrameSisters(sisterN(:)>DESIREDNPAIRSFORSTATS))
+theStdSisters = std(correlationsPerFrameSisters(sisterN(:)>DESIREDNPAIRSFORSTATS))
 
 % Calculate mean lines; for unrelated neighbors
-theMeanUnrelatedNeighbors = mean(correlationsPerFrameUnrelatedNeighbors(unrelatedNeighborN(:)>1000))
-theStdUnrelatedNeighbors = std(correlationsPerFrameUnrelatedNeighbors(unrelatedNeighborN(:)>1000))
+theMeanUnrelatedNeighbors = mean(correlationsPerFrameUnrelatedNeighbors(unrelatedNeighborN(:)>DESIREDNPAIRSFORSTATS))
+theStdUnrelatedNeighbors = std(correlationsPerFrameUnrelatedNeighbors(unrelatedNeighborN(:)>DESIREDNPAIRSFORSTATS))
 
 % Calculate mean lines; for all pairs
-theMeanAllPairs = mean(correlationsPerFrame(allpairsN(:)>1000))
-theStdAllPairs = std(correlationsPerFrame(allpairsN(:)>1000))
+theMeanAllPairs = mean(correlationsPerFrame(allpairsN(:)>DESIREDNPAIRSFORSTATS))
+theStdAllPairs = std(correlationsPerFrame(allpairsN(:)>DESIREDNPAIRSFORSTATS))
 
 figure(6); clf;
 barwitherr([theStdNeighbors,theStdSisters,theStdUnrelatedNeighbors,theStdAllPairs],[theMeanNeighbors,theMeanSisters,theMeanUnrelatedNeighbors,theMeanAllPairs])
-Labels = {'Neighbors', 'Related', 'Unr. neighbor', 'All pairs'};
+Labels = {'Neighbors', 'Related', 'Unr. neighbors', 'All pairs'};
 set(gca, 'XTick', 1:4, 'XTickLabel', Labels);
 set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal')
 set(gca,'FontSize',15)
