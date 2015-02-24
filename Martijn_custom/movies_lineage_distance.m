@@ -1,16 +1,26 @@
 
+disp('Perhaps clear all?'); pause(3);
+
 % Settings
 % ===
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+myRange=[39:265]; % 39:265 for 2015-05-01/pos1crop 
+% 39-200 is in 2015-05-01/pos8crop 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+outputDir = 'U:\Matlab\Saved-analyses\';
+
+MAKEIMAGES=1;
+
+SMALLESTCELL = 0; % y-axis for cell length
+BIGGESTCELL  = 6;
+
 MAXGROWTHRATE = 2; % (dbls/hr)
 ANCESTORDILUTION = .75; % How much color mixing dies out from subsequent ancestry
-myRange=[39:275]; % 39-200 is in 2015-05-01/pos8crop 
 
-SMALLESTCELL = 0; % y-axis for cell speed
-BIGGESTCELL  = 3;
 
 % Load schnitz stuff
 theName = ['pos1crop','2014-05-01']; p = DJK_initschnitz('pos1crop','2014-05-01','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
-theName = ['pos4crop','2014_06_18']; p = DJK_initschnitz('pos4crop','2014_06_18','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
+%theName = ['pos4crop','2014_06_18']; p = DJK_initschnitz('pos4crop','2014_06_18','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
 %theName = ['pos2crop','2014_06_18']; p = DJK_initschnitz('pos2crop','2014_06_18','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
 
 % Load the schnitzcells
@@ -108,12 +118,14 @@ msgbox('Done');
 
 %% Loop again, coloring them and creating plots
 %==
+if MAKEIMAGES
 
 % figure
-h=figure(1), set(h, 'Position', [0,0,800,500]);
-h=figure(2), set(h, 'Position', [0,0,800,500]);
-h=figure(1); clf; hold on;
-h=figure(2); clf; hold on;
+h=figure(1); clf; hold on; set(h, 'Position', [0,0,1200,500]);
+h=figure(2); clf; hold on; set(h, 'Position', [0,0,1200,500]);
+currentDateTime = datestr(now);
+currentDateTime = strrep(currentDateTime, ':', '-');
+currentDateTime = strrep(currentDateTime, ' ', '_');
 for fr = myRange
     % Now we edit color map such that sisters look like their mothers, and a
     % bit less like their grandmothers, etc.
@@ -189,8 +201,12 @@ for fr = myRange
     subplottight(1,3,1); 
     imshow(imOutlines,[]);
     text(20,20,['frame ' sprintf('%05d', fr)],'Color','k','FontWeight','bold','BackgroundColor','white');  
-
-    saveas(h, ['D:\Local_Playground\mymovietest\' theName '\movietest_cells_' sprintf('%05d',fr) '.jpg']);
+    
+    theDir = [outputDir 'movie-' theName '-' currentDateTime '\'];
+    if ~exist(theDir)
+        mkdir(theDir)
+    end
+    saveas(h, [theDir 'movietest_cells_' sprintf('%05d',fr) '.jpg']); % below is another save command for the other fig
 
     % their lengths in a plot
     change_current_figure(2); h = 2;
@@ -206,7 +222,7 @@ for fr = myRange
     xlabel('Frame number','FontSize',15)
     ylabel('Cell length ({\mu}m)','FontSize',15)    
 
-    saveas(h, ['D:\Local_Playground\mymovietest\movietest_lengths_' sprintf('%05d',fr) '.jpg']);
+    saveas(h, [theDir 'movietest_lengthts_' sprintf('%05d',fr) '.jpg']);
     
     disp(['Analyzing range ' num2str(min(myRange)) '-' num2str(max(myRange)) ', now at frame '  num2str(fr)]);
     
@@ -214,9 +230,11 @@ end
 
 msgbox('Done');
 
+end
+
 %% Determine correlations between all cell pairs in growth rate
 % ===
-NEIGHBORDISTANCE = 75; % not sure which units this is, prob. pixels
+NEIGHBORDISTANCE = 40; % not sure which units this is, prob. pixels
 RELATEDNESSCUTOFF = 1; % 1 = sisters, 2 = same granny, etc
 
 correlationsPerFrame = []; allpairsN = []; 
@@ -337,6 +355,16 @@ end
 
 msgbox('Done');
 
+% Save data
+theDir = [outputDir 'output\'];
+currentDateTime = datestr(now);
+currentDateTime = strrep(currentDateTime, ':', '-');
+currentDateTime = strrep(currentDateTime, ' ', '_');
+if ~exist(theDir)
+    mkdir(theDir)
+end
+save( [theDir theName 'calculationoutput-correlationsneighbors_' currentDateTime '.mat'] );
+disp(['Data saved to ' theDir]);
 
 %% plot
 DESIREDNPAIRSFORSTATS = 10;
@@ -461,7 +489,7 @@ ylabel('Correlation (normalized)')
 title('Correlations between cell pairs in a colony')
 
 %% 
-myFrame = 130;
+myFrame = 100;
 xdata=[]; ydata=[];
 for i = 1:numel(DATA(myFrame).output)
     i
