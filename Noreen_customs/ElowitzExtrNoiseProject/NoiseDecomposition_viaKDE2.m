@@ -35,7 +35,7 @@
 % ************************************************************************
 % 
 clear myschnitzname
- myschnitzname='Maltose full highIllum incl more bimodal 2012-05-24 pos5';  % Adjust
+ myschnitzname='R';  % Adjust
 % myschnitzname='Acetate full 2012-06-15 pos4';  % Adjust
  load(['\\biofysicasrv\Users2\Walker\ExtrinsicNoise\Data_Collection\Data\' myschnitzname '.mat']);
 %

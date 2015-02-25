@@ -98,9 +98,9 @@ str=sprintf('%4.4f sec behind within %2.0f frames...%4.4f sec per frame',timelat
 %*******************************************************************
 %%
 % PLOTS SINGLE LINEAGE TIME TRACES OF YFP,CFP,mu,CFPprodRate,YFPprodRate
-% trimmed_branches must have been acquired before (see excel file)
-timelim=[250 850];      % time range in [min]
-lineagenumbers=[3:5];%nicebranches;   % which lineages to plot
+% ***TRIMMED_BRANCHES**  must have been acquired before (see excel file)
+timelim=[0 2000];      % time range in [min]
+lineagenumbers=[1:1000];%nicebranches;   % which lineages to plot
 specline=[6 ];            % highlighted lineage  (use [] if no lineage should be highlighted
 
 % plot YFP
@@ -110,7 +110,7 @@ hold on
 for run=1:length(lineagenumbers)
     i=lineagenumbers(run);
     lineage=trimmed_branches(i);
-    plot(lineage.Y_time,lineage.Y6_mean,'-k')
+    plot(lineage.Y_time,lineage.Y6_mean_cycCor,'-k')
     xlabel('time [min]')
     ylabel('YFP [a.u.]')
     set(gca,'xlim',timelim)
@@ -124,13 +124,13 @@ hold on
 for run=1:length(lineagenumbers)
     i=lineagenumbers(run);
     lineage=trimmed_branches(i);
-    plot(lineage.C_time,lineage.C6_mean,'-k')
+    plot(lineage.Y_time,lineage.C6_mean_cycCor,'-k')
     xlabel('time [min]')
     ylabel('CFP [a.u.]')
     set(gca,'xlim',timelim)
 end
 
-
+%% and more lineages:
 % plot area
 figure(1)
 clf

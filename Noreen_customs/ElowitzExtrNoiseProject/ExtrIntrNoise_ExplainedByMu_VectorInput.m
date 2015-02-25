@@ -36,7 +36,7 @@
 % ************************************************************************
 % 
 clear myschnitzname
- myschnitzname='Maltose full 2012-05-08 pos2';  % Adjust
+ myschnitzname='Maltose full highIllum 2012-05-24 pos5';  % Adjust
  %myschnitzname='Maltose constitutive 2014-11-13 pos6';  % Adjust
  load(['\\biofysicasrv\Users2\Walker\ExtrinsicNoise\Data_Collection\Data\' myschnitzname '.mat']);
 %
@@ -54,7 +54,7 @@ PLOTMUHIST=0;   % mu histogram
 PLOTCONDVALUESEXTR=0;   % extr noise: <C|mu> vs mu plots (same for Y and Cov)
 PLOTCONDVALUESINTR=0;   % intr noise: <Y-C|mu> vs mu plots (same for Var)
 PLOTBINDEPENDENCE=0;    % explained fraction vs # bins used
-PLOTCONDVARCOV=0       % BLUBB TO IMPROVE, see at end of file
+PLOTCONDVARCOV=1;       % BLUBB TO IMPROVE, see at end of file
 %close all % (de)activate for new/overwriting figures
 
 % Data used [careful: in old version class was 'char' now it's 'double']
@@ -116,8 +116,8 @@ SpecialMuBinCondValues=[0.22]; %extract all conditional value arrays (e.g. <yfp|
 %NumberMuBins=[2:10 12:2:20 25:5:40 50:10:100 ceil(length(dY5_cycCor)/6) ceil(length(dY5_cycCor)/5) ...
 %    ceil(length(dY5_cycCor)/4) ceil(length(dY5_cycCor)/3) ceil(length(dY5_cycCor)/2) ceil(length(dY5_cycCor)/1)];%[5 10 15 20 25 30];    % # of bins for mu. centered around median of the bin.
                     % can be vector
-NumberMuBins=15;%unique(ceil(length(field1)./[2:200 210:10:1000]));    % # of bins for mu. centered around median of the bin.
-SpecialNumberBinsCondValues=1600; %extract all conditional value arrays (e.g. <yfp|mu>) for specific # mu-bins
+NumberMuBins=5;%unique(ceil(length(field1)./[2:200 210:10:1000]));    % # of bins for mu. centered around median of the bin.
+SpecialNumberBinsCondValues=5; %extract all conditional value arrays (e.g. <yfp|mu>) for specific # mu-bins
                 % into extra variables for better handling. This # bins has to be included in 'NumberMuBins'
 % *************************************************************************
 
@@ -155,6 +155,8 @@ mymatrix=[field1',field2',field3']; %i.e.: [prodrate1, prodrate2, growthrate]
 %normalize fluorescence fields (field1 & field2)
 mymatrix(:,1)=mymatrix(:,1)./mean(mymatrix(:,1));
 mymatrix(:,2)=mymatrix(:,2)./mean(mymatrix(:,2));
+%mymatrix(:,3)=mymatrix(:,3)./mean(mymatrix(:,3)); %blubb
+
 % normalize stddev if option is set (-> perform zscore)
 if NormalizeStdDev
     if MUBINS_EQUALDIST==1
@@ -884,7 +886,7 @@ if PLOTCONDVARCOV
     legend('CondVar (same as red line in prev. plot)','CondVar normed w average of bin: <f1|mu><f2|mu>')
     %title('Conditional Variance (Var(f1-f2|mu). Intr noise. Normed to mean=1')
     title('TOIMPROVE. Conditional Variance (Var(f1-f2|mu). Intr noise. no norm')
-    xlabel(['mu (binfrac:' num2str(SpecialMuBinCondValues)])
+    xlabel(['mu (binfrac:' num2str(SpecialNumberBinsCondValue)])
     ylabel('var(...|mu)')
     grid on
 end
