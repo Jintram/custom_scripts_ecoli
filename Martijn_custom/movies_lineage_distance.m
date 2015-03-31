@@ -5,6 +5,7 @@ disp('Perhaps clear all?'); pause(3);
 % ===
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 myRange=[39:265]; % 39:265 for 2015-05-01/pos1crop 
+myRange=[1:815]; % 1:815 for 2014_06_18/pos4crop 
 % 39-200 is in 2015-05-01/pos8crop 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 outputDir = 'U:\Matlab\Saved-analyses\';
@@ -19,8 +20,8 @@ ANCESTORDILUTION = .75; % How much color mixing dies out from subsequent ancestr
 
 
 % Load schnitz stuff
-theName = ['pos1crop','2014-05-01']; p = DJK_initschnitz('pos1crop','2014-05-01','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
-%theName = ['pos4crop','2014_06_18']; p = DJK_initschnitz('pos4crop','2014_06_18','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
+%theName = ['pos1crop','2014-05-01']; p = DJK_initschnitz('pos1crop','2014-05-01','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
+theName = ['pos4crop','2014_06_18']; p = DJK_initschnitz('pos4crop','2014_06_18','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
 %theName = ['pos2crop','2014_06_18']; p = DJK_initschnitz('pos2crop','2014_06_18','e.coli.AMOLF','rootDir','F:\A_Tans1_step4a_partially_analyzed_analysis\', 'cropLeftTop', [1,1], 'cropRightBottom', [1392,1040],'fluor1','none','fluor2','none','fluor3','none');
 
 % Load the schnitzcells
