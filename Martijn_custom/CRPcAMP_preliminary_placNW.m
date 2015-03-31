@@ -13,15 +13,11 @@
 % from name mu parameter.)
 
 %% Load dataset
-
-% Note that CRP.cAMP regulates when there's no induction; i.e. basal 
-% expression should show ~different behavior as induced.
 %load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\Maltose basal 2012-05-16 pos1.mat');
 %load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\Maltose basal 2012-07-26 pos4.mat');
 %load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\Acetate basal 2012-07-19 pos4.mat');
 %load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\RDM basal 2011-10-19 pos1.mat');
-%load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\RDM basal 2011-10-19 pos3.mat');
-load('F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Acetate full 2012-06-15 pos4.mat');
+load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\RDM basal 2011-10-19 pos3.mat');
 
 % clear all, close all
 
@@ -29,10 +25,8 @@ load('F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Acetate full 2012-06-15 
 cyan    =  [0,1,1]/2;
 yellow  =  [212/255, 170/255, 0];
 
-growthRateRange = ... % [prctile(mu_Third_cycCor,5), prctile(mu_Third_cycCor,95)];
-                  [0, prctile(mu_Third_cycCor,95)];
-fullGrowthRateRange = ... % [min(mu_Third_cycCor), max(mu_Third_cycCor)];
-                  [0, max(mu_Third_cycCor)];
+growthRateRange = [prctile(mu_Third_cycCor,5), prctile(mu_Third_cycCor,95)];
+fullGrowthRateRange = [min(mu_Third_cycCor), max(mu_Third_cycCor)];
 
 %% Plot histogram
 
@@ -155,6 +149,9 @@ subplot(2,1,2)
 plot(growthRateRange,fityY,'-','Color','k','LineWidth',3)
 
 
+
+
+
 %% Sanity check
 
 % Check if I retrieve same data as Noreen.
@@ -182,6 +179,3 @@ end
 mydC5_cycCor
 
 %}
-
-
-
