@@ -35,10 +35,32 @@ myDataFiles = ...
  'F:\X_Other_datasets\CRPcAMP\PNdata-lacfullinduced\defined-rich-2011-05-12-pos2crop-Schnitz.mat' ...  
      };
 
-myGrouping = [ 1,2,3,4...
-    ];
+myGrouping = [ 1,2,3,4 ...
+   ];
 
-legendDescriptions = {'ace','lac ','succ','RDM'};
+% These datasets have different fields for the parameters we're after
+% (which indeed also means they might be determined slightly differently).
+associatedFieldNames = ...
+[ ...
+ {'muP23_fitNew_cycCor','dY5_sum_dt_cycCor','Y6_mean_cycCor'}; ...
+ {'muP19_fitNew_cycCor','dY5_sum_dt_cycCor','Y6_mean_cycCor'}; ...
+ {'muP37_fitNew_cycCor','dY5_sum_dt_cycCor','Y6_mean_cycCor'}; ...
+ {'muP15_fitNew_cycCor','dY5_sum_dt_cycCor','Y6_mean_cycCor'} ...
+];
+
+% I have extracted the following saved fitTimes from the Excel files in 
+% the directories of the datasets. (See
+% A_README_list-of-original-locations.txt).
+load('F:\X_Other_datasets\CRPcAMP\PNdata-lacfullinduced\fitTimes.mat');
+% Convert them to something processable (note this code works only when
+% each sugar has only one dataset.
+theFitTimes = cell2mat([fitTimes(find(strcmp(fitTimes(:,1),'acetate')),2);...
+                fitTimes(find(strcmp(fitTimes(:,1),'lactose')),2);...
+                fitTimes(find(strcmp(fitTimes(:,1),'succinate')),2);...
+                fitTimes(find(strcmp(fitTimes(:,1),'DRM')),2)...
+                ]);
+
+legendDescriptions = {'ace','lac ','succ','DRM'};
 
 some_colors; % loads some default color settings etc.
 
@@ -58,60 +80,66 @@ for i = 1:numberOfDataFiles
     % clear mu_Third_cycCor, dY5_cycCor, fitydY, Y5_mean_cycCor;
     load(myDataFiles{i});
     
+    % Prepare dummy p struct
+    p={}, p.movieName = 'dummy';
+    
     % Retrieve desired data
     % - mu (multiple points / individual)
     % - enzyme production rate (only Y; since has same filterset)
     % - enzyme concentration (only Y; since has same filterset)
     % - fitted line mu & enzyme expression
-    %NOW HAVE growth rate: mu_Third_cycCor;
-    %NOW HAVE production rate: dY5_cycCor;
-    meanGrowthRate = mean(mu_Third_cycCor);
+    allTimes = [schnitzcells(:).time];
+
+    % Retrieve ALL growth rates
+    retrievedData = DJK_get_schnitzData(p, schnitzcells, 'time','dataFields',{associatedFieldNames{i,1}},'fitTime',theFitTimes(i,:) );
+    mu_values_all = [retrievedData.(associatedFieldNames{i,1})];    
+   
+    % Retrieve ALL production rates - not sure which field to use..!!
+    retrievedData = DJK_get_schnitzData(p, schnitzcells, 'time','dataFields',{associatedFieldNames{i,2}},'fitTime',theFitTimes(i,:) );
+    production_rates_all = [retrievedData.(associatedFieldNames{i,2})];    
+    
+    % Get indices of entries which correspond to fluor measurement, so we
+    % can select above data for only those frames where there was an actual
+    % fluor measurement.
+    fluorIdx = find(~isnan(production_rates_all));
+    % Update retrieved data using this information
+    selected_growth_rates = mu_values_all(fluorIdx);
+    selected_production_rates = production_rates_all(fluorIdx); 
+    
+    %NOW HAVE production rate: dY5_sum_dt_cycCor;
+    %NOW HAVE growth rate: muP23_fitNew_cycCor      
+        
+    meanGrowthRate = mean(selected_growth_rates);
     
     % fit data and plot
-    fullGrowthRateRange = [0, meanGrowthRate];
-    pdY = polyfit(mu_Third_cycCor',dY5_cycCor',1);
-    fitydY = pdY(1)*fullGrowthRateRange + pdY(2);
+    toFitGrowthRateRange = [prctile(selected_growth_rates,20),prctile(selected_growth_rates,80)];
+    pdY = polyfit(selected_growth_rates',selected_production_rates',1);
+    fitydY = pdY(1)*toFitGrowthRateRange + pdY(2);
     %NOW HAVE production fitline: fitydY
-    
-    % Extract the concentration data using Daan's function
-    % ===
-    
-    % Prepare dummy p struct
-    p={}, p.movieName = 'dummy';
+        
     % Retrieve data Y5_mean_cycCor
-    retrievedData = DJK_get_schnitzData(p, schnitzcells_rm, 'time_atY','dataFields',{'Y5_mean_cycCor'},'fitTime',fitTime);
-    Y5_mean_cycCor = [retrievedData.Y5_mean_cycCor];
-    % NOW HAVE concentration: Y5_mean_cycCor
-    
-    % Sanity check, check if I retrieve same data as Noreen.
-    retrievedData = DJK_get_schnitzData(p, schnitzcells_rm, 'time_atY','dataFields',{'dC5_cycCor'},'fitTime',fitTime);
-    mydC5_cycCor = [retrievedData.dC5_cycCor];
-    if numel(mydC5_cycCor) ~= numel(dC5_cycCor)
-        error(['Sanity check failed in #' num2str(i) '! Unequal # entries.']);
-    else
-        sanityCheck = mydC5_cycCor - dC5_cycCor;    
-        if ~isempty(sanityCheck(find(sanityCheck>0)))
-            error(['Sanity check failed in #' num2str(i) '! sanityCheck chould be empty']);
-        end
-        % check this also
-    end
+    retrievedData = DJK_get_schnitzData(p, schnitzcells, 'time','dataFields',{associatedFieldNames{i,3}},'fitTime',theFitTimes(i,:) );
+    concentrations_all = [retrievedData.(associatedFieldNames{i,3})];
+    % Select the ones w. fluorcolor
+    selected_concentrations = concentrations_all(fluorIdx); 
+    % NOW HAVE concentration: Y6_mean_cycCor        
     
     % fitline concentration
-    pY = polyfit(mu_Third_cycCor',Y5_mean_cycCor',1);
-    fityY = pY(1)*fullGrowthRateRange + pY(2);
+    pY = polyfit(selected_growth_rates',selected_concentrations',1);
+    fityY = pY(1)*toFitGrowthRateRange + pY(2);
     % NOW HAVE concentration fitline: fityY
     
     % Save data to convenient plotting struct
-    myData(i).descrip = descrip;
-    myData(i).mu_Third_cycCor = mu_Third_cycCor;
-    myData(i).dY5_cycCor = dY5_cycCor;
-    myData(i).Y5_mean_cycCor = Y5_mean_cycCor;
-    myData(i).fullGrowthRateRange = fullGrowthRateRange;
+    myData(i).descrip = myDataFiles(i);
+    myData(i).selected_growth_rates = selected_growth_rates;
+    myData(i).selected_production_rates = selected_production_rates;
+    myData(i).selected_concentrations = selected_concentrations;
+    myData(i).fullGrowthRateRange = toFitGrowthRateRange;
     myData(i).fitydY = fitydY;
     myData(i).fityY = fityY;
     myData(i).averagemu = meanGrowthRate;    
-    myData(i).averagedY = mean(dY5_cycCor);
-    myData(i).averageY = mean(Y5_mean_cycCor);
+    myData(i).averagedY = mean(selected_production_rates);
+    myData(i).averageY = mean(selected_concentrations);
     
     % Tell user what we're doing
     disp(['==== Loading data ' num2str(i) ' of ' num2str(numberOfDataFiles) ' done. ====']);
@@ -128,7 +156,7 @@ subplot(1,2,1), hold on;
 
 for i = 1:numberOfDataFiles    
     % cloud
-    plot(myData(i).mu_Third_cycCor,myData(i).dY5_cycCor,'o','Color',preferredcolors(myGrouping(i)+1,:));
+    plot(myData(i).selected_growth_rates,myData(i).selected_production_rates,'o','Color',preferredcolors(myGrouping(i)+1,:));
 end
 
 for i = 1:numberOfDataFiles    
@@ -151,7 +179,7 @@ ylabel('Producation rate');
 set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal');
 set(gca,'FontSize',15);
 
-allMu=[myData(:).mu_Third_cycCor];
+allMu=[myData(:).selected_growth_rates];
 xlim([0, max(allMu)]);
 
 % plotting concentration plot
@@ -163,7 +191,7 @@ subplot(1,2,2), hold on;
 
 % cloud
 for i = 1:numberOfDataFiles        
-    plot(myData(i).mu_Third_cycCor,myData(i).Y5_mean_cycCor,'o','Color',preferredcolors(myGrouping(i)+1,:));    
+    plot(myData(i).selected_growth_rates,myData(i).selected_concentrations,'o','Color',preferredcolors(myGrouping(i)+1,:));    
 end
 
 % fit
@@ -185,7 +213,7 @@ ylabel('Concentration');
 set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal');
 set(gca,'FontSize',15);
 
-allMu=[myData(:).mu_Third_cycCor];
+allMu=[myData(:).selected_growth_rates];
 xlim([0, max(allMu)]);
 
 
