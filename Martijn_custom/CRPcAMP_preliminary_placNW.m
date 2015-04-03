@@ -13,11 +13,9 @@
 % from name mu parameter.)
 
 %% Load dataset
-%load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\Maltose basal 2012-05-16 pos1.mat');
-%load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\Maltose basal 2012-07-26 pos4.mat');
-%load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\Acetate basal 2012-07-19 pos4.mat');
-%load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\RDM basal 2011-10-19 pos1.mat');
-load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\RDM basal 2011-10-19 pos3.mat');
+%load('F:\X_Other_datasets\CRPcAMP\NWdata-constitutive\Maltose constitutive 2014-11-13 pos6.mat');
+load('F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Acetate full 2012-06-15 pos4.mat');
+
 
 % clear all, close all
 
