@@ -112,7 +112,7 @@ for i = 1:numberOfDataFiles
     meanGrowthRate = mean(selected_growth_rates);
     
     % fit data and plot
-    toFitGrowthRateRange = [prctile(selected_growth_rates,20),prctile(selected_growth_rates,80)];
+    toFitGrowthRateRange = [prctile(selected_growth_rates,5),prctile(selected_growth_rates,95)];
     pdY = polyfit(selected_growth_rates',selected_production_rates',1);
     fitydY = pdY(1)*toFitGrowthRateRange + pdY(2);
     %NOW HAVE production fitline: fitydY
