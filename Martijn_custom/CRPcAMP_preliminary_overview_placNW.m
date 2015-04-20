@@ -22,20 +22,25 @@
 %load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\RDM basal 2011-10-19 pos1.mat');
 %load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\RDM basal 2011-10-19 pos3.mat');
 
+% Illumination times!
+% YFP, CFP
+
+
 
 % The datasets used for full induction figure
 myDataFiles = ...
- {'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Acetate full 2012-06-15 pos4.mat', ...
+ {'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Acetate full 2012-06-15 pos4.mat', ... % illum 20,40
   ... % 'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Acetate full 2012-06-20 pos2.mat', ... % Sanity check failed!
-  'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Lactose full 2012-01-27 pos1.mat', ...
-  'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Lactose full 2012-03-02 pos6.mat', ...
-  'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Lactose full 2012-04-02 pos4.mat', ...  
-  'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Maltose full 2012-04-24 pos5.mat', ...
-  'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Maltose full 2012-05-08 pos2.mat', ...
+  'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Lactose full 2012-01-27 pos1.mat', ... % illum 25, 100
+  'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Lactose full 2012-03-02 pos6.mat', ... % illum 25, 100
+  'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Lactose full 2012-04-02 pos4.mat', ... % illum 25, 100  
+  'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Maltose full 2012-04-24 pos5.mat', ... % illum 25, 100
+  'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Maltose full 2012-05-08 pos2.mat', ... % illum 25 ,30
   ... % 'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Maltose full highIllum incl more bimodal 2012-05-24 pos5.mat', ...% Sanity check failed!
-   'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\RDM full 2011-10-28 pos1.mat', ...
-   'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\RDM full 2011-10-28 pos2.mat' ...  
+   'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\RDM full 2011-10-28 pos1.mat', ... % illum 25, 100
+   'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\RDM full 2011-10-28 pos2.mat' ...  % illum 25, 100
      };
+ % I used YFP, which always has ~25ms illumination time..
 
 myGrouping = [ ...
       1, ... 'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\Acetate full 2012-06-15 pos4.mat', ...
@@ -50,7 +55,7 @@ myGrouping = [ ...
       4 ... 'F:\X_Other_datasets\CRPcAMP\NWdata-lacfullinduced\RDM full 2011-10-28 pos2.mat' ... 
     ];
 
-legendDescriptions = {'ace','lac ','mal','RDM'};
+legendDescriptions = {'Acetate','Lactose','Maltose','Rich defined'};
 
 
 %{
@@ -138,10 +143,11 @@ for i = 1:numberOfDataFiles
     
     % Save data to convenient plotting struct
     myData(i).descrip = descrip;
-    myData(i).mu_Third_cycCor = mu_Third_cycCor;
-    myData(i).dY5_cycCor = dY5_cycCor;
-    myData(i).Y5_mean_cycCor = Y5_mean_cycCor;
-    myData(i).fullGrowthRateRange = fullGrowthRateRange;
+    myData(i).selected_growth_rates = mu_Third_cycCor;
+    myData(i).selected_production_rates = dY5_cycCor;
+    myData(i).selected_concentrations = Y5_mean_cycCor;
+    
+    myData(i).fullGrowthRateRange = fullGrowthRateRange;    
     myData(i).fitydY = fitydY;
     myData(i).fityY = fityY;
     myData(i).averagemu = meanGrowthRate;    
@@ -163,7 +169,7 @@ subplot(1,2,1), hold on;
 
 for i = 1:numberOfDataFiles    
     % cloud
-    plot(myData(i).mu_Third_cycCor,myData(i).dY5_cycCor,'o','Color',preferredcolors(myGrouping(i)+1,:));
+    plot(myData(i).selected_growth_rates,myData(i).selected_production_rates,'o','Color',preferredcolors(myGrouping(i)+1,:));
 end
 
 for i = 1:numberOfDataFiles    
@@ -186,7 +192,7 @@ ylabel('Producation rate');
 set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal');
 set(gca,'FontSize',15);
 
-allMu=[myData(:).mu_Third_cycCor];
+allMu=[myData(:).selected_growth_rates];
 xlim([0, max(allMu)]);
 
 % plotting concentration plot
@@ -198,7 +204,7 @@ subplot(1,2,2), hold on;
 
 % cloud
 for i = 1:numberOfDataFiles        
-    plot(myData(i).mu_Third_cycCor,myData(i).Y5_mean_cycCor,'o','Color',preferredcolors(myGrouping(i)+1,:));    
+    plot(myData(i).selected_growth_rates,myData(i).selected_concentrations,'o','Color',preferredcolors(myGrouping(i)+1,:));    
 end
 
 % fit
@@ -220,9 +226,75 @@ ylabel('Concentration');
 set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal');
 set(gca,'FontSize',15);
 
-allMu=[myData(:).mu_Third_cycCor];
+allMu=[myData(:).selected_growth_rates];
 xlim([0, max(allMu)]);
 
+
+%% Kernel plot
+% ==========
+
+hFig = figure(2); clf;
+offset=100; width1=1000; height1=500;
+set(hFig, 'Position', [offset offset width1 height1]);
+subplot(1,2,1); hold on;
+
+% Growth rate data
+% ===
+for i = 1:(numberOfDataFiles-2)
+    data = [myData(i).selected_growth_rates', myData(i).selected_production_rates'];
+    [bandwidth,density,X,Y] = kde2d(data);    
+    [C, l1] = contour3(X,Y,density,1,'-k');
+    set(l1, 'LineWidth', 2,'Color', preferredcolors(myGrouping(i)+1,:)/2);
+    plot(data(:,1),data(:,2),'.','Color',preferredcolors(myGrouping(i)+1,:),'MarkerSize',3);
+end
+
+% average point (used for legend too)
+legendLines = []; previous = 0;
+for i = 1:(numberOfDataFiles-2)
+    lineH = plot(myData(i).averagemu,myData(i).averagedY,'o','MarkerFaceColor',preferredcolors(myGrouping(i)+1,:),'LineWidth',2,'MarkerEdgeColor','k','MarkerSize',7);
+if myGrouping(i) ~= previous, legendLines = [legendLines lineH]; end; previous = myGrouping(i);
+end    
+legend( legendLines, legendDescriptions,'Location','northeast');
+
+xlabel('Growth rate (dbl/hr)');
+ylabel('Production rate (a.u./min)');
+%Set all fontsizes
+set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal');
+set(gca,'FontSize',15);
+ylim([-750, 10000])
+xlim([0, 1]);
+
+%set(gca,'YScale','log');
+
+% Concentration data
+% ===
+subplot(1,2,2); hold on;
+for i = 1:(numberOfDataFiles-2)
+    data = [myData(i).selected_growth_rates', myData(i).selected_concentrations'];
+    [bandwidth,density,X,Y] = kde2d(data);    
+    [C, l1] = contour3(X,Y,density,1,'-'); 
+    set(l1, 'LineWidth', 2,'Color', preferredcolors(myGrouping(i)+1,:)/2);
+    plot(data(:,1),data(:,2),'.','Color',preferredcolors(myGrouping(i)+1,:),'MarkerSize',3);
+end
+
+% averages
+legendLines = []; previous = 0;
+for i = 1:(numberOfDataFiles-2)        
+    lineH = plot(myData(i).averagemu,myData(i).averageY,'o','MarkerFaceColor',preferredcolors(myGrouping(i)+1,:),'LineWidth',2,'MarkerEdgeColor','k','MarkerSize',7);
+    if myGrouping(i) ~= previous, legendLines = [legendLines lineH]; end; previous = myGrouping(i);
+end    
+legend( legendLines, legendDescriptions,'Location','northeast');
+
+%set(gca,'YScale','log');
+
+%ylim([0, 400])
+xlim([0, 1]);
+
+xlabel('Growth rate (dbl/hr)');
+ylabel('Concentration (a.u.)');
+%Set all fontsizes
+set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal');
+set(gca,'FontSize',15);
 
 
 

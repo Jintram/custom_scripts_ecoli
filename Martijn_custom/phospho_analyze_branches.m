@@ -20,6 +20,7 @@ for str_idx = 1:length(strains)
         
         % calculate branch data for each strain, rep
         myPhosphoData = phospho_getbranchdata(myPhosphoData,currentstrain,currentrep);
+            % (basically calling DJK_getBranches for each dataset)
         
         disp([currentstrain, ', rep ',currentrep,' done ..'])
         

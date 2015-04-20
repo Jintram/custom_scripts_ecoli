@@ -6,34 +6,23 @@
 % data, since philippe's data is only available as raw Schnitzcells files.
 % All parameters are thus extracted immediately from the Schnitz files.
 
-% Plot some of Noreen's extr/intr noise data, but with different aim.
-% Data is available at:
-% F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal
-% Data is extracted from:
-% \\biofysicasrv\Users2\Walker\ExtrinsicNoise\Data_Collection\Data
-% See for more info:
-% \\biofysicasrv\Users2\Walker\ExtrinsicNoise\Data_Collection\List_Experiments_Used_and_Unsused_ExtrNoiseProject.xlsx
-% (Note that 1/3 of cellcycle means N datapoints used, which can be seen
-% from name mu parameter.)
+% I copied the datasets that seemed to correspond to Philippe's measurement
+% to F:\X_Other_datasets\CRPcAMP\PNdata-lacfullinduced\
+% Where also a list of all experiments can be found.
+%
+% Kiviet 2014 et al. doesn't mention that these assays were performed under
+% IPTG (in fact, it states IPTG is only used 'when indicated'). 
 
 %% Define datasets
 
-% Note that CRP.cAMP regulates when there's no induction; i.e. basal 
-% expression should show ~different behavior as induced.
-%load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\Maltose basal 2012-05-16 pos1.mat');
-%load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\Maltose basal 2012-07-26 pos4.mat');
-%load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\Acetate basal 2012-07-19 pos4.mat');
-%load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\RDM basal 2011-10-19 pos1.mat');
-%load('F:\X_Other_datasets\CRPcAMP\NWdata-lacbasal\RDM basal 2011-10-19 pos3.mat');
-
-
-% The datasets used for full induction figure
+% The datasets used for full induction figure based Kiviet2014
 myDataFiles = ...
  {'F:\X_Other_datasets\CRPcAMP\PNdata-lacfullinduced\acetate-2011-07-29-pos1crop-Schnitz.mat', ...  
  'F:\X_Other_datasets\CRPcAMP\PNdata-lacfullinduced\lactose-2012-01-13-pos5crop-Schnitz.mat', ...  
+ ... 'F:\X_Other_datasets\CRPcAMP\PNdata-lacfullinduced\succinate-2011-09-02-pos2crop-Schnitz.mat', ...  
  'F:\X_Other_datasets\CRPcAMP\PNdata-lacfullinduced\succinate-2011-09-02-pos3crop-Schnitz.mat', ...  
  'F:\X_Other_datasets\CRPcAMP\PNdata-lacfullinduced\defined-rich-2011-05-12-pos2crop-Schnitz.mat' ...  
-     };
+     }
 
 myGrouping = [ 1,2,3,4 ...
    ];
@@ -42,6 +31,12 @@ myGrouping = [ 1,2,3,4 ...
 % (which indeed also means they might be determined slightly differently).
 associatedFieldNames = ...
 [ ...
+%{
+{'muP23_fitNew_cycCor','dY5_sum_dt_cycCor','Y5_mean'}; ...
+ {'muP19_fitNew_cycCor','dY5_sum_dt_cycCor','Y5_mean'}; ...
+ {'muP37_fitNew_cycCor','dY5_sum_dt_cycCor','Y5_mean'}; ...
+ {'muP15_fitNew_cycCor','dY5_sum_dt_cycCor','Y5_mean'} ...
+%}
  {'muP23_fitNew_cycCor','dY5_sum_dt_cycCor','Y6_mean_cycCor'}; ...
  {'muP19_fitNew_cycCor','dY5_sum_dt_cycCor','Y6_mean_cycCor'}; ...
  {'muP37_fitNew_cycCor','dY5_sum_dt_cycCor','Y6_mean_cycCor'}; ...
@@ -56,11 +51,11 @@ load('F:\X_Other_datasets\CRPcAMP\PNdata-lacfullinduced\fitTimes.mat');
 % each sugar has only one dataset.
 theFitTimes = cell2mat([fitTimes(find(strcmp(fitTimes(:,1),'acetate')),2);...
                 fitTimes(find(strcmp(fitTimes(:,1),'lactose')),2);...
-                fitTimes(find(strcmp(fitTimes(:,1),'succinate')),2);...
+                fitTimes(find(strcmp(fitTimes(:,1),'succinatepos3')),2);...
                 fitTimes(find(strcmp(fitTimes(:,1),'DRM')),2)...
                 ]);
 
-legendDescriptions = {'ace','lac ','succ','DRM'};
+legendDescriptions = {'Acetate','Lactose ','Succinate','Rich defined'};
 
 some_colors; % loads some default color settings etc.
 
@@ -90,6 +85,9 @@ for i = 1:numberOfDataFiles
     % - fitted line mu & enzyme expression
     allTimes = [schnitzcells(:).time];
 
+    % Retrieving data I
+    % ===
+    
     % Retrieve ALL growth rates
     retrievedData = DJK_get_schnitzData(p, schnitzcells, 'time','dataFields',{associatedFieldNames{i,1}},'fitTime',theFitTimes(i,:) );
     mu_values_all = [retrievedData.(associatedFieldNames{i,1})];    
@@ -111,11 +109,28 @@ for i = 1:numberOfDataFiles
         
     meanGrowthRate = mean(selected_growth_rates);
     
-    % fit data and plot
-    toFitGrowthRateRange = [prctile(selected_growth_rates,5),prctile(selected_growth_rates,95)];
-    pdY = polyfit(selected_growth_rates',selected_production_rates',1);
-    fitydY = pdY(1)*toFitGrowthRateRange + pdY(2);
-    %NOW HAVE production fitline: fitydY
+    % Fitting growth rate data 
+    % ===
+    
+    % E(mu), 2nd order  
+    toFitGrowthRateRange = [prctile(selected_growth_rates,5),prctile(selected_growth_rates,95)];    
+    N = 100;
+    fitlineratesXmus = [toFitGrowthRateRange(1):(toFitGrowthRateRange(2)-toFitGrowthRateRange(1))/N:toFitGrowthRateRange(2)];
+    coefficientsFitLinesMuAsX = polyfit(selected_growth_rates',selected_production_rates',2);
+    fitlineRatesYE = polyval(coefficientsFitLinesMuAsX,fitlineratesXmus); % coefficientsFitLinesMuAsX(1)*fitlineratesXmus.^2 + coefficientsFitLinesMuAsX(2)*fitlineratesXmus + coefficientsFitLinesMuAsX(3);
+    %NOW HAVE linear production fitline: fitydY
+    
+    % mu(E), 2nd order polyfit   
+    toFitEnzymeRateRange = [prctile(selected_production_rates,5),prctile(selected_production_rates,95)];
+    N = 100;
+    dEnzyme = (toFitEnzymeRateRange(2)-toFitEnzymeRateRange(1))/N;
+    fitlineratesXenzyme = [toFitEnzymeRateRange(1):dEnzyme:toFitEnzymeRateRange(2)];
+    coefficientsFitLinesEnzymeAsX = polyfit(selected_production_rates',selected_growth_rates',2);
+    fitlineRatesYmu = polyval(coefficientsFitLinesEnzymeAsX,fitlineratesXenzyme); % (1)*fitlineratesXenzyme.^2 + coefficientsFitLinesEnzymeAsX(2)*fitlineratesXenzyme + coefficientsFitLinesEnzymeAsX(3);
+    % NOW HAVE polynomial fit mu(E) = a E^2 + b E + c
+    
+    % Retrieving data II
+    % ===
         
     % Retrieve data Y5_mean_cycCor
     retrievedData = DJK_get_schnitzData(p, schnitzcells, 'time','dataFields',{associatedFieldNames{i,3}},'fitTime',theFitTimes(i,:) );
@@ -124,22 +139,58 @@ for i = 1:numberOfDataFiles
     selected_concentrations = concentrations_all(fluorIdx); 
     % NOW HAVE concentration: Y6_mean_cycCor        
     
-    % fitline concentration
-    pY = polyfit(selected_growth_rates',selected_concentrations',1);
-    fityY = pY(1)*toFitGrowthRateRange + pY(2);
+    % fitting concentrations
+    % ===
+    
+    % 2nd order polyfit, E as function mu: E(mu)
+    N = 100;
+    dMu = (toFitGrowthRateRange(2)-toFitGrowthRateRange(1))/N;
+    fitlinesConcXmu = [toFitGrowthRateRange(1):dMu:toFitGrowthRateRange(2)];
+    coefficientsFitLinesConcMuAsX = polyfit(selected_growth_rates',selected_concentrations',2);% TODO make this arbitrary order
+    fitlineConcYE = polyval(coefficientsFitLinesConcMuAsX,fitlinesConcXmu); %coefficientsFitLinesConcMuAsX(1)*fitlinesConcXmu.^2 + coefficientsFitLinesConcMuAsX(2)*fitlinesConcXmu + coefficientsFitLinesConcMuAsX(3);
     % NOW HAVE concentration fitline: fityY
+
+    % 2nd order polyfit, mu as function E: mu(E)
+    toFitEnzymeConcentrationRange = [prctile(selected_concentrations,5),prctile(selected_concentrations,95)];
+    N = 100;
+    dE = (toFitEnzymeConcentrationRange(2)-toFitEnzymeConcentrationRange(1))/N;
+    fitlinesConcXenzymes = [toFitEnzymeConcentrationRange(1):dE:toFitEnzymeConcentrationRange(2)];
+    coefficientsFitLinesConcEnzymeAsX = polyfit(selected_concentrations',selected_growth_rates',2);
+    fitlineConcYmu = polyval(coefficientsFitLinesConcEnzymeAsX,fitlinesConcXenzymes); % (1)*fitlinesConcXenzymes.^2 + coefficientsFitLinesConcEnzymeAsX(2)*fitlinesConcXenzymes + coefficientsFitLinesConcEnzymeAsX(3);
+    % NOW HAVE polynomial fit mu(E) = a E^2 + b E + c    
     
     % Save data to convenient plotting struct
+    % ===
     myData(i).descrip = myDataFiles(i);
     myData(i).selected_growth_rates = selected_growth_rates;
     myData(i).selected_production_rates = selected_production_rates;
     myData(i).selected_concentrations = selected_concentrations;
-    myData(i).fullGrowthRateRange = toFitGrowthRateRange;
-    myData(i).fitydY = fitydY;
-    myData(i).fityY = fityY;
+
     myData(i).averagemu = meanGrowthRate;    
     myData(i).averagedY = mean(selected_production_rates);
     myData(i).averageY = mean(selected_concentrations);
+        
+    % Rate fits
+    % ===  
+    % E(mu)
+    myData(i).fitlineratesXmus = fitlineratesXmus;
+    myData(i).coefficientsFitLinesMuAsX = coefficientsFitLinesMuAsX;
+    myData(i).fitlineRatesYE = fitlineRatesYE;
+    % mu(E)
+    myData(i).fitlineratesXenzyme = fitlineratesXenzyme;
+    myData(i).coefficientsFitLinesEnzymeAsX = coefficientsFitLinesEnzymeAsX;
+    myData(i).fitlineRatesYmu = fitlineRatesYmu;    
+    
+    % Concentration fits
+    % ===
+    % E(mu)
+    myData(i).fitlinesConcXmu = fitlinesConcXmu;
+    myData(i).coefficientsFitLinesConcMuAsX = coefficientsFitLinesConcMuAsX;
+    myData(i).fitlineConcYE = fitlineConcYE;
+    % mu(E)
+    myData(i).fitlinesConcXenzymes = fitlinesConcXenzymes;
+    myData(i).coefficientsFitLinesConcEnzymeAsX = coefficientsFitLinesConcEnzymeAsX;
+    myData(i).fitlineConcYmu = fitlineConcYmu;
     
     % Tell user what we're doing
     disp(['==== Loading data ' num2str(i) ' of ' num2str(numberOfDataFiles) ' done. ====']);
@@ -151,26 +202,29 @@ end
 % plotting production rate plot
 hFig = figure(1), clf; hold on;
 offset=100; width1=1000; height1=500;
-set(hFig, 'Position', [offset offset width1 height1])
+set(hFig, 'Position', [offset offset width1 height1]);
 subplot(1,2,1), hold on;
 
-for i = 1:numberOfDataFiles    
-    % cloud
+% cloud
+for i = 1:numberOfDataFiles        
     plot(myData(i).selected_growth_rates,myData(i).selected_production_rates,'o','Color',preferredcolors(myGrouping(i)+1,:));
 end
 
-for i = 1:numberOfDataFiles    
-    % fit
-    plot(myData(i).fullGrowthRateRange,myData(i).fitydY,'-','Color','k','LineWidth',3)
+% fit
+for i = 1:numberOfDataFiles
+    % E(mu)
+    plot(myData(i).fitlineratesXmus,myData(i).fitlineRatesYE,'-','Color','k','LineWidth',3)
+    % mu(E)
+    plot(myData(i).fitlineRatesYmu,myData(i).fitlineratesXenzyme,'-','Color','r','LineWidth',3)        
 end
 
 % average point (used for legend too)
 legendLines = []; previous = 0;
 for i = 1:numberOfDataFiles        
-    lineH = plot(myData(i).averagemu,myData(i).averagedY,'o','MarkerFaceColor',preferredcolors(myGrouping(i)+1,:),'LineWidth',2,'MarkerEdgeColor','k','MarkerSize',15)
+    lineH = plot(myData(i).averagemu,myData(i).averagedY,'o','MarkerFaceColor',preferredcolors(myGrouping(i)+1,:),'LineWidth',2,'MarkerEdgeColor','k','MarkerSize',15);
 if myGrouping(i) ~= previous, legendLines = [legendLines lineH]; end; previous = myGrouping(i);
 end    
-legend( legendLines, legendDescriptions,'Location','best');
+legend( legendLines, legendDescriptions,'Location','northeast');
 
 
 xlabel('Growth rate (dbl/hr)');
@@ -191,21 +245,25 @@ subplot(1,2,2), hold on;
 
 % cloud
 for i = 1:numberOfDataFiles        
-    plot(myData(i).selected_growth_rates,myData(i).selected_concentrations,'o','Color',preferredcolors(myGrouping(i)+1,:));    
+    plot(myData(i).selected_growth_rates,myData(i).selected_concentrations,'.','Color',preferredcolors(myGrouping(i)+1,:),'MarkerSize',3);    
 end
 
 % fit
 for i = 1:numberOfDataFiles        
-    plot(myData(i).fullGrowthRateRange,myData(i).fityY,'-','Color','k','LineWidth',3)
+    % E(mu)
+    plot(myData(i).fitlinesConcXmu,myData(i).fitlineConcYE,'-','Color','k','LineWidth',3)
+    % mu(E)
+    plot(myData(i).fitlineConcYmu,myData(i).fitlinesConcXenzymes,'-','Color','r','LineWidth',3)    
 end
 
+
 % average point
-%legendLines = []; previous = 0;
+legendLines = []; previous = 0;
 for i = 1:numberOfDataFiles        
-    lineH = plot(myData(i).averagemu,myData(i).averageY,'o','MarkerFaceColor',preferredcolors(myGrouping(i)+1,:),'LineWidth',2,'MarkerEdgeColor','k','MarkerSize',15)
-    %if myGrouping(i) ~= previous, legendLines = [legendLines lineH]; end; previous = myGrouping(i);
+    lineH = plot(myData(i).averagemu,myData(i).averageY,'o','MarkerFaceColor',preferredcolors(myGrouping(i)+1,:),'LineWidth',2,'MarkerEdgeColor','k','MarkerSize',15);
+    if myGrouping(i) ~= previous, legendLines = [legendLines lineH]; end; previous = myGrouping(i);
 end    
-%legend( legendLines, {'ace','lac ','mal','RDM'},'Location','best');
+legend( legendLines, legendDescriptions,'Location','northeast');
 
 xlabel('Growth rate (dbl/hr)');
 ylabel('Concentration');
@@ -216,6 +274,69 @@ set(gca,'FontSize',15);
 allMu=[myData(:).selected_growth_rates];
 xlim([0, max(allMu)]);
 
+
+%% Kernel plot
+% ==========
+
+hFig = figure(2); clf;
+offset=100; width1=1000; height1=500;
+set(hFig, 'Position', [offset offset width1 height1]);
+subplot(1,2,1); hold on;
+
+% Growth rate data
+% ===
+for i = 1:numberOfDataFiles
+    data = [myData(i).selected_growth_rates', myData(i).selected_production_rates'];
+    [bandwidth,density,X,Y] = kde2d(data);    
+    [C, l1] = contour3(X,Y,density,2,'-k');
+    set(l1, 'LineWidth', 1);
+    plot(data(:,1),data(:,2),'.','Color',preferredcolors(myGrouping(i)+1,:),'MarkerSize',3);
+end
+
+% average point (used for legend too)
+legendLines = []; previous = 0;
+for i = 1:numberOfDataFiles        
+    lineH = plot(myData(i).averagemu,myData(i).averagedY,'o','MarkerFaceColor',preferredcolors(myGrouping(i)+1,:),'LineWidth',2,'MarkerEdgeColor','k','MarkerSize',7);
+if myGrouping(i) ~= previous, legendLines = [legendLines lineH]; end; previous = myGrouping(i);
+end    
+legend( legendLines, legendDescriptions,'Location','northeast');
+
+xlabel('Growth rate (dbl/hr)');
+ylabel('Production rate (a.u./min)');
+%Set all fontsizes
+set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal');
+set(gca,'FontSize',15);
+ylim([-750, 2000])
+
+%set(gca,'YScale','log');
+
+% Concentration data
+% ===
+subplot(1,2,2); hold on;
+for i = 1:numberOfDataFiles
+    data = [myData(i).selected_growth_rates', myData(i).selected_concentrations'];
+    [bandwidth,density,X,Y] = kde2d(data);    
+    [C, l1] = contour3(X,Y,density,2,'-k'); 
+    set(l1, 'LineWidth', 2);
+    plot(data(:,1),data(:,2),'.','Color',preferredcolors(myGrouping(i)+1,:),'MarkerSize',3);
+end
+
+% averages
+legendLines = []; previous = 0;
+for i = 1:numberOfDataFiles        
+    lineH = plot(myData(i).averagemu,myData(i).averageY,'o','MarkerFaceColor',preferredcolors(myGrouping(i)+1,:),'LineWidth',2,'MarkerEdgeColor','k','MarkerSize',7);
+    if myGrouping(i) ~= previous, legendLines = [legendLines lineH]; end; previous = myGrouping(i);
+end    
+legend( legendLines, legendDescriptions,'Location','northeast');
+
+%set(gca,'YScale','log');
+
+ylim([0, 400])
+xlabel('Growth rate (dbl/hr)');
+ylabel('Concentration (a.u.)');
+%Set all fontsizes
+set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal');
+set(gca,'FontSize',15);
 
 
 
