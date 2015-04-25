@@ -2,10 +2,41 @@
 %% Description
 
 % MW 2015/04
-
-% Quick script to otbain branchdata/crosscorrs for checking purposes.
 %
-% (Not a key script.)
+% Script to quickly generate "delayed scatter" plots, for now based on
+% NW's data handling; 
+% MW TODO: Check PN data.
+%
+% Example of how to call script:
+%{
+myID = ' icd-lac';
+p.movieName = 'pos6crop';
+p.movieDate = '2013-05-16';
+
+myOutputFolder = ['F:\X_Other_datasets\CRPcAMP\NWdata-pfkA\' myID '_' p. movieDate  '_' p.movieName '\'];
+
+myDataFile = 'F:\X_Other_datasets\CRPcAMP\NWdata-pfkA\icd-lac-2013-05-16-pos6crop-Schnitz.mat';
+associatedFieldNames =  {'G_time','G6_mean', 'muP15_fitNew'};
+myTitle = ['NW' myID '_' p. movieDate  '_' p.movieName];
+
+myFitTime = [50   1000];
+
+p.NW_saveDir = [myOutputFolder 'misc\'];
+p.DJK_saveDir = [myOutputFolder 'misc\'];
+
+p.fluor1='r';
+p.fluor2='g';
+
+% info required to make branches
+badSchnitzes = [428]; % from excel top field “schnitzes to be removed from analysis“
+
+CRPcAMP_preliminary_delayedScatterAndPlot
+
+   
+associatedFieldNames =  {'dG5_time','dG5_cycCor', 'muP15_fitNew'};
+CRPcAMP_preliminary_delayedScatterAndPlot
+%}
+
 
 if ~exist('myOutputFolder')
     myOutputFolder = 'C:\Users\wehrens\Desktop\testdelayedscatter\output\';
