@@ -1,5 +1,5 @@
 
-% 2015/02 MW 
+%% 2015/02 MW 
 % 
 % Looking again at some data Aileen took.
 % Question is whether cells are in exponential phase.
@@ -47,9 +47,14 @@ identifier = regexprep(identifier,'\.','-');
 load(myFile); 
 myFile % just print for user convenience
 
+timeField = 'mins';
+lengthField = 'lengthMicrons';
+
+%% Analyze
+
 myFrames = unique([schnitzcells.frames]);
-myTimes = unique([schnitzcells.mins]);
-allLengths = [schnitzcells.lengthMicrons];
+myTimes = unique([schnitzcells.(timeField)]);
+allLengths = [schnitzcells.(lengthField)];
 
 % Surely this can be done prettier, but let's just loop to get the desired
 % data now.
@@ -66,8 +71,8 @@ for f = myFrames
         
         % If so, add length at that timepoint to the collection of lengths
         if ~isempty(pointInSchnitz)
-            timesForThisFrame(end+1) = schnitzcells(schnitzIdx).mins(pointInSchnitz);            
-            lengthForThisFrame(end+1) = schnitzcells(schnitzIdx).lengthMicrons(pointInSchnitz);
+            timesForThisFrame(end+1) = schnitzcells(schnitzIdx).(timeField)(pointInSchnitz);            
+            lengthForThisFrame(end+1) = schnitzcells(schnitzIdx).(lengthField)(pointInSchnitz);
         end
     end
     
@@ -76,6 +81,8 @@ for f = myFrames
     plottingfXaxis{end+1} = ones(numel(lengthForThisFrame),1)*f; % convenient as x-axis later
     
 end
+
+%% Plotting
 
 % Some plotting settings
 h = figure('Name', myFile,'pos', [100 100 800+100 400+100]); % 700x600
