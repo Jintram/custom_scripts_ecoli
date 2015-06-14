@@ -24,7 +24,7 @@ myRootDir = [myRootDir, '\', positionDate, '\',positionName,'\']
 load(fileToLoad);
 
 % To visualize with checking software:
-% MW_manualcheckseg(p,'manualRange',[39:274],'override',1,'assistedCorrection',1);
+% MW_manualcheckseg(p,'manualRange',[39:274],'overwrite',1,'assistedCorrection',1);
 
 %% Plotting the ellips fittings
 % Select which frame of the movie you'd like to see:

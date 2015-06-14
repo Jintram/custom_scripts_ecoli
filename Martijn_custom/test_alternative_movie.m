@@ -20,7 +20,7 @@ for fr = myRange
   
   % 
   p.showPerim = 1;
-  outim = PN_imshowlabel(p, Lc,0,0,0,'phaseImage',phsub); % note i'm feeding the same img as "previous" img
+  outim = PN_imshowlabel(p, Lc,[],[],[],'phaseImage',phsub); % note i'm feeding the same img as "previous" img
   
   % crop img
   %outim = imcrop(outim, [395   225   650   650]);

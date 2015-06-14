@@ -36,8 +36,8 @@ PN_segmoviephase_3colors(p,'segRange', [6:8],'slices', [1 2 3],'rangeFiltSize', 
 % Set
 
 %
-PN_manualcheckseg(p,'manualRange',[6:9],'override',1,'assistedCorrection',1);
-%MW_manualcheckseg(p,'manualRange',[39:274],'override',1,'assistedCorrection',1);
+PN_manualcheckseg(p,'manualRange',[6:9],'overwrite',1,'assistedCorrection',1);
+%MW_manualcheckseg(p,'manualRange',[39:274],'overwrite',1,'assistedCorrection',1);
 
 
 
