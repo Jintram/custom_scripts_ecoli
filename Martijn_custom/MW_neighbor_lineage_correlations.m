@@ -144,6 +144,7 @@ for fr = myRange
           end
           relatedness = relatedness.*ANCESTORDILUTION;
       end
+      
       if size(colorsAncestry,1) > 1
           ancestryMap(i,:) = sum(colorsAncestry)./sum(ANCESTORDILUTION.^[0:numel(colorsAncestry)-1]);        
       else
@@ -171,17 +172,17 @@ for fr = myRange
 
     % make image of cells 
     p.showPerim = 0;
-    outim = PN_imshowlabel(p, DATA(fr).Lc, 0,0,0, 'customColors', myCustomColorMap);%,'phaseImage',); % note i'm feeding the same img as "previous" img
+    outim = PN_imshowlabel(p, DATA(fr).Lc, [],[],[], 'customColors', myCustomColorMap);%,'phaseImage',); % note i'm feeding the same img as "previous" img
     % crop img
     %outim = imcrop(outim, [395   225   650   650]);
 
     % growthrates image
     p.showPerim = 0;
-    imGrowthRates = PN_imshowlabel(p, DATA(fr).Lc, 0,0,0, 'customColors', growthRateColors);%,'phaseImage',); % note i'm feeding the same img as "previous" img
+    imGrowthRates = PN_imshowlabel(p, DATA(fr).Lc, [],[],[], 'customColors', growthRateColors);%,'phaseImage',); % note i'm feeding the same img as "previous" img
 
     % Outline image
     p.showPerim = 1;
-    imOutlines = PN_imshowlabel(p, DATA(fr).Lc, 0,0,0,'customColors', myCustomColorMap, 'phaseImage', DATA(fr).phsub); % note i'm feeding the same img as "previous" img
+    imOutlines = PN_imshowlabel(p, DATA(fr).Lc, [],[],[],'customColors', myCustomColorMap, 'phaseImage', DATA(fr).phsub); % note i'm feeding the same img as "previous" img
 
     % Plot image of cells and length plot
     % ===
@@ -435,13 +436,13 @@ end
 figure(4), clf,  hold on;
 xlim([min([uniqueSortedNeighborN, uniqueSortedsisterN,uniqueSortedUnrelatedNeighborN ]),max([uniqueSortedNeighborN, uniqueSortedsisterN,uniqueSortedUnrelatedNeighborN ])]);
 ylim([-1,1])
-l1=errorbar(uniqueSortedNeighborN,theMeansNeighbors,theStdsNeighbors,'ob','Linewidth',2)
+l1=errorbar(uniqueSortedNeighborN,theMeansNeighbors,theStdsNeighbors,'ob-','Linewidth',2)
 errorbar_tick(l1)
-l2=errorbar(uniqueSortedsisterN,theMeansSisters,theStdsSisters,'or','Linewidth',2)
+l2=errorbar(uniqueSortedsisterN,theMeansSisters,theStdsSisters,'or-','Linewidth',2)
 errorbar_tick(l2)
-l3=errorbar(uniqueSortedUnrelatedNeighborN,theMeansUnrelatedNeighbors,theStdsUnrelatedNeighbors,'og','Linewidth',2)
+l3=errorbar(uniqueSortedUnrelatedNeighborN,theMeansUnrelatedNeighbors,theStdsUnrelatedNeighbors,'og-','Linewidth',2)
 errorbar_tick(l3)
-l4=errorbar(uniqueSortedallpairsN,theMeansAllPairs,theStdsAllPairs,'ok','Linewidth',2)
+l4=errorbar(uniqueSortedallpairsN,theMeansAllPairs,theStdsAllPairs,'ok-','Linewidth',2)
 errorbar_tick(l4)
 legend([l1,l2,l3,l4],{'neighbors','sisters','unrelated neighbors','all pairs'},'Location','southeast')
 plot([min([uniqueSortedNeighborN, uniqueSortedsisterN,uniqueSortedUnrelatedNeighborN ]),max([uniqueSortedNeighborN, uniqueSortedsisterN,uniqueSortedUnrelatedNeighborN ])],[0,0],'-k')
