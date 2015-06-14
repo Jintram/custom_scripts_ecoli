@@ -45,6 +45,7 @@ associatedFieldNames =  {'dG5_time','dG5_cycCor', 'muP15_fitNew'};
 CRPcAMP_preliminary_delayedScatterAndPlot
 %}
 
+PERFORMSOMECHECKS = 0;
 
 if ~exist('myOutputFolder')
     myOutputFolder = 'C:\Users\wehrens\Desktop\testdelayedscatter\output\';
@@ -160,6 +161,7 @@ xlabel(associatedFieldNames{1},'Interpreter', 'None'), ylabel(associatedFieldNam
 
 %%
 
+%REDUNDANCYALLOWED = 2^2;
 REDUNDANCYALLOWED = 2^2;
 
 % Some additional editing of the branches:
@@ -187,14 +189,19 @@ if isfield(p,'tauIndices'), p=rmfield(p,'tauIndices'); end
 
 %% Compare two cross-corrs (DJK & MW)
 
-figure(1),clf,hold on
+myfig=figure(5),clf,hold on;
 errorbar(CorrData(:,1),CorrData(:,2),CorrData(:,3),'x-','Color', [.5,.5,.5], 'LineWidth',2)
 l1=plot(CorrData(:,1),CorrData(:,2),'x-k','LineWidth',2)
 
 l2=plot(CorrData(:,1),correlationsPerTau,'o-r','LineWidth',2)
+
+% If you recalculate correlations again w. different params, this allows
+% plotting of extra line.
+%l3=plot(CorrData(:,1),correlationsPerTau100,'o-','Color',[1 .5 0],'LineWidth',2)
+
 myxlimvalues=[min(CorrData(:,1)), max(CorrData(:,1))];
 xlim(myxlimvalues);
-ylim([-0.4,0.4]);
+ylim([-1,1]);
 plot(myxlimvalues,[0,0],'k-');
 
 legend([l1,l2],{'DJK','MW'})
@@ -206,14 +213,14 @@ ylabel(['R(' associatedFieldNames{1,2} ', growth) (normalized)'], 'Interpreter',
 set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal');
 set(gca,'FontSize',15);
 
-saveas(1,[myOutputFolder 'crosscorrs_' associatedFieldNames{1,2} '.tiff']);
+saveas(myfig,[myOutputFolder 'crosscorrs_' associatedFieldNames{1,2} '.tiff']);
 
 
 
 %% Plot code from CRPcAMP..overview..general
 % ==========
 NRCONTOURLINES = 5;
-SHOWPLUSMINFROMZERO = 15;
+SHOWPLUSMINFROMZERO = 30;
 PLOT3DSCATTER = 0;
 
 middlePosition = [ceil(numel(iTausCalculated)/2)-SHOWPLUSMINFROMZERO:ceil(numel(iTausCalculated)/2)+SHOWPLUSMINFROMZERO];
@@ -259,7 +266,7 @@ for delayIdx = rangeiTausCalculated
     % mean
     lineH = plot(mean(data(:,1)),mean(data(:,2)),'o','MarkerFaceColor','k','LineWidth',2,'MarkerEdgeColor','k','MarkerSize',7);
     
-    title(['D# = ' num2str(iTausCalculated(delayIdx)) ', R = ' sprintf('%0.3f',correlationsPerTau(delayIdx)), ' -- ' myID '_' p. movieDate  '_' p.movieName], 'Interpreter', 'none')    
+    title(['D# = ' num2str(iTausCalculated(delayIdx)) ', R = ' sprintf('%0.3f',correlationsPerTau(delayIdx)), 10 ,myID '_' p. movieDate  '_' p.movieName], 'Interpreter', 'none')    
     
     xlabel(['Delta ' associatedFieldNames{1,2}] , 'Interpreter', 'none');
     ylabel(['Delta ' associatedFieldNames{1,3}] , 'Interpreter', 'none');
@@ -301,31 +308,33 @@ end
 
 %% Some random checks
 
-% distribution of times 
-% equivalent of 'hist' calculated manually because times have interval,
-% which complicates use of hist function.
-fieldcount=0; R = struct;
-% loop over timefields of interest
-for myfield = {'Y_time','MWDJK_dY_time', 'time'}
+if PERFORMSOMECHECKS
+    % distribution of times 
+    % equivalent of 'hist' calculated manually because times have interval,
+    % which complicates use of hist function.
+    fieldcount=0; R = struct;
+    % loop over timefields of interest
+    for myfield = {'Y_time','MWDJK_dY_time', 'time'}
 
-    % administration
-    myfield = char(myfield);
-    fieldcount = fieldcount+1;
-    
-    % get all possible values 
-    R(fieldcount).YValues = unique([s_rm.(myfield)]);
-    % count how many of each values are in the schnitz struct
-    R(fieldcount).countYValues = [];
-    for value=R(fieldcount).YValues 
-        R(fieldcount).countYValues(end+1) = sum([s_rm.(myfield)]==value);
+        % administration
+        myfield = char(myfield);
+        fieldcount = fieldcount+1;
+
+        % get all possible values 
+        R(fieldcount).YValues = unique([s_rm.(myfield)]);
+        % count how many of each values are in the schnitz struct
+        R(fieldcount).countYValues = [];
+        for value=R(fieldcount).YValues 
+            R(fieldcount).countYValues(end+1) = sum([s_rm.(myfield)]==value);
+        end
+
     end
-    
+    % plot first two fields of interest
+    figure, clf; hold on;
+    if numel(R)>2, plot(R(3).YValues, R(3).countYValues, 'xk'); end
+    plot(R(1).YValues, R(1).countYValues, 'or','LineWidth',2);
+    plot(R(2).YValues, R(2).countYValues, 'ob','LineWidth',2);
 end
-% plot first two fields of interest
-figure, clf; hold on;
-if numel(R)>2, plot(R(3).YValues, R(3).countYValues, 'xk'); end
-plot(R(1).YValues, R(1).countYValues, 'or','LineWidth',2);
-plot(R(2).YValues, R(2).countYValues, 'ob','LineWidth',2);
 
 
 
