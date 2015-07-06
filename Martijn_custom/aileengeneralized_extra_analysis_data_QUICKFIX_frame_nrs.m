@@ -19,7 +19,9 @@ lengthField = 'length_fitNew';
 
 %%% CURRENT ONE: %%%
 %myFile = '\\biofysica-store\data\TansGroup\Aileen\KILLERMIKE\2007mondate\2007-08-23\early Pos08-mini-01\data\Pos08-mini-01-Schnitz.mat';
-myFile = 'F:\A_Tans1_step1_incoming_not_backed_up\2015-06-02\pos5crop\data\pos5crop-Schnitz.mat';
+if ~exist('myFile')
+    myFile = 'F:\A_Tans1_step1_incoming_not_backed_up\2015-06-02\pos4crop\data\pos4crop-Schnitz.mat';
+end
 %%% //////////// %%%
 
 % create identifier
