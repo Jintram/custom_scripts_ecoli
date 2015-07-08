@@ -56,19 +56,27 @@ if ~exist('associatedFieldNames') | ~exist('myTitle') | ~exist('p') | ~exist('ba
 end
     
 
+% Some additional parameters
+YFIELDBRANCHPLOT = 2;
+
 % Loading
 %load(myDataFile); % Can also be done by user
 
 
-%%
+%% preparing data
 
 name_rm = 'rm'; name_all = 'all';
 fitTime = myFitTime;
 
 if ~alreadyRemovedInMatFile
     % Find Schnitzes with slow/negative growth rate -> rm them?!
-    slowschnitzes=NW_detectSlowSchnitzes(p,schnitzcells,associatedFieldNames{3},'muThreshold',0.05);
+    slowschnitzes=NW_detectSlowSchnitzes(p,schnitzcells,associatedFieldNames{3});
 
+    % Now if badSchnitzes not given, just take the slow ones determined
+    % above
+    disp('Assuming slowsschnitzes are badSchnitzes..');
+    badSchnitzes=slowschnitzes';
+    
     % Preparation to load
     % Adapted from NW excel sheet    
     s_all = DJK_selSchitzesToPlot(schnitzcells, 'P', @(x) 1); 
@@ -144,7 +152,7 @@ branchData = DJK_getBranches(p,s_rm,'dataFields',{associatedFieldNames{1}, assoc
  name_rm_branch = [name_rm '_' num2str(fitTime(1)) '_' num2str(fitTime(2)) '_Conc_oldRates'];
 
 
-%%
+%% Plot branches
 
 % Just some plot colors
 distinguishableColors = distinguishable_colors(numel(branchData)+1,[1 1 1]); 
@@ -153,11 +161,14 @@ distinguishableColors = distinguishable_colors(numel(branchData)+1,[1 1 1]);
 figure(1); clf; hold on;
 numelBranches = numel(branchData);
 for branch_nr = 1:numelBranches
-    l = plot(branchData(branch_nr).(associatedFieldNames{1}), branchData(branch_nr).(associatedFieldNames{3}),'-o','Color',distinguishableColors(branch_nr,:))
+    l = plot(branchData(branch_nr).(associatedFieldNames{1}), branchData(branch_nr).(associatedFieldNames{YFIELDBRANCHPLOT}),'-o','Color',distinguishableColors(branch_nr,:))
     set(l, 'LineWidth', (numelBranches-branch_nr+1)/numelBranches*10);
 end
 
-xlabel(associatedFieldNames{1},'Interpreter', 'None'), ylabel(associatedFieldNames{3},'Interpreter', 'None')
+xlabel(associatedFieldNames{1},'Interpreter', 'None'), ylabel(associatedFieldNames{YFIELDBRANCHPLOT},'Interpreter', 'None')
+
+%Set all fontsizes
+MW_makeplotlookbetter(20);
 
 %%
 
@@ -186,6 +197,11 @@ p.timeField = associatedFieldNames{1,1};
 if isfield(p,'tauIndices'), p=rmfield(p,'tauIndices'); end
 [dataPairsPerTau, iTausCalculated, originColorPerTau, correlationsPerTau] = ...
     MW_getdelayedscatter(p, branchData, ['noise_' associatedFieldNames{1,2}], ['noise_' associatedFieldNames{1,3}], REDUNDANCYALLOWED)
+
+%% Plot "raw" cross cor I calculate (MW)
+
+myfig=figure(99),clf,hold on;
+l=plot(iTausCalculated,correlationsPerTau,'o-r','LineWidth',2)
 
 %% Compare two cross-corrs (DJK & MW)
 
@@ -220,7 +236,7 @@ saveas(myfig,[myOutputFolder 'crosscorrs_' associatedFieldNames{1,2} '.tiff']);
 %% Plot code from CRPcAMP..overview..general
 % ==========
 NRCONTOURLINES = 5;
-SHOWPLUSMINFROMZERO = 30;
+SHOWPLUSMINFROMZERO = 25;
 PLOT3DSCATTER = 0;
 
 middlePosition = [ceil(numel(iTausCalculated)/2)-SHOWPLUSMINFROMZERO:ceil(numel(iTausCalculated)/2)+SHOWPLUSMINFROMZERO];
