@@ -68,6 +68,17 @@
 % corryfpmu=0.5295; % use min/max/mean fo the 2 different corrs
 % corrcfpmu=0.4966;
 % experimental_frac_intr_expl=0.025599;
+
+
+% 2012-07-26 Maltose basal
+%numdata=1947; 
+%noisemu=0.1705;  
+%noiseyfp=1.2635
+%noisecfp=1.1141
+%noise2_intr=0.8084; 
+%corryfpmu=0.0961;  
+%corrcfpmu=0.0631;
+%experimental_frac_intr_expl=0.0060775;
 % **************************************************************************
 
 
@@ -76,23 +87,23 @@
 % **************************************
 numrepeats=10000;   % # of times the sampling of vectors & expl frac calc is repeated
 SHOWOUTPUT=0;   % display some data about sampling vectors
-numdata=4225;   % # of data points the experiment has
-noisemu=0.1937;    % noise in growth rate (std/mean)
-noiseyfp=mean([0.4343,0.4151]);   % noise in YFP production rate [blubb Note: currently this 
+numdata=1947;   % # of data points the experiment has
+noisemu=0.1705;    % noise in growth rate (std/mean)
+noiseyfp=mean([1.1141,1.2635]);   % noise in YFP production rate [blubb Note: currently this 
                 % refers to total noise - contrary to "all noise which is
                 % due to sources other than mu"
                 % This could become relevant for different coupling
                 % strengths
                 % default: choose mean of experim. noise(CFP),noise(YFP)
 noisecfp=noiseyfp;
-noise2_intr=0.0485;  % squared(!) intrinsic noise. "Taken as a given constant in a certain experiment!!!"
+noise2_intr=0.8084;  % squared(!) intrinsic noise. "Taken as a given constant in a certain experiment!!!"
 
-corryfpmu=0.2817;  % correlation btw YFPrate and mu. Choose either min, max or
+corryfpmu=0.0961;  % correlation btw YFPrate and mu. Choose either min, max or
                 % mean of [Corr(YFP,mu),Corr(CFP,mu)]
                 % Also test more extreme values
-corrcfpmu=0.1715;%corryfpmu;
+corrcfpmu=0.0631;%corryfpmu;
 
-experimental_frac_intr_expl=0.029646;   % experimentally measured intr expl fraction (KDE)
+experimental_frac_intr_expl=0.0060775;   % experimentally measured intr expl fraction (KDE)
 % **************************************
 
 

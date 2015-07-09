@@ -101,6 +101,12 @@ if nargin<5  %(no Min/Max given) used to be: 3 (NW)
     MAX=max(data,[],1); MIN=min(data,[],1); Range=MAX-MIN;
     MAX_XY=MAX+Range/4; MIN_XY=MIN-Range/4;
 end
+
+% ******************************************
+%MIN_XY=[NAN NAN]; %blubb delete again!
+%MAX_XY=[NAN NAN];%blubb delete again!
+% *************************************
+
 scaling=MAX_XY-MIN_XY;
 if N<=size(data,2)
     error('data has to be an N by 2 array where each row represents a two dimensional observation')
