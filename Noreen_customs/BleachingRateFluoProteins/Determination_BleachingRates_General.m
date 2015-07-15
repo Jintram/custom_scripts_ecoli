@@ -3,6 +3,15 @@
 % A SCHNITZCELLS STRUCTURE.
 % This script is used in the context of fluorescent protein characterization.
 % --------------------------------------------------------------------
+
+% ***************************************************************
+% IMPORTANT: FOR CORRECT UNEVEN-ILLUMINATION-CORRECTION (=need location of
+% cell in full image) IT IS ESSENTIAL THAT IMAGE IS
+% - NOT CROPPED
+% - 'USEFULLIMAGE' SET
+% ***************************************************************
+
+
 % Origin: 
 % The script is strongly based on "Determination_BleachingRates_GFPmCherry.m", 
 %   however * generalized to any color
@@ -65,11 +74,14 @@
 % ** all above quantities exist also without the "effec" and are then not
 % illumination corrected -> these values are only for testing **
 
+% MeanFitBleachCurve        Fitted bleaching curve over selected time range
+
 
 % ********************************************
 % STEP BY STEP: WHAT TO DO
 % ********************************************
 % 1) requires manual adjustement (dataset etc).
+% 2) optional adjustment: ad hoc remove schnitzcells from analysis (useForPlot)
 % 4) optional adjustment (X6mean vs X5sum etc, plotting options)
 % 
 
@@ -87,15 +99,15 @@
 % ------------------------------------------------------------------------
 % ************ADJUST****************
 % path (struct file in .mat must be named schnitzcells_rm)
-myfile='D:\ExperimentalDataTodo\2015-06-11\schnitzcells_2015-06-11pos5_bleach_mKate2.mat';
+myfile='\\biofysicasrv\Users2\Walker\TechnicalAnalysis_Calibration\BleachingRates_Main\Schnitzfiles\schnitzcells_2015-06-08pos3andpos6_bleach_mVenus.mat';
 % shading image (color spec!)
-myshadingfile='D:\SchnitzcellsVersions\Noreen_Develop\fluo_correction_images\Correction_microscope1-mcherry-20150527-40ms.mat';
+myshadingfile='D:\SchnitzcellsVersions\Noreen_Develop\fluo_correction_images\Correction_microscope1-yfp-20150527-20ms.mat';
 %fluo settings
 illumtime=0.200; %[sec!!!]
-mycolor='r';  %color (for file names)
-fluoname='mKate2';
+mycolor='y';  %color (for file names)
+fluoname='mVenus';
 % image range to use (determine after first plot)
-useimages=[20:350]; % counter starts at =1 (also if e.g pos1-..-006 is first image)
+useimages=[1:251]; % counter starts at =1 (also if e.g pos1-..-006 is first image)
                     % 2015-06-11pos5 (mKate2): [20:350] (initial increase:
                     %                       focus or photoconversion?
 % smooth traces with default span=5 (default=1)
@@ -158,7 +170,7 @@ end
 % ------------------------------------------------------------
 useforplot_vec=[myschnitzcells.useForPlot];
 % potentially here: remove schnitzcells with bad traces adhoc -> set =0
-
+% useforplot_vec(ii)=0; %blubb
 
 % ------------------------------------------------------------
 % Effective illumination strength
@@ -264,7 +276,9 @@ figure(1) % not illum corrected
 clf
 hold on
 for i=1:numschnitzes
-    plot(illumtime_vec,X5sum_norm(:,i),'Color',colormatrix(i,:))
+    if useforplot_vec(i)==1
+        plot(illumtime_vec,X5sum_norm(:,i),'Color',colormatrix(i,:))
+    end
 end
 % plot(X5sum_norm) % multicolor
 xlabel('cum. illumtime [sec]')
@@ -275,12 +289,27 @@ figure(2) % yes illum corrected
 clf
 hold on
 for i=1:numschnitzes
-    plot(illumtime_mat_effec(:,i),X5sum_norm(:,i),'Color',colormatrix(i,:))
+    if useforplot_vec(i)==1
+        plot(illumtime_mat_effec(:,i),X5sum_norm(:,i),'Color',colormatrix(i,:))
+    end
 end
 % plot(X5sum_norm) % multicolor
 xlabel('cum. illumtime [sec]')
 ylabel([fluoname ': ' X5sum_name],'Interpreter','None')
 title('IS normalized for illum strength')
+
+figure(10) % not illum corrected, not intensity normalized
+clf
+hold on
+for i=1:numschnitzes
+     if useforplot_vec(i)==1
+        plot(illumtime_vec,X5sum(useimages,i),'Color',colormatrix(i,:))
+     end
+end
+% plot(X5sum_norm) % multicolor
+xlabel('cum. illumtime [sec]')
+ylabel([fluoname ': ' X5sum_name],'Interpreter','None')
+title('NOT normalized for init fluo value & illum strength')
 
 
 %% ----------------------------------------------------------------------------
@@ -325,7 +354,7 @@ Offsets_effec=NaN(numschnitzes,1); % y-axis offset. yes account for illum intens
 % ----------------------------------------
 % loop over all schnitzes
 for i=1:numschnitzes
-    if myschnitzcells(i).useForPlot==1
+    if useforplot_vec(i)==1
         curr_fluovec=Fluo_norm(:,i); % fluo for all frames
         curr_illumvec=illumtime_vec; % cum. illumtime for all frames
 
@@ -373,7 +402,7 @@ end
 % ----------------------------------------
 % loop over all schnitzes
 for i=1:numschnitzes
-    if myschnitzcells(i).useForPlot==1
+    if useforplot_vec(i)==1
         curr_fluovec=Fluo_norm(:,i); % fluo for all frames
         curr_illumvec=illumtime_mat_effec(:,i); % cum. illumtime for all frames
 
@@ -474,7 +503,9 @@ figure(3) % yes illum corrected
 clf
 hold on
 for i=1:numschnitzes
-    plot(illumtime_mat_effec(:,i),X5sum_norm(:,i),'Color',colormatrix(i,:))
+    if useforplot_vec(i)==1
+        plot(illumtime_mat_effec(:,i),X5sum_norm(:,i),'Color',colormatrix(i,:))
+    end
 end
 plot(IllumTimeMeanCurve,MeanFitBleachCurve,'r','LineWidth',2)
 % plot(X5sum_norm) % multicolor
@@ -498,12 +529,46 @@ disp(['Analyzed dataset ' myfile ' .'])
 disp(['Fluorophore: ' fluoname '(' mycolor ')'])
 disp(['Fluoparameter: ' Fluo_name ', illumtime per frame: ' num2str(illumtime) ... 
     'sec, #frames used: ' num2str(length(useimages)) '.'])
-disp(['# schnitzes (traces) used: ' num2str(sum([myschnitzcells.useForPlot])) ...
+disp(['# schnitzes (traces) used: ' num2str(sum(useforplot_vec)) ...
     ', traces were smoothed (0/1): ' num2str(SMOOTHTRACES) '.'])
 disp('--------------------------------------------------------')
 disp(['bleachrate=' num2str(Bleachrate_effec_mean) ' +- ' num2str(Bleachrate_effec_std) ' 1/sec (mean+-std) (base=2)'])
-disp(['half-time T12=' num2str(T12_effec_mean) ' +- ' num2str(T12_effec_std) ' sec.'])
+disp(['half-time T_12=' num2str(T12_effec_mean) ' +- ' num2str(T12_effec_std) ' sec.'])
 disp(['offset=' num2str(Offsets_effec_mean) ' +- ' num2str(Offsets_effec_std) ])
 disp('--------------------------------------------------------')
+
+
+%%
+% ---------------------------------
+% FORMAT IMAGES
+% ---------------------------------
+set(figure(3),'OuterPosition',[695   499   472   432])
+xlim([0 80])
+ylim([-0.05 1.2])
+
+
+set(figure(1),'OuterPosition',[695   499   333   333])
+xlim([0 80])
+ylim([-0.05 1.2])
+
+set(figure(2),'OuterPosition',[695   499   333   333])
+xlim([0 80])
+ylim([-0.05 1.2])
+%%
+%shading image
+figure(4)
+colormap gray
+imagesc(shading)
+axis equal
+xlim([0 2048]); ylim([0 2048]);
+hold on
+plot([512 512],[512 1536],'w')
+plot([1536 1536],[512 1536],'w')
+plot([512 1536],[512 512],'w')
+plot([512 1536],[1536 1536],'w')
+colorbar
+set(figure(4),'OuterPosition',[695   499   356   333])
+
+
 
 
