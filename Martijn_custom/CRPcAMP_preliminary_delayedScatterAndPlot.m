@@ -70,12 +70,21 @@ fitTime = myFitTime;
 
 if ~alreadyRemovedInMatFile
     % Find Schnitzes with slow/negative growth rate -> rm them?!
-    slowschnitzes=NW_detectSlowSchnitzes(p,schnitzcells,associatedFieldNames{3});
+    slowschnitzes=NW_detectSlowSchnitzes(p,schnitzcells,associatedFieldNames{3},'muThreshold',0);
 
     % Now if badSchnitzes not given, just take the slow ones determined
-    % above
-    disp('Assuming slowsschnitzes are badSchnitzes..');
-    badSchnitzes=slowschnitzes';
+    % above    
+    if ~exist('badSchnitzes','var') 
+        disp('ATTENTION: badSchnitzes not given, assuming slowsschnitzes are badSchnitzes..');
+        badSchnitzes= slowschnitzes';
+        pause(2);
+    elseif exist('addSlowOnes','var'), if addSlowOnes
+        
+        disp('ATTENTION: Assuming slowsschnitzes are badSchnitzes, adding them to badSchnitzes array..');
+        badSchnitzes=unique([badSchnitzes slowschnitzes']);
+        pause(2);
+    
+    end, end
     
     % Preparation to load
     % Adapted from NW excel sheet    
@@ -84,7 +93,9 @@ if ~alreadyRemovedInMatFile
     s_all_fitTime_cycle = DJK_selSchitzesToPlot(s_all_fitTime, 'completeCycle', @(x) x ~= 0); name_all_fitTime_cycle = [name_all_fitTime '_cycle'];
 
     s_rm = DJK_selSchitzesToPlot(s_all, 'P', @(x) 1); 
-    for i=badSchnitzes, s_rm(i).useForPlot=0; end;
+    if ~isempty(badSchnitzes)
+        for i=badSchnitzes, s_rm(i).useForPlot=0; end;
+    end
     s_rm_fitTime = DJK_selSchitzesToPlot(s_rm, 'time', @(x) x(1) > fitTime(1) & x(1) < fitTime(2)); name_rm_fitTime = ['rm_' num2str(fitTime(1)) '_' num2str(fitTime(2))];
     s_rm_fitTime_cycle = DJK_selSchitzesToPlot(s_rm_fitTime, 'completeCycle', @(x) x ~= 0); name_rm_fitTime_cycle = [name_rm_fitTime '_cycle'];
 end
@@ -229,12 +240,16 @@ ylabel(['R(' associatedFieldNames{1,2} ', growth) (normalized)'], 'Interpreter',
 set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal');
 set(gca,'FontSize',15);
 
+plot([0,0],[-1,1],'-k');
+
 saveas(myfig,[myOutputFolder 'crosscorrs_' associatedFieldNames{1,2} '.tiff']);
 
 
 
 %% Plot code from CRPcAMP..overview..general
 % ==========
+if ~exist('PLOTSCATTER','var'), PLOTSCATTER=1; end;
+if PLOTSCATTER
 NRCONTOURLINES = 5;
 SHOWPLUSMINFROMZERO = 25;
 PLOT3DSCATTER = 0;
@@ -321,7 +336,7 @@ if PLOT3DSCATTER
     %xlim([0, max([myData(:).selected_growth_rates])])
 end
     
-
+end
 %% Some random checks
 
 if PERFORMSOMECHECKS
