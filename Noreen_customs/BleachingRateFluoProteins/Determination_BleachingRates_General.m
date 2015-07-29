@@ -99,15 +99,25 @@
 % ------------------------------------------------------------------------
 % ************ADJUST****************
 % path (struct file in .mat must be named schnitzcells_rm)
-myfile='\\biofysicasrv\Users2\Walker\TechnicalAnalysis_Calibration\BleachingRates_Main\Schnitzfiles\schnitzcells_2015-06-08pos3andpos6_bleach_mVenus.mat';
+myfile='\\biofysicasrv\Users2\Walker\TechnicalAnalysis_Calibration\BleachingRates_Main\Schnitzfiles\schnitzcells_2015-07-15pos2and4and6_bleach_GFP.mat';
+%myfile='\\biofysicasrv\Users2\Walker\TechnicalAnalysis_Calibration\BleachingRates_Main\Schnitzfiles\schnitzcells_2015-07-15pos3and5and7_bleach_mCherry.mat';
+% ** control: 
+%myfile='\\biofysicasrv\Users2\Walker\Experiments\Technical\2014-03-27\schnitz_icd_L31_merge.mat';
+
 % shading image (color spec!)
-myshadingfile='D:\SchnitzcellsVersions\Noreen_Develop\fluo_correction_images\Correction_microscope1-yfp-20150527-20ms.mat';
+myshadingfile='D:\SchnitzcellsVersions\Noreen_Develop\fluo_correction_images\Correction_microscope1-engfp-20150527-20ms';
+%myshadingfile='D:\SchnitzcellsVersions\Noreen_Develop\fluo_correction_images\Correction_microscope1-mcherry-20150527-40ms';
+% ** control: (control refers to : 2014-03-27)
+% myshadingfile='D:\SchnitzcellsVersions\Noreen_Develop\fluo_correction_images\correction_10MHz_mCherry_100ms_2014-02-19.mat';
+%myshadingfile='D:\SchnitzcellsVersions\Noreen_Develop\fluo_correction_images\Correction_10MHz_GFP_2014_01_28.mat';
+
+
 %fluo settings
-illumtime=0.200; %[sec!!!]
-mycolor='y';  %color (for file names)
-fluoname='mVenus';
+illumtime=0.20; %[sec!!!]  % ** control: mcherry: 150ms, gfp: 300ms (2014-03-27)
+mycolor='g';  %color (for file names)
+fluoname='GFP';
 % image range to use (determine after first plot)
-useimages=[1:251]; % counter starts at =1 (also if e.g pos1-..-006 is first image)
+useimages=[1:380]; % counter starts at =1 (also if e.g pos1-..-006 is first image)
                     % 2015-06-11pos5 (mKate2): [20:350] (initial increase:
                     %                       focus or photoconversion?
 % smooth traces with default span=5 (default=1)
@@ -120,7 +130,8 @@ load(myshadingfile)
 clear flatfield replace
 % ok, if name was wrong: adjust schnitz file name
 myschnitzcells=schnitzcells_rm;
-
+% ** control:
+%myschnitzcells=schnitz_icd_L31;
 
 
 %% --------------------------------------------------------------------------
@@ -168,7 +179,11 @@ end
 % ------------------------------------------------------------
 % useForPlot
 % ------------------------------------------------------------
-useforplot_vec=[myschnitzcells.useForPlot];
+if isfield(myschnitzcells,'useForPlot')
+    useforplot_vec=[myschnitzcells.useForPlot];
+else
+    useforplot_vec=ones(1,length(myschnitzcells)); % if not set, use all cells
+end
 % potentially here: remove schnitzcells with bad traces adhoc -> set =0
 % useforplot_vec(ii)=0; %blubb
 
