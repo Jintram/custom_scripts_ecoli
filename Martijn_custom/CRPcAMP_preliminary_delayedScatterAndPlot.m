@@ -94,7 +94,7 @@ if ~alreadyRemovedInMatFile
 
     s_rm = DJK_selSchitzesToPlot(s_all, 'P', @(x) 1); 
     if ~isempty(badSchnitzes)
-        for i=badSchnitzes, s_rm(i).useForPlot=0; end;
+        for branchIdx=badSchnitzes, s_rm(branchIdx).useForPlot=0; end;
     end
     s_rm_fitTime = DJK_selSchitzesToPlot(s_rm, 'time', @(x) x(1) > fitTime(1) & x(1) < fitTime(2)); name_rm_fitTime = ['rm_' num2str(fitTime(1)) '_' num2str(fitTime(2))];
     s_rm_fitTime_cycle = DJK_selSchitzesToPlot(s_rm_fitTime, 'completeCycle', @(x) x ~= 0); name_rm_fitTime_cycle = [name_rm_fitTime '_cycle'];
@@ -110,15 +110,15 @@ indicesForFluor = {};
 FluorFieldAllName = [upper(p.fluor1) '_mean_all'];
 FluorRateBaseFieldAllName = [upper(p.fluor1) '_time'];
 numelS_rm = numel(s_rm);
-for i = 1:numelS_rm
+for branchIdx = 1:numelS_rm
     % current schnitz
-    s = s_rm(i);
+    s = s_rm(branchIdx);
     
     % Re-calculate fluor times
-    indicesForFluor{i} = find(~isnan(s_rm(i).(FluorFieldAllName))); % could access field name as string
+    indicesForFluor{branchIdx} = find(~isnan(s_rm(branchIdx).(FluorFieldAllName))); % could access field name as string
     % This is only valid for concentration values:
-    theTimes = s_rm(i).('time');
-    s_rm(i).MWTimeField = theTimes(indicesForFluor{i});
+    theTimes = s_rm(branchIdx).('time');
+    s_rm(branchIdx).MWTimeField = theTimes(indicesForFluor{branchIdx});
     
     % Calculate dX_time field if it doesn't exist, based on the assumption
     % it was made by DJK_addTocSchnitzes_fluorRate_phase, which takes into
@@ -142,7 +142,7 @@ for i = 1:numelS_rm
                     
             % add to schnitz
             fieldName = ['MWDJK_' 'd' FluorRateBaseFieldAllName];
-            s_rm(i).(fieldName) = DTimes;
+            s_rm(branchIdx).(fieldName) = DTimes;
 
     end
 end
@@ -164,6 +164,7 @@ branchData = DJK_getBranches(p,s_rm,'dataFields',{associatedFieldNames{1}, assoc
 
 
 %% Plot branches
+HIGHLIGHTSUSPICOUS = 0;
 
 % Just some plot colors
 distinguishableColors = distinguishable_colors(numel(branchData)+1,[1 1 1]); 
@@ -171,15 +172,83 @@ distinguishableColors = distinguishable_colors(numel(branchData)+1,[1 1 1]);
 % Plot all branches
 figure(1); clf; hold on;
 numelBranches = numel(branchData);
-for branch_nr = 1:numelBranches
-    l = plot(branchData(branch_nr).(associatedFieldNames{1}), branchData(branch_nr).(associatedFieldNames{YFIELDBRANCHPLOT}),'-o','Color',distinguishableColors(branch_nr,:))
-    set(l, 'LineWidth', (numelBranches-branch_nr+1)/numelBranches*10);
+for branchIdx = 1:numelBranches
+    l = plot(branchData(branchIdx).(associatedFieldNames{1}), branchData(branchIdx).(associatedFieldNames{YFIELDBRANCHPLOT}),'-o','Color',distinguishableColors(branchIdx,:))
+    set(l, 'LineWidth', (numelBranches-branchIdx+1)/numelBranches*10);
 end
 
+% xlabel
 xlabel(associatedFieldNames{1},'Interpreter', 'None'), ylabel(associatedFieldNames{YFIELDBRANCHPLOT},'Interpreter', 'None')
+
+myXlimFig1 = max(branchData(branchIdx).(associatedFieldNames{1}));
+xlim([0, myXlimFig1]);
+myYlimFig1 = [min([branchData.(associatedFieldNames{YFIELDBRANCHPLOT})]),...
+              max([branchData.(associatedFieldNames{YFIELDBRANCHPLOT})])];
+ylim([myYlimFig1(1), myYlimFig1(2)*1.5]);
+
 
 %Set all fontsizes
 MW_makeplotlookbetter(20);
+
+
+% Plot histogram
+figure(2), clf, hold on
+allYdata = [branchData.(associatedFieldNames{YFIELDBRANCHPLOT})];
+[nelements, centers] = hist(allYdata,200)
+deltaY = centers(2)-centers(1);
+totalCount = numel(allYdata);
+%nelements=nelements./deltaY;
+plot(centers,nelements,'or','LineWidth',2)
+% Fit distribution
+pd=fitdist(allYdata', 'Normal')
+fittedDistrX = [min(allYdata):(max(allYdata)-min(allYdata))/100:max(allYdata)]
+fittedDistrYnorm = normpdf(fittedDistrX,pd.mu,pd.sigma)
+fittedDistrY = fittedDistrYnorm.*totalCount.*deltaY;
+plot(fittedDistrX,fittedDistrY,'k', 'LineWidth', 3);
+%probplot(allYdata)
+MW_makeplotlookbetter(20);
+
+xlabel('Fluor strength s (a.u.)');
+ylabel('P(s) * N * \Deltas (counts)');
+
+% TODO make 99% confidence and plot in previous figure.
+%confidence = paramci(pd,'Alpha',.01);
+sigma2 = pd.mu + 4.*[-pd.sigma, pd.sigma];
+plot([sigma2(1),sigma2(1)],[0,myYlim],'--','Color',[.5 .5 .5],'LineWidth', 2)
+plot([sigma2(2),sigma2(2)],[0,myYlim],'--','Color',[.5 .5 .5],'LineWidth', 2)
+sigma4 = pd.mu + 4.*[-pd.sigma, pd.sigma];
+plot([sigma5(1),sigma5(1)],[0,myYlim],':','Color',[.5 .5 .5],'LineWidth', 2)
+plot([sigma5(2),sigma5(2)],[0,myYlim],':','Color',[.5 .5 .5],'LineWidth', 2)
+
+myYlim = max(nelements)*1.1;
+ylim([0,myYlim]);
+xlim([myYlimFig1(1), myYlimFig1(2)*1.5]);
+
+% Now also plot confidence intervals in previous figure
+figure(1), hold on;
+plot([0,myXlimFig1],[sigma2(1),sigma2(1)],'--','Color',[.5 .5 .5],'LineWidth', 2)
+plot([0,myXlimFig1],[sigma2(2),sigma2(2)],'--','Color',[.5 .5 .5],'LineWidth', 2)
+plot([0,myXlimFig1],[sigma5(1),sigma5(1)],':','Color',[.5 .5 .5],'LineWidth', 2)
+plot([0,myXlimFig1],[sigma5(2),sigma5(2)],':','Color',[.5 .5 .5],'LineWidth', 2)
+
+% Now list schnitzes that have suspiciously high signal:
+suspiciousBranches = []; suspiciousSchnitzes = [];
+for branchIdx = 1:numel(branchData)
+    if any(branchData(branchIdx).(associatedFieldNames{YFIELDBRANCHPLOT}) > sigma5(2))
+        suspiciousBranches(end+1) = branchIdx;
+        if HIGHLIGHTSUSPICOUS % plot if desired
+            plot(branchData(branchIdx).(associatedFieldNames{1}), branchData(branchIdx).(associatedFieldNames{YFIELDBRANCHPLOT}),'-or','LineWidth',3)
+        end
+        %plot(branchData(branchIdx).(associatedFieldNames{1}),
+        %branchData(branchIdx).(associatedFieldNames{YFIELDBRANCHPLOT}),'-o','LineWidth',3,'Color',mycolors(c)) % MW debug
+        
+        % Find out which schnitzes
+        locationsInThisBranch = find(branchData(branchIdx).(associatedFieldNames{YFIELDBRANCHPLOT}) > sigma5(2));
+        suspiciousSchnitzes = [suspiciousSchnitzes branchData(branchIdx).schnitzNrs(locationsInThisBranch)];
+    end
+end
+suspiciousSchnitzes = unique(suspiciousSchnitzes)
+suspiciousBranches
 
 %%
 
