@@ -1,3 +1,4 @@
+% function varargout = barwitherr(errors,varargin)
 %
 % Downloaded from http://www.mathworks.com/matlabcentral/fileexchange/30639-bar-chart-with-error-bars
 %
@@ -19,9 +20,10 @@
 %   Symmetric Example:
 %   y = randn(3,4);         % random y values (3 groups of 4 parameters) 
 %   errY = 0.1.*y;          % 10% error
-%   h = barwitherr(errY, y);% Plot with errorbars
+%   [h,hErrorbar] = barwitherr(errY, y);% Plot with errorbars % MW edit
 %
 %   set(gca,'XTickLabel',{'Group A','Group B','Group C'})
+%   set(hErrorbar, 'LineWidth', 3) % MW added
 %   legend('Parameter 1','Parameter 2','Parameter 3','Parameter 4')
 %   ylabel('Y Value')
 %   set(h(1),'FaceColor','k');

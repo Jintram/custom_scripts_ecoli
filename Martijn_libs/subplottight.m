@@ -1,4 +1,5 @@
 function h = subplottight(n,m,i)
+    % function h = subplottight(n,m,i)
     % MW: function that produces tight subplot    
     % Source: [1]
     [c,r] = ind2sub([m n], i);
