@@ -17,32 +17,47 @@
 %
 % Example of how to call script:
 %{
-myID = ' icd-lac';
-p.movieName = 'pos6crop';
-p.movieDate = '2013-05-16';
+CONFIGFILE = 'config_projectCRPcAMP'; % Not necessary this script, for later analysis scripts
 
-myOutputFolder = ['F:\X_Other_datasets\CRPcAMP\NWdata-pfkA\' myID '_' p. movieDate  '_' p.movieName '\'];
+myID = 'WT_pl-pRCRP-GFP_pl-CRP'; 
+p.movieName = 'pos4crop';       % Not necessary if p already exists.
+p.movieDate = '2015-06-12';     % Not necessary if p already exists.
+p.fluor1='g';
+myFitTime = [0 800]; 
 
-myDataFile = 'F:\X_Other_datasets\CRPcAMP\NWdata-pfkA\icd-lac-2013-05-16-pos6crop-Schnitz.mat';
-associatedFieldNames =  {'G_time','G6_mean', 'muP15_fitNew'};
-myTitle = ['NW' myID '_' p. movieDate  '_' p.movieName];
+associatedFieldNames =  {'G_time','G6_mean_cycCor', 'muP5_fitNew_cycCor'} % NW suggested fields
 
-myFitTime = [50   1000];
+p.NW_saveDir = [myOutputFolder 'misc\'];  % To send additional output to
+p.DJK_saveDir = [myOutputFolder 'misc\']; % To send additional output to
 
-p.NW_saveDir = [myOutputFolder 'misc\'];
-p.DJK_saveDir = [myOutputFolder 'misc\'];
+myIllumTime = 100; % Not necessary this script, for later analysis scripts
+ASCnumber = 852; % Not necessary this script, for later analysis scripts
+filterset='engfp'; % Not necessary this script, for later analysis scripts
+fluoName = 'GFP'; % Not necessary this script, for later analysis scripts
 
-p.fluor1='r';
-p.fluor2='g';
+myOutputFolder = ['F:\A_Tans1_step1_incoming_not_backed_up\'  p. movieDate   '\' p. movieDate  '_' p.movieName '_' myID  '\'];
+
+% Location of .mat file containing schnitzcells struct
+myDataFile = ['F:\A_Tans1_step1_incoming_not_backed_up\' p.movieDate '\' p.movieName  '\data\' p.movieName '-Schnitz.mat'];
+load(myDataFile);
+
+myTitle = 'WT CRP behavior July2, r1'; % Plot title
 
 % info required to make branches
-badSchnitzes = [428]; % from excel top field “schnitzes to be removed from analysis“
+badSchnitzes = [868, 853, 774, 578]; % pos 4 bad ones
 
-CRPcAMP_preliminary_delayedScatterAndPlot
+% Options for script
+addSlowOnes = 1;            % Automatically add slow schnitzes to bad schnitzes
+alreadyRemovedInMatFile=0;  % If s_rm is your input, it's not necessary to generate it, then set this to 1
+makeDtime = 1;              % !! If 1, re-calculates schnitzcells.dX_time field !!
+PLOTSCATTER=1;              % If zero, only cross corrs are calculated, not delayed scatter plots
 
-   
-associatedFieldNames =  {'dG5_time','dG5_cycCor', 'muP15_fitNew'};
-CRPcAMP_preliminary_delayedScatterAndPlot
+% Run script
+CRPcAMP_preliminary_delayedScatterAndPlot.m 
+
+% One can just set associatedFieldNames to another value, and re-run the
+% script to obtain cross corrs etc. between other paramters.
+
 %}
 
 PERFORMSOMECHECKS = 0;
