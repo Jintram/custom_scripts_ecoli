@@ -53,7 +53,7 @@ makeDtime = 1;              % !! If 1, re-calculates schnitzcells.dX_time field 
 PLOTSCATTER=1;              % If zero, only cross corrs are calculated, not delayed scatter plots
 
 % Run script
-CRPcAMP_preliminary_delayedScatterAndPlot.m 
+MW_delayedScatter.m 
 
 % One can just set associatedFieldNames to another value, and re-run the
 % script to obtain cross corrs etc. between other paramters.
