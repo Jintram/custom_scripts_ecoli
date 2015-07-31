@@ -49,7 +49,7 @@ badSchnitzes = [868, 853, 774, 578]; % pos 4 bad ones
 % Options for script
 addSlowOnes = 1;            % Automatically add slow schnitzes to bad schnitzes
 alreadyRemovedInMatFile=0;  % If s_rm is your input, it's not necessary to generate it, then set this to 1
-makeDtime = 1;              % !! If 1, re-calculates schnitzcells.dX_time field !!
+makeDtime = 0;              % !! If 1, re-calculates schnitzcells.dX_time field !!
 PLOTSCATTER=1;              % If zero, only cross corrs are calculated, not delayed scatter plots
 
 % Run script
@@ -84,6 +84,7 @@ name_rm = 'rm'; name_all = 'all';
 fitTime = myFitTime;
 
 if ~alreadyRemovedInMatFile
+    
     % Find Schnitzes with slow/negative growth rate -> rm them?!
     slowschnitzes=NW_detectSlowSchnitzes(p,schnitzcells,associatedFieldNames{3},'muThreshold',0);
 
@@ -121,6 +122,7 @@ end
 % fields -and the fluor code already does this 
 % (DJK_addToSchnitzes_fluor_anycolor) - but might be convenient for future 
 % generation of "fieldX_at_G".
+
 indicesForFluor = {};
 FluorFieldAllName = [upper(p.fluor1) '_mean_all'];
 FluorRateBaseFieldAllName = [upper(p.fluor1) '_time'];
@@ -172,7 +174,6 @@ end
 s_rm = MW_calculateframe_nrs(s_rm); % backwards compatibility fix 
 
 fitTime = fitTime + [2 -2];
-
 
 branchData = DJK_getBranches(p,s_rm,'dataFields',{associatedFieldNames{1}, associatedFieldNames{2}, associatedFieldNames{3} }, 'fitTime', fitTime); 
  name_rm_branch = [name_rm '_' num2str(fitTime(1)) '_' num2str(fitTime(2)) '_Conc_oldRates'];
