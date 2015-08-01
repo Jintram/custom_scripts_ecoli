@@ -27,15 +27,15 @@ myFitTime = [0 800];
 
 associatedFieldNames =  {'G_time','G6_mean_cycCor', 'muP5_fitNew_cycCor'} % NW suggested fields
 
-p.NW_saveDir = [myOutputFolder 'misc\'];  % To send additional output to
-p.DJK_saveDir = [myOutputFolder 'misc\']; % To send additional output to
-
 myIllumTime = 100; % Not necessary this script, for later analysis scripts
 ASCnumber = 852; % Not necessary this script, for later analysis scripts
 filterset='engfp'; % Not necessary this script, for later analysis scripts
 fluoName = 'GFP'; % Not necessary this script, for later analysis scripts
 
 myOutputFolder = ['F:\A_Tans1_step1_incoming_not_backed_up\'  p. movieDate   '\' p. movieDate  '_' p.movieName '_' myID  '\'];
+
+p.NW_saveDir = [myOutputFolder 'misc\'];  % To send additional output to
+p.DJK_saveDir = [myOutputFolder 'misc\']; % To send additional output to
 
 % Location of .mat file containing schnitzcells struct
 myDataFile = ['F:\A_Tans1_step1_incoming_not_backed_up\' p.movieDate '\' p.movieName  '\data\' p.movieName '-Schnitz.mat'];
