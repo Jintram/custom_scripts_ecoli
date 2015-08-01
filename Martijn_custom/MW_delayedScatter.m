@@ -214,7 +214,8 @@ allYdata = [branchData.(associatedFieldNames{YFIELDBRANCHPLOT})];
 deltaY = centers(2)-centers(1);
 totalCount = numel(allYdata);
 %nelements=nelements./deltaY;
-plot(centers,nelements,'or','LineWidth',2)
+%plot(centers,nelements,'or','LineWidth',2)
+bar(centers,nelements,'FaceColor','r','EdgeColor','r')
 % Fit distribution
 pd=fitdist(allYdata', 'Normal')
 fittedDistrX = [min(allYdata):(max(allYdata)-min(allYdata))/100:max(allYdata)]
@@ -227,25 +228,28 @@ MW_makeplotlookbetter(20);
 xlabel('Fluor strength s (a.u.)');
 ylabel('P(s) * N * \Deltas (counts)');
 
+% Define some axes limits
+myYlim = max(nelements)*1.1;
+ylim([0,myYlim]);
+xlim([myYlimFig1(1), myYlimFig1(2)*1.5]);
+
 % TODO make 99% confidence and plot in previous figure.
 %confidence = paramci(pd,'Alpha',.01);
 sigma2 = pd.mu + 4.*[-pd.sigma, pd.sigma];
 plot([sigma2(1),sigma2(1)],[0,myYlim],'--','Color',[.5 .5 .5],'LineWidth', 2)
 plot([sigma2(2),sigma2(2)],[0,myYlim],'--','Color',[.5 .5 .5],'LineWidth', 2)
-sigma4 = pd.mu + 4.*[-pd.sigma, pd.sigma];
+sigma5 = pd.mu + 5.*[-pd.sigma, pd.sigma];
 plot([sigma5(1),sigma5(1)],[0,myYlim],':','Color',[.5 .5 .5],'LineWidth', 2)
 plot([sigma5(2),sigma5(2)],[0,myYlim],':','Color',[.5 .5 .5],'LineWidth', 2)
 
-myYlim = max(nelements)*1.1;
-ylim([0,myYlim]);
-xlim([myYlimFig1(1), myYlimFig1(2)*1.5]);
-
 % Now also plot confidence intervals in previous figure
 figure(1), hold on;
-plot([0,myXlimFig1],[sigma2(1),sigma2(1)],'--','Color',[.5 .5 .5],'LineWidth', 2)
+l1=plot([0,myXlimFig1],[sigma2(1),sigma2(1)],'--','Color',[.5 .5 .5],'LineWidth', 2)
 plot([0,myXlimFig1],[sigma2(2),sigma2(2)],'--','Color',[.5 .5 .5],'LineWidth', 2)
-plot([0,myXlimFig1],[sigma5(1),sigma5(1)],':','Color',[.5 .5 .5],'LineWidth', 2)
+l2=plot([0,myXlimFig1],[sigma5(1),sigma5(1)],':','Color',[.5 .5 .5],'LineWidth', 2)
 plot([0,myXlimFig1],[sigma5(2),sigma5(2)],':','Color',[.5 .5 .5],'LineWidth', 2)
+
+legend([l1,l2],{'2\sigma confidence','5\sigma confidence'},'location','Best');
 
 % Now list schnitzes that have suspiciously high signal:
 suspiciousBranches = []; suspiciousSchnitzes = [];
