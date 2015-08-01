@@ -225,8 +225,9 @@ plot(fittedDistrX,fittedDistrY,'k', 'LineWidth', 3);
 %probplot(allYdata)
 MW_makeplotlookbetter(20);
 
+title(['PDF for ' associatedFieldNames{YFIELDBRANCHPLOT}],'Interpreter','None');
 xlabel('Fluor strength s (a.u.)');
-ylabel('P(s) * N * \Deltas (counts)');
+ylabel('PDF(s) * N * \Deltas (counts)');
 
 % Define some axes limits
 myYlim = max(nelements)*1.1;
