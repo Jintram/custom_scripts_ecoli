@@ -96,7 +96,7 @@ end
 subplot(1,2,2); 
 semilogy(myTimes, summedLengthsPerFrame,'o');
 hold on;
-ylim([min(summedLengthsPerFrame),max(summedLengthsPerFrame)]);
+ylim([min(summedLengthsPerFrame)*.5,max(summedLengthsPerFrame)*2]);
 
 % Fitting
 fit_idx = find(myTimes<FITTIME);
@@ -109,7 +109,7 @@ set(gca,'FontSize',15)
 title([ 'Growth \newline' ...
         'Fitted \mu = ' num2str(fitMu) ' (dbl/hr)'])
 xlabel('Time in minutes');
-ylabel('Summed length all bacteria');
+ylabel('Summed length all bacteria ({\mu}m)');
 
 set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal')
 
