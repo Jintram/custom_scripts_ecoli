@@ -66,7 +66,7 @@ if ~exist('myOutputFolder')
     myOutputFolder = 'C:\Users\wehrens\Desktop\testdelayedscatter\output\';
 end
 
-if ~exist('associatedFieldNames') | ~exist('myTitle') | ~exist('p') | ~exist('badSchnitzes')
+if ~exist('associatedFieldNames') | ~exist('p') | ~exist('badSchnitzes')
     error('input not supplied.')
 end
     
@@ -77,6 +77,73 @@ YFIELDBRANCHPLOT = 2;
 % Loading
 %load(myDataFile); % Can also be done by user
 
+%% 
+% Collect indices of the GFP measurement per schnitz.
+% (Second method)
+% ===    
+% This is rather specific conversion code, only use if you know what it is
+% about; otherwise ignore. -MW 2015/08
+% It grabs the values from timepoints corresponding to the timepoints where
+% a fluor or dfluor was calculated for (this reference field is given by 
+% FIELDOFREFERENCE).
+%
+% Fields that need to be set:
+%{
+FIELD1='time';
+FIELD3='muP15_fitNew_all';
+FIELDOFREFERENCE = 'G5_mean_all'; % also corresponds to dG5, except for branch end/start.
+%}
+
+if exist('RECALCULATE', 'var')
+    if RECALCULATE == 1
+        
+        indicesForField = {};
+        numelschnitzcells=numel(schnitzcells);
+        for schIdx = 1:numelschnitzcells            
+            
+            % Get indices where myField has value
+            indicesForField{schIdx} = find(~isnan(schnitzcells(schIdx).(FIELDOFREFERENCE))); % could access field name as string
+            
+            if ~(numel(schnitzcells(schIdx).(FIELDOFREFERENCE)) == numel(schnitzcells(schIdx).(FIELD1))) == ...
+                   numel(schnitzcells(schIdx).(FIELD3))
+                warning(['Things are messed up? Look at schIdx = ' num2str(schIdx)]);
+            end
+
+            schnitzcells(schIdx).([FIELD1 '_MW_atX']) = schnitzcells(schIdx).(FIELD1)(indicesForField{schIdx});
+            schnitzcells(schIdx).([FIELD3 '_MW_atX']) = schnitzcells(schIdx).(FIELD3)(indicesForField{schIdx});
+            
+            % Now for dX
+            % Assuming PN_fluorrate_X was used. (And FIELDOFREFERENCE
+            % contains fluor value.)
+            % First calculate times                
+            dummySField = schnitzcells(schIdx).(FIELDOFREFERENCE);
+            % if has no parent, remove value, like real value is also missing in PN_fluorrate_X
+            if (schnitzcells(schIdx).P == 0) || ~any(~isnan(schnitzcells(schnitzcells(schIdx).P).(FIELDOFREFERENCE)))
+                tempIdxs = find(~isnan(dummySField));
+                if ~isempty(tempIdxs)
+                    dummySField(tempIdxs(1))=NaN;
+                end
+            end
+            % if has no daughter, remove value, like real value is also missing in PN_fluorrate_X
+            if (schnitzcells(schIdx).E == 0) || ~any(~isnan(schnitzcells(schnitzcells(schIdx).E).(FIELDOFREFERENCE))) ...
+                    || ~any(~isnan(schnitzcells(schnitzcells(schIdx).D).(FIELDOFREFERENCE)))
+                tempIdxs = find(~isnan(dummySField));
+                if ~isempty(tempIdxs)
+                    dummySField(tempIdxs(end))=NaN;
+                end
+                %dummySField = dummySField(1:end-1);
+            end
+                        
+            indicesForDField{schIdx} = find(~isnan(dummySField)); % could access field name as string
+            schnitzcells(schIdx).([FIELD1 '_MW_atdX']) = schnitzcells(schIdx).(FIELD1)(indicesForDField{schIdx});
+            schnitzcells(schIdx).([FIELD3 '_MW_atdX']) = schnitzcells(schIdx).(FIELD3)(indicesForDField{schIdx});
+            
+        end
+    
+    end
+end
+
+disp('done');
 
 %% preparing data
 
@@ -117,58 +184,6 @@ if ~alreadyRemovedInMatFile
     warning('s_rm_fitTime_cycle is not used, this is a TODO, fix it! -MW');
 end
 
-%% 
-% Collect indices of the GFP measurement per schnitz.
-% This is not necessary because Noreen's data already contains the right
-% fields -and the fluor code already does this 
-% (DJK_addToSchnitzes_fluor_anycolor) - but might be convenient for future 
-% generation of "fieldX_at_G".
-
-indicesForFluor = {};
-FluorFieldAllName = [upper(p.fluor1) '_mean_all'];
-FluorRateBaseFieldAllName = [upper(p.fluor1) '_time'];
-numelS_rm = numel(s_rm);
-for branchIdx = 1:numelS_rm
-    % current schnitz
-    s = s_rm(branchIdx);
-    
-    % Re-calculate fluor times
-    indicesForFluor{branchIdx} = find(~isnan(s_rm(branchIdx).(FluorFieldAllName))); % could access field name as string
-    % This is only valid for concentration values:
-    theTimes = s_rm(branchIdx).('time');
-    s_rm(branchIdx).MWTimeField = theTimes(indicesForFluor{branchIdx});
-    
-    % Calculate dX_time field if it doesn't exist, based on the assumption
-    % it was made by DJK_addTocSchnitzes_fluorRate_phase, which takes into
-    % acount the points t+1 and t.
-    if makeDtime        
-            
-            % include the daughter field that was also used for fluor calc
-            if s.D ~= 0
-                % take only one daughter for time reference
-                sD = s_rm(s.D);
-                % extend
-                extendedTime = [s.(FluorRateBaseFieldAllName), sD.(FluorRateBaseFieldAllName)(1)];
-            else
-                % end of lineage, no extension
-                extendedTime = [s.(FluorRateBaseFieldAllName)]; 
-            end
-            
-            % calculate times
-            % sum n and n+1, average
-            DTimes = [extendedTime(1:end-1)+extendedTime(2:end)]./2;
-                    
-            % add to schnitz
-            fieldName = ['MWDJK_' 'd' FluorRateBaseFieldAllName];
-            s_rm(branchIdx).(fieldName) = DTimes;
-
-    end
-end
-
-if makeDtime
-    warning('Determination of dX_time values only valid for DJK_addToSchnitzes_fluor_anycolor rates.');
-    pause(1);
-end
 
 %% Calculating branches
 % ===
