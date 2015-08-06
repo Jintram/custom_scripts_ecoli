@@ -114,6 +114,7 @@ if ~alreadyRemovedInMatFile
     end
     s_rm_fitTime = DJK_selSchitzesToPlot(s_rm, 'time', @(x) x(1) > fitTime(1) & x(1) < fitTime(2)); name_rm_fitTime = ['rm_' num2str(fitTime(1)) '_' num2str(fitTime(2))];
     s_rm_fitTime_cycle = DJK_selSchitzesToPlot(s_rm_fitTime, 'completeCycle', @(x) x ~= 0); name_rm_fitTime_cycle = [name_rm_fitTime '_cycle'];
+    warning('s_rm_fitTime_cycle is not used, this is a TODO, fix it! -MW');
 end
 
 %% 
@@ -176,7 +177,7 @@ s_rm = MW_calculateframe_nrs(s_rm); % backwards compatibility fix
 fitTime = fitTime + [2 -2];
 
 branchData = DJK_getBranches(p,s_rm,'dataFields',{associatedFieldNames{1}, associatedFieldNames{2}, associatedFieldNames{3} }, 'fitTime', fitTime); 
- name_rm_branch = [name_rm '_' num2str(fitTime(1)) '_' num2str(fitTime(2)) '_Conc_oldRates'];
+name_rm_branch = [name_rm '_' num2str(fitTime(1)) '_' num2str(fitTime(2)) '_Conc_oldRates'];
 
 
 %% Plot branches
@@ -275,11 +276,16 @@ suspiciousBranches
 
 %REDUNDANCYALLOWED = 2^2;
 REDUNDANCYALLOWED = 2^2;
+ONSCREEN=1;
+NRBRANCHGROUPS=4;
 
 % Some additional editing of the branches:
 branchData = DJK_addToBranches_noise(p, branchData,'dataFields',{associatedFieldNames{1},associatedFieldNames{2},associatedFieldNames{3}});
-%trimmed_branches = DJK_trim_branch_data(branches);
-branch_groups = DJK_divide_branch_data(branchData);
+
+% Trim of starting frames until there are N start schnitzes
+trimmed_branches = DJK_trim_branch_data(branchData,NRBRANCHGROUPS);
+% Divide branchdata in groups based on those N start schnitzes
+branch_groups = DJK_divide_branch_data(trimmed_branches);
 
 % Colony average mean has already been substracted so theoretically extra
 % normalization shouldn't have an effect.
@@ -288,7 +294,7 @@ p.extraNorm=0;
 % THIS MIGHT FAIL BECAUSE TIME IS NOT SET CORRECTLY (SHOULD BE time_at_..)
 % To calculate cross correlations, additional normalization is usually
 % performed, namely to filter out colony average behavior.
-[CorrData,composite_corr] = DJK_plot_crosscorrelation_standard_error_store(p, branch_groups, ['noise_' associatedFieldNames{1,2}],['noise_' associatedFieldNames{1,3}] ,'selectionName',name_rm_branch,'timeField',associatedFieldNames{1},'onScreen',1); 
+[CorrData,composite_corr] = DJK_plot_crosscorrelation_standard_error_store(p, branch_groups, ['noise_' associatedFieldNames{1,2}],['noise_' associatedFieldNames{1,3}] ,'selectionName',name_rm_branch,'timeField',associatedFieldNames{1},'onScreen',ONSCREEN); 
 
 % Do we want to filter out colony average behavior for the "delayed
 % scatter" plots also? Maybe do this with noise fields?
@@ -310,7 +316,13 @@ myfig=figure(5),clf,hold on;
 errorbar(CorrData(:,1),CorrData(:,2),CorrData(:,3),'x-','Color', [.5,.5,.5], 'LineWidth',2)
 l1=plot(CorrData(:,1),CorrData(:,2),'x-k','LineWidth',2)
 
-l2=plot(CorrData(:,1),correlationsPerTau,'o-r','LineWidth',2)
+% Calculate appropriate x-axis assuming assuming same delta(x) as CorrData,
+% and dx is same everywhere.
+centerIdx=ceil(size(CorrData,1)/2);
+deltaXCorrData = CorrData(centerIdx+1,1)-CorrData(centerIdx,1);
+MWxAxis = iTausCalculated.*deltaXCorrData;
+% Plot
+l2=plot(MWxAxis,correlationsPerTau,'o-r','LineWidth',2)
 
 % If you recalculate correlations again w. different params, this allows
 % plotting of extra line.
