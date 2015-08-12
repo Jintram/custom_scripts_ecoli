@@ -70,9 +70,8 @@ if ~exist('associatedFieldNames') | ~exist('p') | ~exist('badSchnitzes')
     error('input not supplied.')
 end
     
-
-% Some additional parameters
-YFIELDBRANCHPLOT = 2;
+% At sections there are some more parameters to set. They are marked in
+% capitals.
 
 % Loading
 %load(myDataFile); % Can also be done by user
@@ -196,7 +195,8 @@ name_rm_branch = [name_rm '_' num2str(fitTime(1)) '_' num2str(fitTime(2)) '_Conc
 
 
 %% Plot branches
-HIGHLIGHTSUSPICOUS = 0;
+HIGHLIGHTSUSPICOUS = 1;
+YFIELDBRANCHPLOT = 3; % 3 = growth, 2 = fluor
 
 % Just some plot colors
 distinguishableColors = distinguishable_colors(numel(branchData)+1,[1 1 1]); 
@@ -214,7 +214,7 @@ xlabel(associatedFieldNames{1},'Interpreter', 'None'), ylabel(associatedFieldNam
 
 myXlimFig1 = max(branchData(branchIdx).(associatedFieldNames{1}));
 xlim([0, myXlimFig1]);
-myYlimFig1 = [min([branchData.(associatedFieldNames{YFIELDBRANCHPLOT})]),...
+myYlimFig1 = [min([0, [branchData.(associatedFieldNames{YFIELDBRANCHPLOT})]]),...
               max([branchData.(associatedFieldNames{YFIELDBRANCHPLOT})])];
 ylim([myYlimFig1(1), myYlimFig1(2)*1.5]);
 
@@ -269,9 +269,11 @@ plot([0,myXlimFig1],[sigma5(2),sigma5(2)],':','Color',[.5 .5 .5],'LineWidth', 2)
 legend([l1,l2],{'2\sigma confidence','5\sigma confidence'},'location','Best');
 
 % Now list schnitzes that have suspiciously high signal:
+mySigma = sigma2;
 suspiciousBranches = []; suspiciousSchnitzes = [];
 for branchIdx = 1:numel(branchData)
-    if any(branchData(branchIdx).(associatedFieldNames{YFIELDBRANCHPLOT}) > sigma5(2))
+    if (     any(branchData(branchIdx).(associatedFieldNames{YFIELDBRANCHPLOT}) > mySigma(2)) ) || ...
+       (     any(branchData(branchIdx).(associatedFieldNames{YFIELDBRANCHPLOT}) < mySigma(1)) )
         suspiciousBranches(end+1) = branchIdx;
         if HIGHLIGHTSUSPICOUS % plot if desired
             plot(branchData(branchIdx).(associatedFieldNames{1}), branchData(branchIdx).(associatedFieldNames{YFIELDBRANCHPLOT}),'-or','LineWidth',3)
@@ -279,8 +281,11 @@ for branchIdx = 1:numel(branchData)
         %plot(branchData(branchIdx).(associatedFieldNames{1}),
         %branchData(branchIdx).(associatedFieldNames{YFIELDBRANCHPLOT}),'-o','LineWidth',3,'Color',mycolors(c)) % MW debug
         
-        % Find out which schnitzes
-        locationsInThisBranch = find(branchData(branchIdx).(associatedFieldNames{YFIELDBRANCHPLOT}) > sigma5(2));
+        % Find out which schnitzes are suspiciously high or low
+        locationsInThisBranch = unique(...
+            [ find(branchData(branchIdx).(associatedFieldNames{YFIELDBRANCHPLOT}) > mySigma(2)),...
+              find(branchData(branchIdx).(associatedFieldNames{YFIELDBRANCHPLOT}) < mySigma(1)) ] ...
+            );
         suspiciousSchnitzes = [suspiciousSchnitzes branchData(branchIdx).schnitzNrs(locationsInThisBranch)];
     end
 end
@@ -328,6 +333,8 @@ l=plot(iTausCalculated,correlationsPerTau,'o-r','LineWidth',2)
 %% Compare two cross-corrs (DJK & MW)
 
 myfig=figure(5),clf,hold on;
+
+% Plot DJK cross correlation function
 errorbar(CorrData(:,1),CorrData(:,2),CorrData(:,3),'x-','Color', [.5,.5,.5], 'LineWidth',2)
 l1=plot(CorrData(:,1),CorrData(:,2),'x-k','LineWidth',2)
 
@@ -336,7 +343,8 @@ l1=plot(CorrData(:,1),CorrData(:,2),'x-k','LineWidth',2)
 centerIdx=ceil(size(CorrData,1)/2);
 deltaXCorrData = CorrData(centerIdx+1,1)-CorrData(centerIdx,1);
 MWxAxis = iTausCalculated.*deltaXCorrData;
-% Plot
+
+% Plot MW cross correlation function
 l2=plot(MWxAxis,correlationsPerTau,'o-r','LineWidth',2)
 
 % If you recalculate correlations again w. different params, this allows
@@ -454,6 +462,51 @@ if PLOT3DSCATTER
 end
     
 end
+
+
+%% Determine correlation per brach..
+MAXLAGS=40; % width of the correlation function, i.e. frames lag 
+
+% Plot all branches
+figure(4); clf; hold on;
+numelBranches = numel(branchData);
+lengthCorr = MAXLAGS*2+1;
+meanR = zeros(1,lengthCorr); meanTau = zeros(1,lengthCorr); 
+for branchIdx = 1:numelBranches
+    
+    % Gather data
+    field1Data = branchData(branchIdx).(associatedFieldNames{2});
+    field2Data = branchData(branchIdx).(associatedFieldNames{3});
+    
+    % Substract mean
+    field1Data = field1Data-mean(field1Data);
+    field2Data = field2Data-mean(field2Data);
+    
+    % Get correlations per branch
+    [RThisBranch, tauThisBranch] = xcorr(...
+        field1Data, ...
+        field2Data, ...
+        MAXLAGS,'coeff');
+    
+    l = plot(tauThisBranch, RThisBranch,'-','Color',distinguishableColors(branchIdx,:));
+    %set(l, 'LineWidth', (numelBranches-branchIdx+1)/numelBranches*10);
+    
+    meanR   = meanR     + RThisBranch./numelBranches;
+    
+end
+
+% Overlay axes
+plot([-MAXLAGS,MAXLAGS] ,[0,0]  , '-k', 'LineWidth', 2);
+plot([0,0]              ,[-1,1] , '-k', 'LineWidth', 2);
+
+plot([-MAXLAGS:MAXLAGS], meanR,'k-','LineWidth',4)
+
+xlabel('Lag (in frames)')
+ylabel('Correlation')
+title(['xcorr(',associatedFieldNames{2},',..',10,associatedFieldNames{3},')'],'Interpreter','None')
+MW_makeplotlookbetter(20);
+
+
 %% Some random checks
 
 if PERFORMSOMECHECKS
