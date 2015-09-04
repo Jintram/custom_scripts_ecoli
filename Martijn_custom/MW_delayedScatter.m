@@ -15,6 +15,11 @@
 % - makeDtime   if set to 0 nothing happens, if set to 1, extra 
 %               MWDJK_dX_time filed is recalculated.
 %
+% Additional (optional) parameters:
+% - NOTMEANSUBTRACTED   : Don't automatically take fields that have the
+%                         noise subtracted, i.e. noise_FieldOfInterest.
+% - FIGUREVISIBLE       : hides some figures, only saves them 
+%
 % Example of how to call script:
 %{
 CONFIGFILE = 'config_projectCRPcAMP'; % Not necessary this script, for later analysis scripts
@@ -242,7 +247,7 @@ plot(fittedDistrX,fittedDistrY,'k', 'LineWidth', 3);
 MW_makeplotlookbetter(20);
 
 title(['PDF for ' associatedFieldNames{YFIELDBRANCHPLOT}],'Interpreter','None');
-xlabel('Fluor strength s (a.u.)');
+xlabel(associatedFieldNames{YFIELDBRANCHPLOT},'Interpreter','None');
 ylabel('PDF(s) * N * \Deltas (counts)');
 
 % Define some axes limits
@@ -325,6 +330,60 @@ if isfield(p,'tauIndices'), p=rmfield(p,'tauIndices'); end
 [dataPairsPerTau, iTausCalculated, originColorPerTau, correlationsPerTau] = ...
     MW_getdelayedscatter(p, branchData, ['noise_' associatedFieldNames{1,2}], ['noise_' associatedFieldNames{1,3}], REDUNDANCYALLOWED)
 
+%% 
+if ~exist('NOTMEANSUBTRACTED','var')
+    NOTMEANSUBTRACTED = 0;
+end
+if NOTMEANSUBTRACTED
+    [dataPairsPerTau, iTausCalculated, originColorPerTau, correlationsPerTau] = ...
+    MW_getdelayedscatter(p, branchData, [associatedFieldNames{1,2}], [associatedFieldNames{1,3}], REDUNDANCYALLOWED)
+end
+
+%% Plot trace of mean point..
+if NOTMEANSUBTRACTED
+    % Initialize
+    if ~exist('SHOWPLUSMINFROMZERO','var'), SHOWPLUSMINFROMZERO = 25; end
+    
+    % Set up figure
+    figure(98), clf, hold on;
+    
+    % Redundant with below
+    indexMidpoint = ceil(numel(iTausCalculated)/2)
+    rangeiTausCalculated = [indexMidpoint-SHOWPLUSMINFROMZERO:indexMidpoint+SHOWPLUSMINFROMZERO];
+    
+    % Loop over different values of tau (= delays)
+    myTimeTrace = [];
+    numelRangeiTausCalculated = numel(rangeiTausCalculated);
+    for i = 1:numelRangeiTausCalculated
+        % Create array with the points.
+        myTimeTrace = [myTimeTrace; mean(dataPairsPerTau{rangeiTausCalculated(i)}(:,1)) , mean(dataPairsPerTau{rangeiTausCalculated(i)}(:,2))];
+        
+        % Plot separately, color coded for amount of delay        
+        l = plot(myTimeTrace(i,1), myTimeTrace(i,2),'o');
+        % Color of plot
+        timeColor = [0 0 1-i/numelRangeiTausCalculated]  + ... % Starting with blue
+                    [i/numelRangeiTausCalculated 0 0];       % turning red, over time        
+        set(l, 'Color', timeColor, 'MarkerFaceColor', timeColor);
+            
+    end
+    
+    % Plot time trace 
+    plot(myTimeTrace(:,1), myTimeTrace(:,2),'-k')
+    
+    % 
+    xlim([  min(dataPairsPerTau{indexMidpoint}(:,1)), max(dataPairsPerTau{indexMidpoint}(:,1))  ])
+    ylim([  min(dataPairsPerTau{indexMidpoint}(:,2)), max(dataPairsPerTau{indexMidpoint}(:,2))  ])
+    
+    title(['< X(t) Y(t+\tau)>_{t}; \tau trace ' ...
+        10 'Branches assumed independent, means shouldn''t move.'])    
+        %10 'I''m not sure what this plot means; or should behave like??' ...
+        %10 'this might all be an artefact of data selection..'])
+    xlabel('<X(t)>_t');
+    ylabel('<Y(t+\tau)>_t');
+        
+    MW_makeplotlookbetter(15);
+end
+
 %% Plot "raw" cross cor I calculate (MW)
 
 myfig=figure(99),clf,hold on;
@@ -379,8 +438,14 @@ NRCONTOURLINES = 5;
 SHOWPLUSMINFROMZERO = 25;
 PLOT3DSCATTER = 0;
 
-middlePosition = [ceil(numel(iTausCalculated)/2)-SHOWPLUSMINFROMZERO:ceil(numel(iTausCalculated)/2)+SHOWPLUSMINFROMZERO];
-rangeiTausCalculated = middlePosition;
+% Whether plots should be shown.
+if ~exist('FIGUREVISIBLE','var'), FIGUREVISIBLE=1; end;
+
+% What range should be plotted.
+numeliTausCalculated=numel(iTausCalculated);
+indexMidpoint = ceil(numeliTausCalculated/2)
+rangeiTausCalculated = [indexMidpoint-SHOWPLUSMINFROMZERO:indexMidpoint+SHOWPLUSMINFROMZERO];
+numelRangeiTausCalculated = numel(rangeiTausCalculated);
 % delayIdx = 11; % 39 is middle
 
 myColorMap = colormap(winter(numel(iTausCalculated)));
@@ -391,9 +456,14 @@ if PLOT3DSCATTER
     set(hFig, 'Position', [offset offset width1 height1]);
 end
 
-hFig = figure(3); clf; hold on;
+hFig = figure(3); 
+if ~FIGUREVISIBLE, set(gcf,'Visible', 'off'); end
+clf; hold on;
 
-densities=[]; Xs=[]; Ys=[]; Zs=[];
+% Initialization
+emptySizedCell = cell(1,numeliTausCalculated);
+bandwidths = emptySizedCell; densities=emptySizedCell; 
+Xs=emptySizedCell; Ys=emptySizedCell; Zs=emptySizedCell; count = 0;
 for delayIdx = rangeiTausCalculated
     
     % Rename data more convenient
@@ -401,7 +471,9 @@ for delayIdx = rangeiTausCalculated
     
     % plot scatter
     if PLOT3DSCATTER
-        hFig = figure(2), hold on;
+        hFig = figure(2);
+        if ~FIGUREVISIBLE, set(gcf,'Visible', 'off'); end
+        hold on;
         scatter3(data(:,1),data(:,2),ones(1,numel(data(:,2)))*iTausCalculated(delayIdx),3,myColorMap(delayIdx,:),'.');%,'Color',distinguishableColors(myGrouping(i)+1,:),'MarkerSize',3);
     end
 
@@ -409,36 +481,58 @@ for delayIdx = rangeiTausCalculated
     set(0,'CurrentFigure',3); clf, hold on;
     offset=100; width1=500; height1=500;
     set(hFig, 'Position', [(offset+width1) offset width1 height1]);     
-     
+
     % scatter
     for pointIdx = 1:numel(data(:,1))
         plot(data(pointIdx,1),data(pointIdx,2),'.','Color',originColorPerTau{delayIdx}(pointIdx,:));%,'Color',distinguishableColors(myGrouping(i)+1,:),'MarkerSize',3);
     end
     
     % contour (from kde)
-    [bandwidth,density,X,Y] = kde2d(data);    
+    [bandwidth,density,X,Y] = kde2d(data);      
     [C, l1] = contour(X,Y,density,NRCONTOURLINES,'-k','LineWidth',2);
-          
+    % For later storage
+    bandwidths{delayIdx}    = bandwidth;
+    densities{delayIdx}     = density;
+    Xs{delayIdx}            = X;
+    Ys{delayIdx}            = Y;
+              
     % mean
     lineH = plot(mean(data(:,1)),mean(data(:,2)),'o','MarkerFaceColor','k','LineWidth',2,'MarkerEdgeColor','k','MarkerSize',7);
-    
+
     title(['D# = ' num2str(iTausCalculated(delayIdx)) ', R = ' sprintf('%0.3f',correlationsPerTau(delayIdx)), 10 ,myID '_' p. movieDate  '_' p.movieName], 'Interpreter', 'none')    
-    
+
     xlabel(['Delta ' associatedFieldNames{1,2}] , 'Interpreter', 'none');
     ylabel(['Delta ' associatedFieldNames{1,3}] , 'Interpreter', 'none');
     %Set all fontsizes
-    set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal');
-    set(gca,'FontSize',15);
-    
-    midIdx = ceil(numel(iTausCalculated)/2);
-    xlim([  min(dataPairsPerTau{midIdx}(:,1)), max(dataPairsPerTau{midIdx}(:,1))  ])
-    ylim([  min(dataPairsPerTau{midIdx}(:,2)), max(dataPairsPerTau{midIdx}(:,2))  ])
-       
+    MW_makeplotlookbetter(15);
+
+    xlim([  min(dataPairsPerTau{indexMidpoint}(:,1)), max(dataPairsPerTau{indexMidpoint}(:,1))  ])
+    ylim([  min(dataPairsPerTau{indexMidpoint}(:,2)), max(dataPairsPerTau{indexMidpoint}(:,2))  ])
+
     saveas(3,[myOutputFolder 'graphTauIdx_' associatedFieldNames{1,2} '_' sprintf('%05d',delayIdx) '.tiff']);
-   
+
+    % Let user know progress
+    count=count+1;
+    disp(['Finished ' num2str(count) '/' num2str(numelRangeiTausCalculated) '.'])
+    
 end
 
-figure(3);
+% Wrap the data that's needed to make this plot in a neat package :)
+% ===
+% Initialize
+contourPlotData = struct;
+% Indices of pairs calculated
+contourPlotData.rangeiTausCalculated = rangeiTausCalculated;
+% All available pairs, for all delays: dataPairsPerTau{tauIndex}(fieldIndex,:)
+contourPlotData.dataPairsPerTau     =  dataPairsPerTau;
+% Time between each frame, according to corrData (not necessarily the same, since might be extrapolation).
+contourPlotData.deltaXCorrData      = deltaXCorrData;
+% output of kde2d(data); plot contour lines using:
+% >>contour(X,Y,density,NRCONTOURLINES,'-k','LineWidth',2);
+contourPlotData.bandwidths           = bandwidths;
+contourPlotData.densities             = densities;
+contourPlotData.Xs                   = Xs;
+contourPlotData.Ys                   = Ys;
 
 % average point (used for legend too)
 %{
@@ -450,7 +544,7 @@ end
 legend( legendLines, legendDescriptions,'Location','northeast');
 %}
 
-if PLOT3DSCATTER
+if PLOT3DSCATTER && ~CALCULATEONLY
     figure(2);
     xlabel('Growth rate (dbl/hr)');
     ylabel('Concentration (a.u.)');
