@@ -1,3 +1,7 @@
+function count = MW_countcellsinlastframe(schnitzcells)
+% A super simple function that identifies the last frame and then brute
+% force counts the number of schnitzcells that are associated to that
+% frame.
 
 count=0;
 
@@ -10,4 +14,6 @@ for i = 1:numel(schnitzcells)
     end
 end
 
-count
+%count
+
+end

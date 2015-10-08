@@ -297,7 +297,7 @@ end
 suspiciousSchnitzes = unique(suspiciousSchnitzes)
 suspiciousBranches
 
-%%
+%% Get the actual cross-corrs
 
 %REDUNDANCYALLOWED = 2^2;
 REDUNDANCYALLOWED = 2^2;
@@ -419,7 +419,7 @@ legend([l1,l2],{'DJK','MW'})
 
 title(['DJK vs. MW R -- ' myID '_' p. movieDate  '_' p.movieName], 'Interpreter', 'none');
 xlabel('\tau (hrs)');
-ylabel(['R(' associatedFieldNames{1,2} ', growth) (normalized)'], 'Interpreter', 'none');
+ylabel(['R(' associatedFieldNames{1,2} ',... ' 10 associatedFieldNames{1,3} ') (normalized)'], 'Interpreter', 'none');
 %Set all fontsizes
 set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal');
 set(gca,'FontSize',15);
