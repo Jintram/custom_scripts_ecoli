@@ -1,4 +1,10 @@
 
+
+% OLD VERSION -- USE NEW ONE CALLED MW_growthplots
+
+
+
+
 %% 2015/02 MW 
 % 
 % Looking again at some data Aileen took.
@@ -6,7 +12,9 @@
 
 % Paramater settings ----------
 FITTIME = 800;
-EXPORTFOLDER = 'C:\Users\wehrens\Desktop\export\';
+if ~exist('EXPORTFOLDER', 'var')
+    EXPORTFOLDER = 'C:\Users\wehrens\Desktop\export\';
+end
 % -----------------------------
 
 
@@ -113,8 +121,8 @@ ylabel('Summed length all bacteria ({\mu}m)');
 
 set(findall(gcf,'type','text'),'FontSize',15,'fontWeight','normal')
 
-saveas(h, [EXPORTFOLDER 'bacteriaSize_RAW-' identifier '.eps'])
-saveas(h, [EXPORTFOLDER 'bacteriaSize_RAW-' identifier '.png'])
+saveas(h, [EXPORTFOLDER 'EPS_bacteriaSize_RAW-' identifier '.eps'],'epsc')
+saveas(h, [EXPORTFOLDER 'TIF_bacteriaSize_RAW-' identifier '.tif'])
 
 %% Fancy plot for suppl. mat. article
 % Plotting setup
@@ -136,14 +144,14 @@ set(gca,'YTickLabel',[]);
 set(findall(gcf,'type','text'),'FontSize',FONTSIZE,'fontWeight','normal')
 set(gca,'FontSize',FONTSIZE)
 
-saveas(h, [EXPORTFOLDER 'bacteriaSize-' identifier '.eps'])
-saveas(h, [EXPORTFOLDER 'bacteriaSize-' identifier '.png'])
+saveas(h, [EXPORTFOLDER 'EPS_bacteriaSize-' identifier '.eps'],'epsc')
+saveas(h, [EXPORTFOLDER 'TIF_bacteriaSize-' identifier '.tif'])
 
 % Plotting of fitted line:
 semilogy(myTimes,A0*2.^(fitMu*myTimes/60),'--k','LineWidth',5)
 
-saveas(h, [EXPORTFOLDER 'bacteriaSize_withFit-' identifier '.eps'])
-saveas(h, [EXPORTFOLDER 'bacteriaSize_withFit-' identifier '.png'])
+saveas(h, [EXPORTFOLDER 'EPS_bacteriaSize_withFit-' identifier '.eps'],'epsc')
+saveas(h, [EXPORTFOLDER 'TIF_bacteriaSize_withFit-' identifier '.tif'])
 
 disp('Done.');
 
