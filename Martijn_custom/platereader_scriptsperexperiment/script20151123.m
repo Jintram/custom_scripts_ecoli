@@ -211,10 +211,15 @@ plot(theXlim,[0,0],'k-')
 %% growth rate vs. cAMP
 FIELDNAMEY = 'muValues';
 FIELDNAMEX = 'cAMP';
-MYXLIM=[10^0,10000];
+MYXLIM=[10^0,1000000];
 USEFORLEGEND=[1,3,5,6];
 
-figure(1); clf; hold on
+% For later use outside script
+if ~exist('xydatacollection','var'), xydatacollection = []; end
+
+figure(1); 
+if ~exist('NOCLEARFIGURE','var'), clf; end;
+hold on
 
 % collect data
 values=[]; valuesstd=[]; lines=[];
@@ -222,11 +227,16 @@ for i=1:numel(alloutput)
     
     % raw
     l=plot([alloutput(i).output.(FIELDNAMEX)],[alloutput(i).output.(FIELDNAMEY)],'x','MarkerSize',25,'LineWidth',3,'Color',[alloutput(i).COLOR])    
-    lines(end+1)=l;
+    lines(end+1)=l;    
     
     % since we use log-scale, also plot the 0 values at the left xlim
     myunplottableidxs = find([alloutput(i).output.(FIELDNAMEX)]==0)
     plot(ones(1,numel(myunplottableidxs))*MYXLIM(1),[alloutput(i).output(myunplottableidxs).(FIELDNAMEY)],'o','MarkerSize',25,'LineWidth',3,'Color',[alloutput(i).COLOR])    
+    
+    % For later use outside script
+    if i<=4
+        xydatacollection = [xydatacollection [[alloutput(i).output.(FIELDNAMEX)];[alloutput(i).output.(FIELDNAMEY)]]];
+    end
     
 end
 
@@ -248,11 +258,13 @@ saveas(gcf,[PLOTDIR 'cAMP_growth.eps'],'epsc')
 %% fluor vs. cAMP (extracellular cAMP)
 FIELDNAMEY = 'meanFluor';
 FIELDNAMEX = 'cAMP';
-MYXLIM=[10^0,10000];
+MYXLIM=[10^0,100000];
 MYYLIM=[0 300000];
 USEFORLEGEND=[1,3,5,6];
 
-figure(1); clf; hold on
+figure(1); 
+if ~exist('NOCLEARFIGURE','var'), clf; end;
+hold on
 
 % collect data
 values=[]; valuesstd=[]; lines=[];
@@ -290,7 +302,9 @@ MYXLIM=[150,300000];
 MYYLIM=[0 1];
 USEFORLEGEND=[1,3,5,6];
 
-figure(3); clf; hold on
+figure(3); 
+if ~exist('NOCLEARFIGURE','var'), clf; end;
+hold on
 
 % collect data
 values=[]; valuesstd=[]; lines=[];
