@@ -1,3 +1,4 @@
+% function[h,L,MX,MED,bw]=violin(Y,varargin)
 %__________________________________________________________________________
 % violin.m - Simple violin plot using matlab default kernel density estimation
 %
