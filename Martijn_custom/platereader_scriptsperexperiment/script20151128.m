@@ -1,4 +1,4 @@
-PLOTDIR = 'U:\ZZ_EXPERIMENTAL_DATA\C_Platereader\2015_11_28\summaryPlots\'
+
 
 
 %% Converting names to cAMP concentration values.
@@ -113,7 +113,7 @@ ylabel('Fitted growth rate [dbl/hr]')
 xlabel('Extracellular cAMP [uM]')
 MW_makeplotlookbetter(20);
 plot(theXlim,[0,0],'k-')
-title('script20151123.m');
+title('script20151128.m');
 
 legend(lines(USEFORLEGEND),{ampoutput(USEFORLEGEND).name},'Location','northeastoutside');
 
@@ -125,7 +125,7 @@ FIELDNAMEY = 'meanFluor';
 FIELDNAMEX = 'cAMP';
 MYXLIM=[10^0,100000];
 MYYLIM=[0 300000];
-USEFORLEGEND=[1,3,5,6];
+USEFORLEGEND=[1,3];
 
 figure(1); clf; hold on
 
@@ -151,7 +151,7 @@ ylabel('Fluor reporter signal/OD [a.u.]')
 xlabel('Extracellular cAMP [uM]')
 MW_makeplotlookbetter(20);
 plot(theXlim,[0,0],'k-')
-title('script20151123.m');
+title('script20151128.m');
 
 legend(lines(USEFORLEGEND),{ampoutput(USEFORLEGEND).name},'Location','northeastoutside');
 
@@ -163,7 +163,7 @@ FIELDNAMEX = 'meanFluor';
 FIELDNAMEY = 'muValues';
 MYXLIM=[150,300000];
 MYYLIM=[0 1];
-USEFORLEGEND=[1,3,5,6];
+USEFORLEGEND=[1,3];
 
 figure(3); clf; hold on
 
@@ -189,7 +189,7 @@ ylabel('Growth rate [dbl/hr]')
 xlabel('Fluor reporter signal/OD [a.u.]')
 MW_makeplotlookbetter(20);
 plot(theXlim,[0,0],'k-')
-title('script20151123.m');
+title('script20151128.m');
 
 legend(lines(USEFORLEGEND),{ampoutput(USEFORLEGEND).name},'Location','northeastoutside');
 
@@ -200,7 +200,7 @@ saveas(gcf,[PLOTDIR 'cAMP_scatter.eps'],'epsc')
 %% Extra plot
 
 % xydatacollection obtained from executing script20151128 and 
-% script20151123 consecutively
+% script20151128 consecutively
 
 MYXLIM = [10^0, 10^5];
 
@@ -232,3 +232,78 @@ MW_makeplotlookbetter(20);
 
 title('script20151128.m')
 
+saveas(gcf,[PLOTDIR 'twoexperimentscombined-Ocurve.png'],'png')
+saveas(gcf,[PLOTDIR 'twoexperimentscombined-Ocurve.eps'],'epsc')
+
+%% Add microscope data to figure
+
+figure(4); hold on;
+
+microscopedata = ...
+[ 314, .567;...
+ 314, .529;...
+ 314, .611;...
+ 314, .705;...
+ 314, .510;...
+ 314, .675;...
+ 314, .623;...
+  50, .386;...
+1300, .821;...
+1300, .80;...
+1300, .727;...
+1300, .763;...
+1300, .818;...
+1300, .810;...
+1300, .774;]
+
+plot(microscopedata(:,1),microscopedata(:,2),'x','LineWidth',3,'Color','r','MarkerSize',15)
+
+disp('done');
+
+%% 
+
+%% fitTime(1) (proxy for lag phase) vs. cAMP
+FIELDNAMEX = 'cAMP';
+FIELDNAMEY = 'fitTimes';
+MYXLIM=[10^0,100000];
+USEFORLEGEND=[1,3];
+
+% For later use
+if ~exist('xydatacollection','var'), xydatacollection = []; end
+
+figure(5); clf; hold on;
+
+% go over data
+values=[]; valuesstd=[]; lines=[];
+for i=1:numel(ampoutput)      
+    
+    % raw
+    for j = 1:numel([ampoutput(i).output])
+    
+        if ampoutput(i).output(j).(FIELDNAMEX) == 0
+            ydata=[ampoutput(i).output(j).(FIELDNAMEY)(1)];
+            plot(MYXLIM(1),ydata,'o','MarkerSize',25,'LineWidth',3,'Color',[ampoutput(i).COLOR]);
+        else        
+            ydata=[ampoutput(i).output(j).(FIELDNAMEY)(1)];
+            l=plot([ampoutput(i).output(j).(FIELDNAMEX)],ydata,'x','MarkerSize',25,'LineWidth',3,'Color',[ampoutput(i).COLOR]);            
+        end
+    end
+    
+    lines(end+1)=l;
+        
+end
+
+% cosmetics
+set(gca,'xscale','log');
+xlim(MYXLIM)
+%ylim([0,1])
+ylabel('Treshold passage (hrs)')
+xlabel('Extracellular cAMP [uM]')
+MW_makeplotlookbetter(20);
+plot(theXlim,[0,0],'k-')
+title('script20151128.m');
+
+legend(lines(USEFORLEGEND),{ampoutput(USEFORLEGEND).name},'Location','northeastoutside');
+
+saveas(gcf,[PLOTDIR 'treshold.png'],'png')
+saveas(gcf,[PLOTDIR 'treshold.eps'],'epsc')
