@@ -1,6 +1,8 @@
 % Simple script to get some feel for correlation funtions
 % ===
 %
+% This script calculate corr or cov values for a cloud.
+%
 % Note that Noreen has sent me two websites with two nice explanations when
 % the slope indeed is the same as the cov, and when not.
 %
@@ -11,7 +13,7 @@
 
 fi = 1; % figure index
 
-% Simple linear relationsship
+%% Simple linear relationsship
 % ===
 x = [0:.01:1];
 y = 5*x+2;
@@ -20,7 +22,7 @@ Rlin = corr(x',y')
 %corrcoef(x',y')
 fi = fi+1;
 
-% The outcome of this is one, which can be derived easily,
+%% The outcome of this is one, which can be derived easily,
 % see notes 19-04-2015 (p. 2). A manual calculation of the R is as follows:
 % ===
 % Note:
@@ -46,7 +48,7 @@ betaX = varXY / varY
 % (And this was also mentioned in my programming course - see lecture notes 
 % thereof.)
 
-% What happens if you have a non-linear relation?
+%% What happens if you have a non-linear relation?
 % E.g. a parabola
 % ===
 x = [-1:.01:1];
@@ -61,7 +63,7 @@ fi = fi+1;
 % Which makes sense since there is no straight line describing this 
 % relationship.
 
-% Another example
+%% Another example
 % ===
 x = [-1:.01:1];
 y = 4*x.^3+x.^4;
