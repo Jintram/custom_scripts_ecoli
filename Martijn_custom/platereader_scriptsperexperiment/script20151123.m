@@ -5,7 +5,8 @@ FIELDNAMEY = 'muValues';
 
 figure(1); clf; hold on
 
-% collect data
+
+% collect data 
 values=[]; valuesstd=[];
 for i=1:numel(controls)      
     
