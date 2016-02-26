@@ -50,17 +50,18 @@ disp('NOTE: Keep in mind fluor images are not corrected for lighting effects.')
 
 % Setting _________________________________________________________________
 % Make this setting such that it can be set before execution of the script.
-if ~exist('myFolder')
+if ~exist('myFolder','var')
     %myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\negcon732\';
     %myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-08_testicd\783\denser\';
-    myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\467\1\';
+    %myFolder = 'D:\MICROSCOPE_EXPERIMENTS\To_Analyze\2014-10-07\467\1\';
+    error('Please set myFolder parameter');
 end
-if ~exist('myPCPrefix') | ~exist('myFPPrefix')
+if ~exist('myPCPrefix','var') | ~exist('myFPPrefix','var')
     myPCPrefix = 'BF_';
     myFPPrefix = 'GFP_';
     disp('% myPCPrefix and myFPPrefix set to default');
 end
-if ~exist('timeMargin')
+if ~exist('timeMargin','var')
     timeMargin = 5/(24*60*60); % to determine accompanyning fluor img, 1st nr is seconds
 end
 ExportFilename = 'mydata';
@@ -69,10 +70,17 @@ myTextSize=8;
 
 % margin to put into treshold value
 %tresholdMargin=1.0;
-myTresholdPercentile=80; % 97 for normal data, 90 for negcon
+if ~exist('myTresholdPercentile','var')
+    myTresholdPercentile=97; % 97 for normal data, 90 for negcon
+end
 minCellSize=100;
 limMinRatio = .9; limMaxRatio = 3.0;
 limAbsoluteDifference=100;
+
+myAnalysisFolder = [myFolder 'analysis\'];
+if ~exist(myAnalysisFolder,'dir')
+    mkdir(myAnalysisFolder);
+end
 
 % Preparation _____________________________________________________________
 myFileListing = dir(myFolder);
@@ -96,7 +104,7 @@ if ~(myFolder(end)=='\'), disp('YOU FORGOT THE TRAILING SLASH! (in param myFolde
 % Main script _____________________________________________________________
 
 % Loop over files in dir 
-ImagesAnalyzed=0;
+ImagesAnalyzed=0; fluorFileNames = {};
 for theFile=myFileListing'       
     
     myFileName=theFile.name;
@@ -176,7 +184,7 @@ for theFile=myFileListing'
         % Find and show also phase contrast image to user
         % ===
         
-        % find brightfield image
+        % find brightfield images
         % loop over files in dir
         for thePhaseFile=myFileListing'
             
@@ -297,13 +305,16 @@ for theFile=myFileListing'
         allMultipleSignalNoise{end+1}=multipleSignalNoise;
         allMultipleSignalMinusNoise{end+1}=mulitipleSignalMinusNoise;
         
+        % save filenames to recognize files later
+        fluorFileNames{end+1} = myFileName;
+        
         % Finish plot with summary images
         % ===
         hFig = figure(8); subplottight(1,2,2);
         imshow(PhaseOutlineImg,[]);
         text(10,size(PhaseOutlineImg,2)-30,phasePath,'Color','w','BackgroundColor','k','FontSize',myTextSize);
         %break; % TODO REMOVE JUST FOR TESTING  
-        myFilePath = [myFolder ExportFilename '_mic-img-' num2str(ImagesAnalyzed) '.jpg'];
+        myFilePath = [myAnalysisFolder ExportFilename '_mic-img-' num2str(ImagesAnalyzed) '.jpg'];
         saveas(hFig,myFilePath)
                
     end
@@ -318,12 +329,16 @@ dirMeanMultipleSignalMinusNoise.*(multipleImgMax-multipleImgMin)+multipleImgMin
 if ImagesAnalyzed==0, disp('NO IMAGES FOUND TO ANALYZE!'); break; end
 
 % Export data to Excel
-myFilePath = [myFolder ExportFilename '.xls'];
-xlswrite(myFilePath,{myFolder},'sheet1','B2');
+myFilePath = [myAnalysisFolder ExportFilename '.xls'];
+xlswrite(myFilePath,{myAnalysisFolder},'sheet1','B2');
 xlswrite(myFilePath,{'Mean signal to noise'},'sheet1','B3');
 xlswrite(myFilePath,dirMeanMultipleSignalToNoise,'sheet1','C3');
 xlswrite(myFilePath,{'Std signal to noise'},'sheet1','B4');
 xlswrite(myFilePath,dirStdMultipleSignalToNoise,'sheet1','C4');
+xlswrite(myFilePath,{'Filenames'},'sheet1','B5');
+xlswrite(myFilePath,fluorFileNames,'sheet1','C5');
+
+
 
 % Make histogram of data
 % ===
@@ -353,7 +368,7 @@ ylim([1-spacing,1+spacing*(length(allMultipleSignalNoise))]);
 xlim([limMinRatio,limMaxRatio])
 title({myFolder,infoText,''})
 
-myFigFilePath = [myFolder ExportFilename '_signalToNoise.png'];
+myFilePath = [myAnalysisFolder ExportFilename '_signalToNoise.png'];
 
 mySize=[4,15];
 pos = get(hFig, 'Position');
@@ -364,7 +379,7 @@ set(hFig, 'Units', 'centimeters', 'PaperPosition', ...
    [2,2, ...
    mySize(2), mySize(1)]);
 
-saveas(hFig,myFigFilePath);
+saveas(hFig,myFilePath);
 
 % Plotting code, signal MINUS noise
 % ===
@@ -395,7 +410,7 @@ xlim([0,limAbsoluteDifference])
 
 title({myFolder,infoText})
 
-myFigFilePath = [myFolder ExportFilename '_signalMinusNoise.png'];
+myFilePath = [myFolder 'analysis\' ExportFilename '_signalMinusNoise.png'];
 
 mySize=[4,15];
 pos = get(hFig, 'Position');
@@ -406,7 +421,7 @@ set(hFig, 'Units', 'centimeters', 'PaperPosition', ...
    [2,2, ...
    mySize(2), mySize(1)]);
 
-saveas(hFig,myFigFilePath);
+saveas(hFig,myFilePath);
 
 %% EXTRA PLOT XXXXXXXXXXXXX
 % ===
@@ -443,18 +458,18 @@ title(([myFolder sprintf('\n this should be done on non-normalized data!')]),'Fo
 %% Build database whilst working
 % ===
 
-if ~exist('databaseValuesMeanSignalNoise'), databaseValuesMeanSignalNoise=[] ,else
-    databaseValuesMeanSignalNoise(end+1)=mean(dirMeanMultipleSignalToNoise);
-end
-if ~exist('databaseValuesStdSignalNoise'), databaseValuesStdSignalNoise=[] ,else
-    databaseValuesStdSignalNoise(end+1)=std(dirMeanMultipleSignalToNoise);
-end
-if ~exist('databaseValuesNames'), databaseValuesNames={} ,else
-    databaseValuesNames{end+1}=myFolder;
-end
+if ~exist('databaseValuesSignalNoise'), databaseValuesSignalNoise={}; end
+databaseValuesSignalNoise{end+1}=dirMeanMultipleSignalToNoise;
+if ~exist('databaseValuesMeanSignalNoise'), databaseValuesMeanSignalNoise=[]; end
+databaseValuesMeanSignalNoise(end+1)=mean(dirMeanMultipleSignalToNoise);
+if ~exist('databaseValuesStdSignalNoise'), databaseValuesStdSignalNoise=[]; end
+databaseValuesStdSignalNoise(end+1)=std(dirMeanMultipleSignalToNoise);
+if ~exist('databaseValuesNames'), databaseValuesNames={}; end
+databaseValuesNames{end+1}=myFolder;
+
 
 % Save whole analysis to file
-save([myFolder 'complete_analysis_' date '.mat']);
+save([myAnalysisFolder 'complete_analysis_' date '.mat']);
 
 
 

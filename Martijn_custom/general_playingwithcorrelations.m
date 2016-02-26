@@ -30,11 +30,16 @@ fi = fi+1;
 varXY = 0; varX = 0; varY = 0;
 xNorm = x-mean(x);
 yNorm = y-mean(y);
-for t=1:numel(x)
-    varXY = varXY + xNorm(t)*yNorm(t);    
-    varX = varX+xNorm(t)^2;
-    varY = varY+yNorm(t)^2;
+N = numel(x);
+for t=1:N
+    % sum
+    varXY = (varXY + xNorm(t)*yNorm(t));
+    varX  = (varX+xNorm(t)^2);
+    varY  = (varY+yNorm(t)^2);
 end
+% normalize
+varXY = varXY; varX = varX; varY = varY;
+% correlation coefficient
 RXY = varXY / sqrt(varX*varY)
 
 % Note that you can calculate the correlation coefficients easily:
