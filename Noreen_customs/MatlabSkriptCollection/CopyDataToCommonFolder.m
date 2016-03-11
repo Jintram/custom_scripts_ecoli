@@ -7,7 +7,7 @@
 % **NOTE: pay attention to when a backslash (\) is needed! ********
 
 % maindir: main experimental folder: \root\date\
-maindir='D:\ExperimentalDataTodo\XX\';
+maindir='D:\ExperimentalDataTodo\2015-09-17\';
 % useCrop: decides about which position folders to use. if 'poscrop' folders
 % are to be usd: =1. if 'pos' folders: =0
 useCrop=1;
@@ -19,7 +19,7 @@ useCrop=1;
 % subfolder ='\segmentation\png\';
  subfolder ='\analysis\schnitzcells\';
 % subfolder ='\analysis\fluor_r\RfromFluor\';
-%subfolder ='\analysis\fluor_g\g5\';
+% subfolder ='\analysis\fluor_c\c5\';
 
 % TOCOME: specify if only a subset of files (containing a certain string) 
 % from this folder should be copied into new folder
@@ -45,7 +45,7 @@ addPosName=1;
 % subfolder of 'maindir'
 %combinedFolder = 'AllPositions_LastmCherryImage';
 % ** classical options: **
-% combinedFolder = 'AllPositions_LastmCherryImage';
+% combinedFolder = 'AllPositions_LastFluoImage';
 % combinedFolder = 'AllPositions_LastSegmentationImage';
  combinedFolder = 'AllPositions_AverageTraces';
 % combinedFolder = 'AllPositions_AllFluoR6Images';

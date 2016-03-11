@@ -41,7 +41,7 @@
 %
 %
 % *** OUTPUT ***
-%  'allstepsVec'  containing: schnitz - phase (xjump) - prod (p0) - score
+%  'allstepsVec'  containing: schnitz - phase (xjump) - prod (p0) - score -threshold - timejump [min] - interdivtime [min]
 %  -threshold - time[min] of jump (rel. to birth) - lifetime of cell [min]
 %  'stepFraction' : fraction of schnitzcells which is considered to have a
 %                   step function trace (dependent on threshold)
@@ -53,6 +53,8 @@ pincr=0.02; %increment of production rates tested (usually prod rate is normaliz
 PLOTFIT=0;
 PLOT2ND3RDFIT=0;
 PLOTONLYSTEPSCHNITZES=1;
+SAVESTEPTRACEFIGURES=XXX1; % the other figures can currently not be saved automatically
+SAVEDIR='XXX\\storage01\data\AMOLF\users\walker\CellCycle\Data_and_Analysis\StepTrace_Schnitzes_and_Distribution\SomData_UseFullTimeRange\AllIndividualStepTraces_incl_Fit\';
 schnitzUse=s_rm_fitTime;
 schnitznumrange=1:length(schnitzUse); % earlysteps';
 ExcludeFirstStep=0;  % if=1, the step xjump must not occur at first datapoint (makes sense since typical dbl time =100 min, 
@@ -305,9 +307,25 @@ for schnitznum=schnitznumrange
             plot(ph_schnitz,prod_schnitz,'.-b','MarkerSize',20,'LineWidth',2)
             xlim([0 1])
             
-            if ISSTEP
-                annotation(gcf,'textbox',[0.77 0.14 0.12 0.06],'String',{'Step'});
+            %BLUBB start 2016-01-04 Quick adjustments to make the reviewers
+            %happy. Check single cell step traces
+            title('')
+            set(gcf,'OuterPosition',[100 100 300 300])
+            xlabel('phase')
+            ylabel('prod. rate')
+            %if ISSTEP
+            %    annotation(gcf,'textbox',[0.77 0.14 0.12 0.06],'String',{'Step'});
+            %end
+            legend off
+            if SAVESTEPTRACEFIGURES
+                % save the figures
+                figname=['SingleTrace_Schnitz' str3(schnitznum)];
+                savefig(gcf,[SAVEDIR figname])
+                saveSameSize(gcf,'format','png','file',[SAVEDIR figname '.png']) %.pdf does not work with same size
+                saveSameSize(gcf,'format','eps','file',[SAVEDIR figname '.eps'])
             end
+            %BLUBB end
+            
             % BLUBB
            % if ~ISSTEP & fit1(3)<=0.03
            %     annotation(gcf,'textbox',[0.77 0.14 0.12 0.06],'String',{'Step0.03'});

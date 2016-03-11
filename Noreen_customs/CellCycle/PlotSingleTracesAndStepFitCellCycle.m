@@ -16,7 +16,7 @@
 %             'allstepsVec' from the code 'FitSmoothStepFunctionViaScanning.m'
 %             It does not matter, if more schnitzes than used are written
 %             into this vector.
-%             content of one row: schnitz - phase (xjump) - prod (p0) - score -threshold
+%             content of one row: schnitz - phase (xjump) - prod (p0) - score -threshold - timejump [min] - interdivtime [min]
 %             Note that p0 (from 'FitSmoot..') is normalized by colony average and will be
 %             retransformed to absolute value within this function ('PlotSingle..').
 % 'schnitznumrange': a vector that contains the schnitzes which will
