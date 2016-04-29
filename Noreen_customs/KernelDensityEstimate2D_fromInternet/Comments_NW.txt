@@ -1,0 +1,9 @@
+from the website: "If you need to use a fixed bandwidth, just overwrite t_x and t_y in the main function. Thanks to Zdravko for this hint."
+
+downloaded from http://www.mathworks.com/matlabcentral/fileexchange/17204-kernel-density-estimation
+Maltab FileExchange ID #17204
+
+
+%  Reference: Z. I. Botev, J. F. Grotowski and D. P. Kroese
+%             "KERNEL DENSITY ESTIMATION VIA DIFFUSION" ,Submitted to the
+%             Annals of Statistics, 2009
