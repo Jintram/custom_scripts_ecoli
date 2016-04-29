@@ -114,9 +114,9 @@ else
     data = [[[scatterX{:}] [scatterX{:}]]; [[scatterY{:}], 1-[scatterY{:}]]]'; % symmetry data
 end
 
-plot([scatterX{:}],[scatterY{:}],['.' COLOR],'MarkerSize',15);
+plot([scatterX{:}],[scatterY{:}],['.' COLOR],'MarkerSize',7);
 if MAKEUSEOFSYMMETRY
-    plot([scatterX{:}],1-[scatterY{:}],['.' COLOR],'MarkerSize',15); % plot symmetric
+    plot([scatterX{:}],1-[scatterY{:}],['.' COLOR],'MarkerSize',7); % plot symmetric
 end
 [bandwidth,density,X,Y] = kde2d(data);      
 %[C, l1] = contour(X,Y,density,NRCONTOURLINES,'-k','LineWidth',2);
@@ -125,9 +125,9 @@ end
 %[C, l1] = contour(X,Y,density.*X,NRCONTOURLINES,'-k','LineWidth',2);
 [C, l1] = contour(X,Y,density.*X,NRCONTOURLINES,'-k','LineWidth',2);
 
-title('kde, density directed (pdf(x)*x)')
-xlabel('Length of cell');
-ylabel('Locations of its fts peaks');
+%title('kde, density directed (pdf(x)*x)')
+xlabel(['Length of cell [' '\mu' 'm]']);
+ylabel('ftsA peaks location');
 %figure(); hist([scatterX{:}])
 
 maxX = max([scatterX{:}]);
@@ -144,10 +144,31 @@ for i=1:N
     end
 end
 
+%% Create overlay plot if division ratios are avaible
+NEWMAXX = 50;
+
+figure(3); clf; hold on;
+[C, l1] = contour(X,Y,density.*X,NRCONTOURLINES,'-k','LineWidth',2);
+
+% data that should be obtained from
+% script20160429_filamentRecoveryDivisionRatioss
+if exist('Ratios','var')
+    for datasetIdx = 1:numel(datasetsPaths)
+        plot(myLengthSumNewborns{datasetIdx},Ratios{datasetIdx},'o', 'Color', PLOTCOLORS(datasetIdx,:),'LineWidth',2);
+    end
+end
+
+xlim([0, NEWMAXX]);
+ylim([0,1]);
+
+xlabel(['Length of cell [' '\mu' 'm]']);
+ylabel('ftsA peaks location / division location');
+
+MW_makeplotlookbetter(15)
 
 %% 
 
-figure(3);clf;
+figure(4);clf;
 
 [n,c] = hist(pileofLengthsOfBacteriaInMicrons,50);
 plot(c,n./(sum(n)*(c(2)-c(1))),'o-k','MarkerSize',15,'LineWidth',3);

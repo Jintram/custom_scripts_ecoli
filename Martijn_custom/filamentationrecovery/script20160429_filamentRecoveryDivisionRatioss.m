@@ -1,25 +1,36 @@
 
 %% 
 % Plotting division ratios
-%
+%WHATDATA = 'sulA';
+WHATDATA = 'temperature';
 
 HISTNRBINS=20;
 
 FIGURENUMBERS=[1 1 1];
+%PLOTCOLORS = [0 0 1;0 0 1;0 0 1];
+PLOTCOLORS = [0,0,139 ; 0,191,255  ; 	135,206,250]./255; % shades of blue
+PLOTCOLORS = [255, 0, 0; 204, 0, 204 ; 255, 102, 0]./255; % shades of blue
 
-LENGTHFIELD = 'areaPixels';
+%LENGTHFIELD = 'areaPixels';
 %LENGTHFIELD = 'length_fitNew';
-%LENGTHFIELD = 'length_skeleton';
+LENGTHFIELD = 'length_skeleton';
 
 %% The sulA datasets
 
-datasetsPaths = ...
-    { ...
-    'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos1crop\data\pos1crop-Schnitz.mat',...
-    'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos4crop\data\pos4crop-Schnitz.mat',...
-    'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos7crop\data\pos7crop-Schnitz.mat',...
-    }
-
+if strcmp(WHATDATA, 'sulA')
+    datasetsPaths = ...
+        { ...
+        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos1crop\data\pos1crop-Schnitz.mat',...
+        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos4crop\data\pos4crop-Schnitz.mat',...
+        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos7crop\data\pos7crop-Schnitz.mat'...
+        }
+elseif strcmp(WHATDATA, 'temperature')
+    datasetsPaths = ...
+        { ...
+        ...'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-03-23\pos4crop\data\pos4crop-Schnitz.mat',...
+        ['G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos' num2str(2) 'crop\data\pos' num2str(2) 'crop-Schnitz.mat'],...
+        }
+end
 %% 
 for i = FIGURENUMBERS
     figure(i); clf; hold on;
@@ -88,21 +99,24 @@ for datasetIdx = 1:numel(datasetsPaths)
 end
 
 %% Now plot this
+SANITYCHECKSYMMETRY=1;
+
 Ratios={};
 for datasetIdx = 1:numel(datasetsPaths)
     
     %%
-    % user given parameters
-    LONGESTNORMALDIVSIZEPARENT = 2000;
+    % user given parameters    
     LEFTX =  0;   
 
     % calculated parameters
     if strcmp(LENGTHFIELD,'length_skeleton')
-        rightx = 30;
+        RIGHTX = 30;        
+        LONGESTNORMALDIVSIZEPARENT=5;
     elseif strcmp(LENGTHFIELD,'areaPixels')
-        rightx = 20000;
+        RIGHTX = 15000;
+        LONGESTNORMALDIVSIZEPARENT = 2000;
     else
-        rightx  = max(myLengthParents)*1.1;
+        RIGHTX  = max(myLengthParents)*1.1;
     end
 
     % create figure
@@ -116,23 +130,25 @@ for datasetIdx = 1:numel(datasetsPaths)
     N=5;
     for i=1:N
         for j = 1:(i*2-1)
-            plot([0, rightx], [(j)/(2*i) (j)/(2*i)],'-','Color',[.5 .5 .5],'LineWidth',N-i+1)
+            plot([0, RIGHTX], [(j)/(2*i) (j)/(2*i)],'-','Color',[.5 .5 .5],'LineWidth',N-i+1)
         end
     end
 
     % target length line
-    x = (LONGESTNORMALDIVSIZEPARENT):rightx;
+    x = (LONGESTNORMALDIVSIZEPARENT):RIGHTX;
     y = (LONGESTNORMALDIVSIZEPARENT/2)./x;
-    plot(x,y,'-','Color',[.5 .5 .5],'LineWidth',2);    
+    plot(x,y,'--','Color','k','LineWidth',2);    
     
     % plot ratios
     Ratios{datasetIdx} = myLengthNewborns{datasetIdx}./myLengthSumNewborns{datasetIdx};
-    plot(myLengthSumNewborns{datasetIdx},Ratios{datasetIdx},'xb','LineWidth',2);
-    plot(myLengthSumNewborns{datasetIdx},1-Ratios{datasetIdx},'ob','LineWidth',2);
+    plot(myLengthSumNewborns{datasetIdx},Ratios{datasetIdx},'x', 'Color', PLOTCOLORS(datasetIdx,:),'LineWidth',2);
+    if SANITYCHECKSYMMETRY    
+        plot(myLengthSumNewborns{datasetIdx},1-Ratios{datasetIdx},'o', 'Color', PLOTCOLORS(datasetIdx,:),'LineWidth',2);
+    end
 
     % cosmetics
     ylim([0,1]);
-    xlim([LEFTX,rightx]);
+    xlim([LEFTX,RIGHTX]);
 
     xlabel(['Cell size by ' LENGTHFIELD],'Interpreter','None');
     ylabel('L_{child}/L_{parent}');
@@ -144,6 +160,9 @@ end
 %% Now calculate overall histogram
 h=figure(FIGURENUMBERS(end)+1); clf; hold on;
 
+% calculate hist
+[count,x] = hist([Ratios{:}],HISTNRBINS);
+
 % helping lines
 N=5; highestcount=max(count);
 for i=1:N
@@ -152,9 +171,7 @@ for i=1:N
     end
 end
 
-% hist
-[count,x] = hist([Ratios{:}],HISTNRBINS);
-
+% plot hist (calculated above)
 if exist('histSkel','var') && exist('histArea','var')
     % plot histograms from multiple fields
     l1=plot(histArea(2,:),histArea(1,:),'-','LineWidth',3);    
@@ -206,11 +223,12 @@ ylim([0 max([myLengthParents{:}])]);
 
 
 %%
+%{
 figure(FIGURENUMBERS(end)+3); clf; hold on;
 
 plot(histArea(2,:),histArea(1,:),'-r');
 plot(histSkel(2,:),histSkel(1,:),'-b');
-
+%}
 
 
 
