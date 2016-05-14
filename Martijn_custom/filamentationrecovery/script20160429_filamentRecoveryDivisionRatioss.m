@@ -6,17 +6,19 @@ WHATDATA = 'sulA';
 
 HISTNRBINS=20;
 
-FIGURENUMBERS=[1 1 1];
+FIGURENUMBERS=[1 1 1 1 1 1 1]; % TODO this option does not work any more
+
 %PLOTCOLORS = [0 0 1;0 0 1;0 0 1];
-PLOTCOLORS = [0,0,139 ; 0,191,255  ; 	135,206,250]./255; % shades of blue
-PLOTCOLORS = [255, 0, 0; 204, 0, 204 ; 255, 102, 0]./255; % shades of blue
+%PLOTCOLORS = [0,0,139 ; 0,191,255  ; 	135,206,250]./255; % shades of blue
+%PLOTCOLORS = [255, 0, 0; 204, 0, 204 ; 255, 102, 0]./255; % shades of blue
+PLOTCOLORS = linspecer(7);
 
 %LENGTHFIELD = 'areaPixels';
 %LENGTHFIELD = 'length_fitNew';
 LENGTHFIELD = 'length_skeleton';
 
 PLOTSAVEDIR = 'U:\PROJECTS\B_filamentationRecovery\Contributions_Martijn\figures_fig_files\';
-makenoteintoreadme(PLOTSAVEDIR,'script20160429_filamentRecoveryDivisionRatioss');
+makenoteinreadme(PLOTSAVEDIR,'script20160429_filamentRecoveryDivisionRatioss');
 
 
 %% The sulA datasets
@@ -25,6 +27,8 @@ if strcmp(WHATDATA, 'sulA')
     datasetsPaths = ...
         { ...
         'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos1crop\data\pos1crop-Schnitz.mat',...
+        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos2crop\data\pos2crop-Schnitz.mat',...
+        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos3crop\data\pos3crop-Schnitz.mat',...
         'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos4crop\data\pos4crop-Schnitz.mat',...
         'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos7crop\data\pos7crop-Schnitz.mat'...
         }
@@ -92,6 +96,7 @@ for datasetIdx = 1:numel(datasetsPaths)
     
     % Finding 2 daughters with each parent
     myLengthNewborns{datasetIdx} = []; myLengthParents{datasetIdx} = []; myLengthSumNewborns{datasetIdx}=[];
+    myNewBornSchnitzNrs{datasetIdx} = []; %myDaughter1schnitzNrs{datasetIdx} = []; myDaughter2schnitzNrs{datasetIdx} = [];
     for i = 1:numel(schnitzcells)
 
         LengthParent = schnitzcells(i).(LENGTHFIELD)(end);
@@ -108,21 +113,28 @@ for datasetIdx = 1:numel(datasetsPaths)
             myLengthNewborns{datasetIdx}(end+1) =     lengthDaughterSchnitz1;
             myLengthParents{datasetIdx}(end+1) =      LengthParent;
             myLengthSumNewborns{datasetIdx}(end+1) =  lengthDaughterSchnitz1+lengthDaughterSchnitz2;
+            myNewBornSchnitzNrs{datasetIdx}(end+1) =  daughterSchnitz1;
             % daughter 2
             myLengthNewborns{datasetIdx}(end+1) =     lengthDaughterSchnitz2;
             myLengthParents{datasetIdx}(end+1) =      LengthParent;
             myLengthSumNewborns{datasetIdx}(end+1) =  lengthDaughterSchnitz1+lengthDaughterSchnitz2;
+            myNewBornSchnitzNrs{datasetIdx}(end+1) =  daughterSchnitz2;
             
+            % For later reference, make lookup table 
+            %myDaughter1schnitzNrs{datasetIdx}(end+1) = daughterSchnitz1;
+            %myDaughter2schnitzNrs{datasetIdx}(end+1) = daughterSchnitz2;                        
         end
 
     end
 
     %% Gather data on interdivision time vs. lifetime of cell
     lifeTimes{datasetIdx} = [schnitzcells.interDivTime];
+    birthTimes{datasetIdx} = NaN(1,numel(schnitzcells));
     allLengths{datasetIdx} = NaN(1,numel(schnitzcells));
     for i = 1:numel(schnitzcells)
         thisSchnitzLengths = schnitzcells(i).(LENGTHFIELD);
         allLengths{datasetIdx}(i) = thisSchnitzLengths(1);
+        birthTimes{datasetIdx}(i) = schnitzcells(i).time(1);
     end
     
 end
@@ -320,7 +332,7 @@ saveas(h, [PLOTSAVEDIR WHATDATA '_ratios_histograms.tif']);
 
 h=figure(FIGURENUMBERS(end)+4); clf; hold on
 myColors = linspecer(numel(datasetsPaths));
-myPlotMarkers = 'os^y';
+myPlotMarkers = 'os^vd<>';
 
 title([WHATDATA ' condition']);
 
@@ -377,13 +389,96 @@ for datasetIdx = 1:numel(datasetsPaths)
         'MarkerFaceColor','k','MarkerSize',10)
 end
     
-xlim([LEFTX,RIGHTX]);
+%xlim([LEFTX,RIGHTX]);
 xlabel(['Birth size by ' LENGTHFIELD ' '],'Interpreter','None');
 ylabel('Lifetime [min]');
 MW_makeplotlookbetter(15)
 
 saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_histograms.fig']);
 saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_histograms.tif']);
+
+%% Plot with time-coded ratios
+MINUTELIFETIMETRESHOLD=40;
+
+h1=figure(FIGURENUMBERS(end)+5); clf; hold on
+h2=figure(FIGURENUMBERS(end)+6); clf; hold on
+
+% Get a colormap (is 64 long by default)
+timeColormap = colormap(jet); % winter
+rowsInColormap = size(timeColormap,1);
+
+% 
+longestTime = max([lifeTimes{:}]);
+%longestTime = max([birthTimes{:}]);
+fromLifeTimeToColorCodeFactor = longestTime/(rowsInColormap-1);
+
+for datasetIdx = 1:numel(datasetsPaths)
+
+    for i = 1:numel(myLengthSumNewborns{datasetIdx})
+
+        %currentLifeTime = lifeTimes{datasetIdx}(myNewBornSchnitzNrs{datasetIdx}(i)); % daughter lifetime
+        currentTime = lifeTimes{datasetIdx}(i); % parent lifetime
+        %currentTime = birthTimes{datasetIdx}(i); % time at which born
+        
+        % determine color if lifetime known
+        if isnan(currentTime)
+            colorForThisDataPoint = [.5 .5 .5];
+        else    
+            colorForThisDataPoint = ...
+                timeColormap(...
+                    round(currentTime/fromLifeTimeToColorCodeFactor)+1 ...
+                    ,:);
+        end
+
+        % plot all datapoint to one figure
+        figure(FIGURENUMBERS(end)+5);
+        plot(myLengthSumNewborns{datasetIdx}(i),Ratios{datasetIdx}(i),'o','MarkerSize',10,...
+                'MarkerEdgeColor',colorForThisDataPoint,...
+                'MarkerFaceColor',colorForThisDataPoint)
+        
+        % plot selection of datapoints to 2nd figure
+        figure(FIGURENUMBERS(end)+6);
+        if currentTime>MINUTELIFETIMETRESHOLD % || isnan(currentLifeTime)
+            plot(myLengthSumNewborns{datasetIdx}(i),Ratios{datasetIdx}(i),'o','MarkerSize',10,...
+                'MarkerEdgeColor',colorForThisDataPoint,...
+                'MarkerFaceColor',colorForThisDataPoint)
+        end
+    end
+    
+end
+
+for myfignum = 5:6
+    figure(FIGURENUMBERS(end)+myfignum);
+
+    xlabel('Summed daughter length [um]');
+    ylabel('L_d/L_p');
+    
+    hc = colorbar;
+    %ax = gca;
+    %ax.XTickLabel = {'1000','1'};
+    caxis([0,longestTime])
+    ylabel(hc, 'Daughter interdivision time')
+
+    MW_makeplotlookbetter(20);
+end
+
+saveas(h1, [PLOTSAVEDIR WHATDATA '_ratiosByInterdiv.fig']);
+saveas(h1, [PLOTSAVEDIR WHATDATA '_ratiosByInterdiv.tif']);
+
+saveas(h2, [PLOTSAVEDIR WHATDATA '_ratiosByInterdivSelected.fig']);
+saveas(h2, [PLOTSAVEDIR WHATDATA '_ratiosByInterdivSelected.tif']);
+
+%% Histogram of lifetimes
+h=figure(FIGURENUMBERS(end)+7); clf; hold on
+
+hist([lifeTimes{:}],30)
+xlabel('Interdivision lifetime [min]');
+ylabel('Count')
+
+MW_makeplotlookbetter(20);
+
+saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_generalhistogram.fig']);
+saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_generalhistogram.tif']);
 
 %%
 %{
@@ -393,7 +488,8 @@ plot(histArea(2,:),histArea(1,:),'-r');
 plot(histSkel(2,:),histSkel(1,:),'-b');
 %}
 
-
+%% 
+disp('Done.');
 
 
 
