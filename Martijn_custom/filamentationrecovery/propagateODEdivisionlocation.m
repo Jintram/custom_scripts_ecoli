@@ -4,7 +4,7 @@ parameters.mu = 1;
 parameters.divisionTime = 1; % for timer model to work, this needs to be equal to mu
 parameters.divisionSize = 6;
 parameters.addedSize = 6;
-parameters.divisionType = 'adder';
+parameters.divisionType = 'sizer';
 
 % noise parameters
 parameters.fluctuationIntensity = 0.04; % 0.04 seems good value
@@ -81,14 +81,14 @@ ylabel('Cell lengths [\mum]');
 MW_makeplotlookbetter(20);
 
 %%
-h=figure(3); clf; hold on;
 % Create lookuptable
 % lookuptable{n} gives, for nth simulation time, in lookuptable{n}(:,1) the
 % schnitzes that are alive during that time, and lookuptable{n}(:,2), the
-% corresponding frame in which they were alive.
+% corresponding frame in which they were alive. lookuptable{n}(:,3) is 0,
+% but 1 if it was the last frame in which this schnitz was spotted.
+%{
 lookuptable={};
-lineageHierarchy = {};
-for t = simulationtimes    
+for t = 1:numel(simulationtimes)
     
     lookuptable{t} = [];
     hits=0;
@@ -97,42 +97,76 @@ for t = simulationtimes
     
         if any(simulatedschnitzcells(i).times==t)
             hits=hits+1;
+            % schnitz#
             lookuptable{t}(hits,1) = [i];
+            % which timefield corresponds
             lookuptable{t}(hits,2) = [find(simulatedschnitzcells(i).times==t)];
+            % flag for if its the last frame in which schnitz lives
+%             if (lookuptable{t}(hits,2))==numel(simulatedschnitzcells(i).times)
+%                 lookuptable{t}(hits,3) = 1;
+%             else
+%                 lookuptable{t}(hits,3) = 0;
+%             end
         end
     
     end
 end
+%}
 
-% now sort the lookuptable by lineage hierarchy
-% go over times again
-for t = simulationtimes(2:end)
+%% build a lookuptable that corresponds with lineage structure
+% lookuptable{n} gives, for nth simulation time, in lookuptable{n}(:,1) the
+% schnitzes that are alive during that time, and lookuptable{n}(:,2), the
+% corresponding frame in which they were alive. lookuptable{n}(:,3) is 0,
+% but 1 if it was the last frame in which this schnitz was spotted.
+% identify the first schnitzcells
+lookuptable={}; lookuptable{1}=[]; hits=0;
+for i = 1:numel(simulatedschnitzcells)
+    if any(simulatedschnitzcells(i).times==simulationtimes(1))
+        hits=hits+1;
+        lookuptable{1}(hits,1) = i;
+        lookuptable{1}(hits,2) = 1;
+    end
+end
+
+% now expand lookuptable
+for t = 2:numel(simulationtimes)
     
-    % go over schnitzes
-    for tableRow = 1:numel(lookuptable{t}(:,1))
+    lookuptable{t}=[]; 
+    rprime = 0;
+    for r = 1:numel(lookuptable{t-1}(:,1))
         
+        % previous schnitz
+        previousSchnitz = lookuptable{t-1}(r,1);
         
+        % previous indices of time
+        previousTimeIdx = find(simulatedschnitzcells(previousSchnitz).times==simulationtimes(t-1));
         
-        % if it is newborn, move it to the location in the array it's
-        % parent was previously
-        if lookuptable{t}(tableRow,2)==1 % if time was 1st element
-            
-            parentLocation = find(lookuptable{t-1}(tableRow,1)==simulatedschnitzcells(tableRow).P);
-            originalLocation = tableRow;
-            
-            % remember old values
-            oldValues = lookuptable{t}(tableRow,:);
-            % remove at original location
-            lookuptable{t}=lookuptable{t}([1:tableRow-1,tableRow+1:end],:);
-            % insert at new location
-            lookuptable{t}=[lookuptable{t}([1:tableRow],:);oldValues;lookuptable{t}([tableRow:end],:)];            
-            
-            
+        % if previous time is last time
+        if numel((simulatedschnitzcells(previousSchnitz).times))==previousTimeIdx
+            % cell has divided
+            nextSchnitz1 = simulatedschnitzcells(previousSchnitz).D;
+            nextSchnitz2 = simulatedschnitzcells(previousSchnitz).E;
+            % put in table
+            rprime=rprime+1;
+            lookuptable{t}(rprime,1) = nextSchnitz1;
+            lookuptable{t}(rprime,2) = 1;
+            rprime=rprime+1;
+            lookuptable{t}(rprime,1) = nextSchnitz2;
+            lookuptable{t}(rprime,2) = 1;
+        else
+            % cell has not divided
+            nextSchnitz = previousSchnitz;
+            rprime=rprime+1;
+            lookuptable{t}(rprime,1) = nextSchnitz;
+            lookuptable{t}(rprime,2) = find((simulatedschnitzcells(nextSchnitz).times==simulationtimes(t)));
         end
+            
     end
     
 end
 
+%%
+h=figure(3); clf; hold on;
 for t=1:numel(lookuptable)
     
     currentSchnitzes = lookuptable{t}(:,1)';
