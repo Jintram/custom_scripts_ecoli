@@ -87,6 +87,7 @@ h=figure(3); clf; hold on;
 % schnitzes that are alive during that time, and lookuptable{n}(:,2), the
 % corresponding frame in which they were alive.
 lookuptable={};
+lineageHierarchy = {};
 for t = simulationtimes    
     
     lookuptable{t} = [];
@@ -101,6 +102,35 @@ for t = simulationtimes
         end
     
     end
+end
+
+% now sort the lookuptable by lineage hierarchy
+% go over times again
+for t = simulationtimes(2:end)
+    
+    % go over schnitzes
+    for tableRow = 1:numel(lookuptable{t}(:,1))
+        
+        
+        
+        % if it is newborn, move it to the location in the array it's
+        % parent was previously
+        if lookuptable{t}(tableRow,2)==1 % if time was 1st element
+            
+            parentLocation = find(lookuptable{t-1}(tableRow,1)==simulatedschnitzcells(tableRow).P);
+            originalLocation = tableRow;
+            
+            % remember old values
+            oldValues = lookuptable{t}(tableRow,:);
+            % remove at original location
+            lookuptable{t}=lookuptable{t}([1:tableRow-1,tableRow+1:end],:);
+            % insert at new location
+            lookuptable{t}=[lookuptable{t}([1:tableRow],:);oldValues;lookuptable{t}([tableRow:end],:)];            
+            
+            
+        end
+    end
+    
 end
 
 for t=1:numel(lookuptable)
