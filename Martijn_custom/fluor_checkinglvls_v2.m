@@ -38,15 +38,26 @@
 % - manualLim
 % - myPCPrefix and myFPPrefix
 % - timeMargin
+% - SHADINGCORRECTIONPATH (optional)
 %
 % And run: 
 % fluor_checkinglvls_v2
 %
+% Example execution:
+%{
+myFolder = 'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-05-26\M9ace\asc810\';
+myPCPrefix = 'BF_';
+myFPPrefix = 'CFP_';
+SHADINGCORRECTIONPATH = 'D:\Local_Software\Martijn_merging\Fluor_correction_images\Correction_microscope2-cfp-20160518-200ms-1000ms.mat';
+
+fluor_checkinglvls_v2
+%}
 % TODOs/note:
 % - THE BACKGROUND VALUE IS DISTORTED BECAUSE I NORMALIZE THE IMAGE!
+%       2016/05: I removed this normalization
 % - This script does not perform corrections to the fluor images.
-
-disp('NOTE: Keep in mind fluor images are not corrected for lighting effects.')
+%       2016/05: introduced optional input for path of background & 
+%                shading correction.
 
 % Setting _________________________________________________________________
 % Make this setting such that it can be set before execution of the script.
@@ -63,6 +74,9 @@ if ~exist('myPCPrefix','var') | ~exist('myFPPrefix','var')
 end
 if ~exist('timeMargin','var')
     timeMargin = 5/(24*60*60); % to determine accompanyning fluor img, 1st nr is seconds
+end
+if ~exist('SHADINGCORRECTIONPATH','var')
+    SHADINGCORRECTIONPATH = '';
 end
 ExportFilename = 'mydata';
 
@@ -88,7 +102,7 @@ myFileListing = dir(myFolder);
 multipleImgMin=[];
 multipleImgMax=[];
 
-dirMeanValues = [];
+dirMeanBackgroundValues = [];
 
 dirMeanMultipleSignalToNoise = [];
 dirStdMultipleSignalToNoise = [];
@@ -96,10 +110,17 @@ dirMeanMultipleSignalMinusNoise = [];
 dirStdMultipleSignalMinusNoise = [];
 
 dirMultipleSignal={};
+dirMultipleSignalMax={};
+dirmultiplePercentile09Fluor={};
 allMultipleSignalNoise = {};
 allMultipleSignalMinusNoise = {};
 
 if ~(myFolder(end)=='\'), disp('YOU FORGOT THE TRAILING SLASH! (in param myFolder)'), break, end
+
+% Load shading correction image
+if ~strcmp(SHADINGCORRECTIONPATH,'')
+    load(SHADINGCORRECTIONPATH);
+end
 
 % Main script _____________________________________________________________
 
@@ -122,18 +143,26 @@ for theFile=myFileListing'
         % load image
         fluorPath=[myFolder myFileName];
         myImg=imread(fluorPath);
-        % normalize image
         myImg=double(myImg);
+        % normalize image
+        %{
         myImgMin=min(myImg(:)); multipleImgMin(end+1)=myImgMin; % also save
         myImgMax=max(myImg(:)); multipleImgMax(end+1)=myImgMax; % also save     
         myImg=(myImg-myImgMin)./(myImgMax-myImgMin);
+        %}
+        % correct shading if path supplied
+        if ~strcmp(SHADINGCORRECTIONPATH,'') % where shading param is loaded from
+            % shading contains shading image, flatfield contains background
+            % image (misnomer).
+            myImg = (myImg-flatfield)./shading;
+        end
         % show image
         figure(1), imshow(myImg,[])
         text(10,size(myImg,2)-30,fluorPath,'Color','w','BackgroundColor','k','FontSize',myTextSize) 
         
         % select piece for background 
         disp('Select area to determine background.');
-        myRect = getrect();
+        myRect = round(getrect());
         
         % clear summary figure (note that getrect is the interaction w. the
         % user)
@@ -164,16 +193,17 @@ for theFile=myFileListing'
         % transform img
         myFilter = fspecial('average', 7)
         blurredImg = imfilter(myImg, myFilter);
-        figure(99), imshow(blurredImg);        
-        text(10,size(blurredImg,2)-30,fluorPath,'Color','w','BackgroundColor','k','FontSize',myTextSize) 
-        tresholdedImg = im2bw(blurredImg,[],myTreshold);
-        figure(3), imshow(tresholdedImg);
-        text(10,size(tresholdedImg,2)-30,fluorPath,'Color','w','BackgroundColor','k','FontSize',myTextSize) 
+        figure(99), imshow(blurredImg,[]);
+        text(10,size(blurredImg,2)-30,fluorPath,'Color','w','BackgroundColor','k','FontSize',myTextSize,'Interpreter','None') 
+        tresholdedImg = blurredImg>myTreshold;
+        figure(3), imshow(tresholdedImg,[]);
+        text(10,size(tresholdedImg,2)-30,fluorPath,'Color','w','BackgroundColor','k','FontSize',myTextSize,'Interpreter','None') 
        
         % get edges (just to show user)
         outlineImg = edge(tresholdedImg, 'canny'); % faster then bwboundaries
         %[myB,myL,myN,myA] = bwboundaries(tresholdedImg,4);
-        cellsOutlineImg = cat(3,myImg,myImg,myImg);        
+        myImgNormalized = (myImg-min(myImg(:)))./(max(myImg(:))-min(myImg(:)));
+        cellsOutlineImg = cat(3,myImgNormalized,myImgNormalized,myImgNormalized);        
         [redCol,redRow]=find(outlineImg);
         for idx=[1:length(redCol)]
             cellsOutlineImg(redCol(idx),redRow(idx),:)=[1,0,0];
@@ -248,18 +278,32 @@ for theFile=myFileListing'
         imshow(labeledImg,[]);        
         
         % loop over found objects (i.e. cells)
-        multipleMeansFluor = []; allTxtCoordsI = []; allTxtCoordsJ = [];
+        multipleMeansFluor = []; multipleMaxFluor = []; multiplePercentile09Fluor = [];
+        allTxtCoordsI = []; allTxtCoordsJ = [];
         for objectIdxs = CC.PixelIdxList
             % convert to matrix
             objectIdxs=cell2mat(objectIdxs);
             % if object is large enough to be cell
             if size(objectIdxs,1)>minCellSize     
                 % acquire the values at those points
-                fluorValues = fluorDataImage(objectIdxs);
+                fluorValues = fluorDataImage(objectIdxs);                                
+                
                 % calculate mean and add to vector of means
-                meanFluor = mean(fluorValues(:));
+                meanFluor = mean(fluorValues(:));                
                 multipleMeansFluor = [multipleMeansFluor ...
                         meanFluor];
+                % calculate max and add to vector of maxes
+                maxFluor =  max(fluorValues(:));
+                multipleMaxFluor = [multipleMaxFluor ...
+                    maxFluor];
+                
+                % Calculate 0.9 percentile value
+                sortedFluorValues = sort(fluorValues);
+                indexoToTake = round(numel(sortedFluorValues)*.9);
+                percentile09Fluor = sortedFluorValues(indexoToTake);
+                multiplePercentile09Fluor = [multiplePercentile09Fluor ...
+                    percentile09Fluor];
+                
                 % get the i,j indices of the object
                 [i,j] = ind2sub(size(fluorDataImage),objectIdxs);
                 % text
@@ -294,12 +338,14 @@ for theFile=myFileListing'
         
         % store above in arrays w. entry for each img file
         dirMultipleSignal{end+1}=multipleMeansFluor;
+        dirMultipleSignalMax{end+1}=multipleMaxFluor;
+        dirmultiplePercentile09Fluor{end+1}=multiplePercentile09Fluor;
         dirMeanMultipleSignalToNoise(end+1) = meanMultipleSignalToNoise;
         dirStdMultipleSignalToNoise(end+1) = stdMultipleSignalToNoise;
         dirMeanMultipleSignalMinusNoise(end+1) = meanMultipleSignalMinusNoise;
         dirStdMultipleSignalMinusNoise(end+1) = stdMultipleSignalMinusNoise;
         % also store mean lvls in array
-        dirMeanValues(end+1) = meanBackground;
+        dirMeanBackgroundValues(end+1) = meanBackground;
         
         % raw data of cellular means (to make plot)
         allMultipleSignalNoise{end+1}=multipleSignalNoise;
@@ -322,8 +368,9 @@ for theFile=myFileListing'
 end
 
 % Calculate delta value in original units
-dirMeanMultipleSignalMinusNoise.*(multipleImgMax-multipleImgMin)+multipleImgMin
+%dirMeanMultipleSignalMinusNoise.*(multipleImgMax-multipleImgMin)+multipleImgMin
 
+%%
 
 % Check whether something was analyzed, otherwise break analysis
 if ImagesAnalyzed==0, disp('NO IMAGES FOUND TO ANALYZE!'); break; end
@@ -350,6 +397,8 @@ title(myFolder);
 % ===
 
 some_colors;
+
+%{
 hFig=figure(100), clf, hold on;
 spacing=.1;
 for i =[1:length(allMultipleSignalNoise)]
@@ -380,17 +429,20 @@ set(hFig, 'Units', 'centimeters', 'PaperPosition', ...
    mySize(2), mySize(1)]);
 
 saveas(hFig,myFilePath);
+%}
 
 % Plotting code, signal MINUS noise
 % ===
 
 % convert back from normalized img values
+%{
 if 1
     for i = [1:length(allMultipleSignalMinusNoise)]
         allMultipleSignalMinusNoise{i}=allMultipleSignalMinusNoise{i}.*(multipleImgMax(i)-multipleImgMin(i))+multipleImgMin(i);
     end
     dirMeanMultipleSignalMinusNoise=dirMeanMultipleSignalMinusNoise.*(multipleImgMax-multipleImgMin)+multipleImgMin;
 end
+%}
 
 hFig=figure(300), clf, hold on;
 spacing=.1;
@@ -402,12 +454,11 @@ end
 plot(mean(dirMeanMultipleSignalMinusNoise),1-spacing,['v' 'k'],'LineWidth',3)
 set(hFig, 'Units', 'pixels')
 
-infoText=['mean over imgs=' num2str(mean(dirMeanMultipleSignalMinusNoise)) ' +/- ' num2str(std(dirStdMultipleSignalMinusNoise)) ' (std), tresh=' num2str(myTresholdPercentile) ' (percentile)'];
-
 % set limits
 ylim([1-spacing,1+spacing*(length(allMultipleSignalMinusNoise))]);
 xlim([0,limAbsoluteDifference])
 
+infoText=['mean over imgs=' num2str(mean(dirMeanMultipleSignalMinusNoise)) ' +/- ' num2str(std(dirMeanMultipleSignalMinusNoise)) ' (std), tresh=' num2str(myTresholdPercentile) ' (percentile)'];
 title({myFolder,infoText})
 
 myFilePath = [myFolder 'analysis\' ExportFilename '_signalMinusNoise.png'];
@@ -423,19 +474,20 @@ set(hFig, 'Units', 'centimeters', 'PaperPosition', ...
 
 saveas(hFig,myFilePath);
 
+
 %% EXTRA PLOT XXXXXXXXXXXXX
 % ===
 
-figure(301), clf;
+hFig=figure(301), clf;
 set(gca,'FontSize',20);
 
 % Administration for plotting
-N = numel(dirMeanValues);
+N = numel(dirMeanBackgroundValues);
 dy = 1/(N+1);
 lefty = dy; righty = 1-dy;
 ylocs = linspace(lefty,righty,N);
 
-plot(dirMeanValues,ylocs,'ok','LineWidth',3);
+plot(dirMeanBackgroundValues,ylocs,'ok','LineWidth',3);
 hold on;
 for i = 1:numel(dirMultipleSignal)
     plot(dirMultipleSignal{i},ones(1,numel(dirMultipleSignal{i})).*ylocs(i),'xb');
@@ -451,25 +503,40 @@ xlim([0,myLim]);
 ylim([lefty-dy,righty+dy]);
 set(gca,'YTickLabel','');
 
-ylabel('Colonies')
-xlabel('Intensity')
-title(([myFolder sprintf('\n this should be done on non-normalized data!')]),'FontSize',13)
+ylabel('Sample')
+xlabel('Fluorescence intensity [a.u.]')
+
+infoText=['mean over imgs=' num2str(mean([dirMultipleSignal{:}])) ' +/- ' num2str(std([dirMultipleSignal{:}])) ' (std), tresh=' num2str(myTresholdPercentile) ' (percentile)'];
+title({myFolder,infoText})
+
+myFilePath = [myAnalysisFolder ExportFilename '_summaryFluorLvls.png'];
+saveas(hFig,myFilePath);
 
 %% Build database whilst working
 % ===
 
-if ~exist('databaseValuesSignalNoise'), databaseValuesSignalNoise={}; end
-databaseValuesSignalNoise{end+1}=dirMeanMultipleSignalToNoise;
-if ~exist('databaseValuesMeanSignalNoise'), databaseValuesMeanSignalNoise=[]; end
-databaseValuesMeanSignalNoise(end+1)=mean(dirMeanMultipleSignalToNoise);
-if ~exist('databaseValuesStdSignalNoise'), databaseValuesStdSignalNoise=[]; end
-databaseValuesStdSignalNoise(end+1)=std(dirMeanMultipleSignalToNoise);
-if ~exist('databaseValuesNames'), databaseValuesNames={}; end
-databaseValuesNames{end+1}=myFolder;
+% create struct for combined output of multiple runs
+if ~exist('outputfluorvalues')
+    outputfluorvalues = struct;
+    currentIndex=0;
+end
 
+% increase counter each time this script is ran
+currentIndex=currentIndex+1;
+
+% store data of current run
+outputfluorvalues(currentIndex).dirMeanBackgroundValues = dirMeanBackgroundValues;
+outputfluorvalues(currentIndex).dirMultipleSignal = dirMultipleSignal;
+outputfluorvalues(currentIndex).dirMultipleSignalMax = dirMultipleSignalMax;
+outputfluorvalues(currentIndex).dirmultiplePercentile09Fluor = dirmultiplePercentile09Fluor;
+outputfluorvalues(currentIndex).ValuesSignalNoise=dirMeanMultipleSignalToNoise;
+outputfluorvalues(currentIndex).ValuesMeanSignalNoise=mean(dirMeanMultipleSignalToNoise);
+outputfluorvalues(currentIndex).ValuesStdSignalNoise=std(dirMeanMultipleSignalToNoise);
+outputfluorvalues(currentIndex).ValuesNames=myFolder;
 
 % Save whole analysis to file
-save([myAnalysisFolder 'complete_analysis_' date '.mat']);
+save([myAnalysisFolder 'complete_analysis_' date '.mat'],'outputfluorvalues');
+
 
 
 
