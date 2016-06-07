@@ -1,3 +1,5 @@
+% function count=hist2d(data, xrange, yrange)
+%
 %A Simple function that makes a 2D histgram developed by Sisi Ma (sisima[at]rci.rutgers.edu )
 
 % Input:    data: two cols, x value; y value
