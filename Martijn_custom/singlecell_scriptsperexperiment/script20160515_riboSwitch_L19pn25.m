@@ -2,6 +2,8 @@
 % Script to plot effect of ribosomal switch.
 % Script adapted from script20160126_plottingSarahsData.
 %
+% Meant to run after full analysis is done.
+%
 %
 %
 %
@@ -55,7 +57,7 @@ THESHIFTTIME = (24*60+46)-(22*60+9); % Note 221 mins is what you'd manually calc
 % timeofswitch = datenum(2016,02,17,16,23,00); schnitzstarttime = min([schnitzcells.timestamp]); switchedafterdays=timeofswitch-schnitzstarttime; switchedafterminutes=switchedafterdays*24*60
 EXPERIMENTALID = ['2016-05-15_pos1_' TITLE];
 GROWTHFIELD = 'muP5_fitNew_all';
-load('F:\A_Tans1_step1_incoming_not_backed_up\2016-02-17\pos2\data\pos2-Schnitz.mat');
+load('G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-05-15\pos1crop\data\pos1crop-Schnitz.mat');
 subdir = [EXPERIMENTALID '\']
 
 
@@ -63,7 +65,7 @@ subdir = [EXPERIMENTALID '\']
 %schnitzcells = s_rm;
 
 %% Parameters
-OUTPUTDIR = 'D:\Local_Software\Martijn_extensions\Martijn_custom\singlecell_scriptsperexperiment\plots20160217\';
+OUTPUTDIR = 'D:\Local_Software\Martijn_extensions\Martijn_custom\singlecell_scriptsperexperiment\plots20160515\';
 
 if ~exist(OUTPUTDIR,'dir')
     mkdir(OUTPUTDIR)

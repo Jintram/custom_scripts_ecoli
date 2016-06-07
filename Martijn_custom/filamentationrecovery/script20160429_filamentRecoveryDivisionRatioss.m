@@ -1,8 +1,8 @@
 
 %% 
 % Plotting division ratios
-WHATDATA = 'sulA';
-%WHATDATA = 'temperature';
+%WHATDATA = 'sulA';
+WHATDATA = 'temperature';
 
 HISTNRBINS=20;
 
@@ -35,8 +35,8 @@ if strcmp(WHATDATA, 'sulA')
 elseif strcmp(WHATDATA, 'temperature')
     datasetsPaths = ...
         { ...
-        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-03-23\pos4crop\data\pos4crop-Schnitz.mat',...
-        ['G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos' num2str(2) 'crop\data\pos' num2str(2) 'crop-Schnitz.mat'],...
+        'G:\EXPERIMENTAL_DATA_2016\c_completely_analyzed\2016-03-23\pos4crop\data\pos4crop-Schnitz.mat',...
+        ['G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos2crop\data\pos2crop-Schnitz.mat'],...
         }
 else
     error('No data loaded..');
@@ -239,9 +239,9 @@ MW_makeplotlookbetter(15);
 
 % Save the histogram
 if strcmp(LENGTHFIELD, 'areaPixels')
-    histArea=[count;x]
+    histArea=[count;x];
 elseif strcmp(LENGTHFIELD, 'length_skeleton')
-    histSkel=[count;x]
+    histSkel=[count;x];
 end
 
 %% Sanity check
@@ -280,8 +280,8 @@ for datasetIdx = 1:numel(datasetsPaths)
 
     for windowIndex = 1:(numel(WINDOWBORDERS)-1)
 
-        windowLeft = WINDOWBORDERS(windowIndex)
-        windowRight  = WINDOWBORDERS(windowIndex+1)
+        windowLeft = WINDOWBORDERS(windowIndex);
+        windowRight  = WINDOWBORDERS(windowIndex+1);
         windowSize = windowRight-windowLeft;
 
         % get data
