@@ -4,4 +4,9 @@
 *.docx
 *.fig
 *.asv
+*.mat
+*.txt
+*.zip
+*.svg
+
 
