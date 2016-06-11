@@ -101,10 +101,9 @@ plot([min(simulationtimes),max(simulationtimes)],[parameters.divisionSize,parame
 plot([min(simulationtimes),max(simulationtimes)],[parameters.divisionSize,parameters.divisionSize]/2,'-','Color',[.5 .5 .5])
 
 
-%% kymograph
-h2=figure(2); clf; hold on;
+%% extra calculations
 
-% calculate ring location in absolute length values
+% calculate ring location & nucleoid location in absolute length values
 for loopIdx = 1:numel(simulatedschnitzcells)   
     
     for idx = 1:numel(simulatedschnitzcells(loopIdx).times)
@@ -121,6 +120,7 @@ for loopIdx = 1:numel(simulatedschnitzcells)
     
 end
 
+%{
 for time = simulationtimes
     
     indicesCurrentTime = find([simulatedschnitzcells(:).times] == time);
@@ -146,6 +146,7 @@ xlabel('Time [min]');
 ylabel('Cell lengths [\mum]');
 
 MW_makeplotlookbetter(20);
+%}
 
 %%
 % Create lookuptable
@@ -183,9 +184,10 @@ end
 %% build a lookuptable that corresponds with lineage structure
 % lookuptable{n} gives, for nth simulation time, in lookuptable{n}(:,1) the
 % schnitzes that are alive during that time, and lookuptable{n}(:,2), the
-% corresponding frame in which they were alive. lookuptable{n}(:,3) is 0,
-% but 1 if it was the last frame in which this schnitz was spotted.
-% identify the first schnitzcells
+% corresponding number that corresponds to their progress towards their 
+% life (i.e. schnitzcells(i).times==[time at n]). 
+% 
+
 lookuptable={}; lookuptable{1}=[]; hits=0;
 for i = 1:numel(simulatedschnitzcells)
     if any(simulatedschnitzcells(i).times==simulationtimes(1))
@@ -248,11 +250,11 @@ tic
 for t=1:numel(lookuptable)
     
     currentSchnitzes = lookuptable{t}(:,1)';
-    currentFrames    = lookuptable{t}(:,2)';
+    currentCellPhaseIdx = lookuptable{t}(:,2)';
     
     totalLength=0;
     for loopIdx = 1:numel(currentSchnitzes)
-        totalLength = totalLength+simulatedschnitzcells(currentSchnitzes(loopIdx)).cellLengths(currentFrames(loopIdx));
+        totalLength = totalLength+simulatedschnitzcells(currentSchnitzes(loopIdx)).cellLengths(currentCellPhaseIdx(loopIdx));
     end
     
     previousLengthsSummed=0;
@@ -261,23 +263,23 @@ for t=1:numel(lookuptable)
     for loopIdx = 1:numel(currentSchnitzes)
     
         plottingDividedLocations = ...
-            [plottingDividedLocations previousLengthsSummed+simulatedschnitzcells(currentSchnitzes(loopIdx)).cellLengths(currentFrames(loopIdx))-totalLength/2];
+            [plottingDividedLocations previousLengthsSummed+simulatedschnitzcells(currentSchnitzes(loopIdx)).cellLengths(currentCellPhaseIdx(loopIdx))-totalLength/2];
         
-        for ringIdx = 1:numel(simulatedschnitzcells(currentSchnitzes(loopIdx)).absoluteRingSite{currentFrames(loopIdx)})
+        for ringIdx = 1:numel(simulatedschnitzcells(currentSchnitzes(loopIdx)).absoluteRingSite{currentCellPhaseIdx(loopIdx)})
             plottingRingLocations = ...
-                [plottingRingLocations previousLengthsSummed+simulatedschnitzcells(currentSchnitzes(loopIdx)).absoluteRingSite{currentFrames(loopIdx)}(ringIdx)-totalLength/2];
+                [plottingRingLocations previousLengthsSummed+simulatedschnitzcells(currentSchnitzes(loopIdx)).absoluteRingSite{currentCellPhaseIdx(loopIdx)}(ringIdx)-totalLength/2];
         end
 
-        for nucleoidIdx = 1:numel(simulatedschnitzcells(currentSchnitzes(loopIdx)).absoluteNucleoidSite{currentFrames(loopIdx)})
+        for nucleoidIdx = 1:numel(simulatedschnitzcells(currentSchnitzes(loopIdx)).absoluteNucleoidSite{currentCellPhaseIdx(loopIdx)})
             plottingNucleoidLocations = ...
-                [plottingNucleoidLocations previousLengthsSummed+simulatedschnitzcells(currentSchnitzes(loopIdx)).absoluteNucleoidSite{currentFrames(loopIdx)}(nucleoidIdx)-totalLength/2];
+                [plottingNucleoidLocations previousLengthsSummed+simulatedschnitzcells(currentSchnitzes(loopIdx)).absoluteNucleoidSite{currentCellPhaseIdx(loopIdx)}(nucleoidIdx)-totalLength/2];
         end
         
         %plot(simulatedschnitzcells(currentSchnitzes(loopIdx)).times(currentFrames(loopIdx)),...
         %     previousLengthsSummed+simulatedschnitzcells(currentSchnitzes(loopIdx)).cellLengths(currentFrames(loopIdx))-totalLength/2,...
         %    'ok-','MarkerFaceColor','k','MarkerSize',5);
         
-        previousLengthsSummed=previousLengthsSummed+simulatedschnitzcells(currentSchnitzes(loopIdx)).cellLengths(currentFrames(loopIdx));
+        previousLengthsSummed=previousLengthsSummed+simulatedschnitzcells(currentSchnitzes(loopIdx)).cellLengths(currentCellPhaseIdx(loopIdx));
        
         if toc>10
             error('timeout error');
