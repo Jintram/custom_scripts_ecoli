@@ -182,7 +182,7 @@ ylabel('Probability');
 %% build a lookuptable that corresponds with lineage structure
 % lookuptable{n} gives, for nth simulation time, in lookuptable{n}(:,1) the
 % schnitzes that are alive during that time, and lookuptable{n}(:,2), the
-% corresponding frame in which they were alive.
+% corresponding point in their cellphase.
 % lookuptable{n} = [schnitznr, framenr]
 
 alltimes = unique([schnitzcells.time]);
@@ -245,24 +245,24 @@ RANGE = 1:100;
 MAXPIXELHEIGHTKYMOGRAPH=500;
 
 % determine how many timepoints need to be plotted
-activeFrames=[];
+cellPhaseActiveIdxs=[];
 for frameNr = RANGE
     if ~isempty(allmeanY{frameNr})
-        activeFrames(end+1) = frameNr;
+        cellPhaseActiveIdxs(end+1) = frameNr;
     end
 end
-sizeX = numel(activeFrames); % frames 
+sizeX = numel(cellPhaseActiveIdxs); % frames 
 
 % determine total length to be plotted
-theLastFrameNr = max(activeFrames);
+theLastFrameNr = max(cellPhaseActiveIdxs);
 lastSchnitzNrs = lookuptable{theLastFrameNr}(:,1)';
 summedNumel = 0; allYnumels = [];
-for idx=1:numel(lastSchnitzNrs)
+for schnitzIdx=1:numel(lastSchnitzNrs)
     % currentLength = schnitzcells(lastSchnitzNrs).(LENGTHFIELD);
         
-    currentCellPhaseIdx = lookuptable{theLastFrameNr}(idx,2);
+    currentCellPhaseIdx = lookuptable{theLastFrameNr}(schnitzIdx,2);
     
-    cellno=schnitzcells(lastSchnitzNrs(idx)).cellno(currentCellPhaseIdx);
+    cellno=schnitzcells(lastSchnitzNrs(schnitzIdx)).cellno(currentCellPhaseIdx);
     currentNumelYvalues = numel(allmeanY{theLastFrameNr}{cellno});
     
     allYnumels(end+1)=currentNumelYvalues;
@@ -301,10 +301,10 @@ workAllmeanY = normalizedAllmeanY;
 figure(5); clf; hold on;
 
 tic
-for frameIdx = 1:numel(activeFrames)
+for frameIdx = 1:numel(cellPhaseActiveIdxs)
     
-    currentSchnitzes    = lookuptable{activeFrames(frameIdx)}(:,1)';
-    currentCellPhaseIdx = lookuptable{activeFrames(frameIdx)}(:,2)';
+    currentSchnitzes    = lookuptable{cellPhaseActiveIdxs(frameIdx)}(:,1)';
+    currentCellPhaseIdx = lookuptable{cellPhaseActiveIdxs(frameIdx)}(:,2)';
     
     totalLength=0;
     for loopIdx = 1:numel(currentSchnitzes)
@@ -322,7 +322,7 @@ for frameIdx = 1:numel(activeFrames)
             [plottingDividedLocations previousLengthsSummed+schnitzcells(currentSchnitzes(loopIdx)).(LENGTHFIELD)(currentCellPhaseIdx(loopIdx))-totalLength/2];
         
         cellno=schnitzcells(currentSchnitzes(loopIdx)).cellno(currentCellPhaseIdx(loopIdx));
-        Yvector = workAllmeanY{activeFrames(frameIdx)}{cellno};
+        Yvector = workAllmeanY{cellPhaseActiveIdxs(frameIdx)}{cellno};
         currentRawPixelLength = numel(Yvector);
         for pxIdx = 1:currentRawPixelLength
             matrixIndex = pxIdx+previousRawPixelLengthsSummed+nrSeparatorPixels;
@@ -336,7 +336,11 @@ for frameIdx = 1:numel(activeFrames)
         end
         if ~((matrixIndex)>MAXPIXELHEIGHTKYMOGRAPH)
             nrSeparatorPixels = nrSeparatorPixels+1;
-            outputMatrix(frameIdx,matrixIndex+1,3) = 1;
+            if currentCellPhaseIdx(loopIdx)==1
+                outputMatrix(frameIdx,matrixIndex+1,1) = 1;
+            else
+                outputMatrix(frameIdx,matrixIndex+1,3) = 1;
+            end
         end        
         
         %{
@@ -364,7 +368,7 @@ for frameIdx = 1:numel(activeFrames)
         
     end
     
-    plot(ones(1,numel(plottingDividedLocations))*alltimes(activeFrames(frameIdx)),...
+    plot(ones(1,numel(plottingDividedLocations))*alltimes(cellPhaseActiveIdxs(frameIdx)),...
             plottingDividedLocations,...
            'sk-','MarkerFaceColor','k','MarkerSize',5);
        %{
@@ -388,11 +392,151 @@ imshow(outputMatrix,[]);
 
 imwrite(outputMatrix,'G:\kymograph.tif')
 
+%% Create a little kymograph per schnitz
 
+theoutputdir = [p.analysisDir '\straightenedCells\kymospercell\'];
+if ~exist(theoutputdir,'dir')
+    mkdir(theoutputdir);
+end
+
+% prepare ring timing plot
+mycolor = linspecer(1);
+
+multipleringTimePlotx={};
+multipleringTimePloty={};
+
+for schnitzIdx = 1:numel(schnitzcells)
+    %%
+   
+    % Don't consider schnitzes that have unfinished life cycle
+    if schnitzcells(schnitzIdx).E==0
+        disp(['Skipping barren schnitzcell ' num2str(schnitzIdx)]);
+        continue;
+    end
+    
+    % prepare ring distribution plot
+    h8=figure(8); clf; hold on;
+    xlabel('Biased cell length [pixels]');
+    ylabel('Fluor intensity (normalized by overall mean)');
+    title('Grey towards black is cell cycle progression.');
+    MW_makeplotlookbetter(15);
+    
+    % for ring timing plots
+    ringTimePlotx=[];    
+    ringTimePloty=[];
+    
+    % frame and cellnos applicable for this schnitz needed for calculations
+    theframes  = schnitzcells(schnitzIdx).frame_nrs;
+    thecellnos = schnitzcells(schnitzIdx).cellno;
+    
+    cellLifeLength = numel(theframes); % in frames, for administration
+    
+    allCellPixelLengths=[]; cellPhaseActiveIdxs = [];
+    for i = 1:numel(theframes)
+        if~isempty(allmeanY{theframes(i)})
+            allCellPixelLengths(end+1) = numel(allmeanY{theframes(i)}{thecellnos(i)});
+            cellPhaseActiveIdxs(end+1) = i;
+        end
+    end
+    
+    maxPixLength = max(allCellPixelLengths);
+    nrActiveCellPhaseFrames = numel(cellPhaseActiveIdxs);
+    
+    littleOutputMatrix = zeros(nrActiveCellPhaseFrames,maxPixLength,3); %% 
+    littleOutputMatrix(:,:,3) = ones(nrActiveCellPhaseFrames,maxPixLength);
+        
+    for idx = 1:nrActiveCellPhaseFrames        
+        
+        cellPhase = cellPhaseActiveIdxs(idx);
+       
+        cosmeticCenteringShift = floor((maxPixLength-allCellPixelLengths(idx))/2);
+                
+        for pixIdx = 1:allCellPixelLengths(idx)
+            
+            littleOutputMatrix(idx,pixIdx+cosmeticCenteringShift,1) = normalizedAllmeanY{theframes(cellPhase)}{thecellnos(cellPhase)}(pixIdx);
+            littleOutputMatrix(idx,pixIdx+cosmeticCenteringShift,2) = normalizedAllmeanY{theframes(cellPhase)}{thecellnos(cellPhase)}(pixIdx);
+            littleOutputMatrix(idx,pixIdx+cosmeticCenteringShift,3) = normalizedAllmeanY{theframes(cellPhase)}{thecellnos(cellPhase)}(pixIdx);
+        
+        end
+        
+        h8=figure(8); hold on;
+        theSignal = normalizedAllmeanY{theframes(cellPhase)}{thecellnos(cellPhase)};
+        meanSignal = mean(theSignal);
+        theNormalizedSignal = theSignal./meanSignal;
+        xvector=[1:allCellPixelLengths(idx)]+cosmeticCenteringShift;
+        plot(xvector,theNormalizedSignal,'Color',1-[1 1 1].*(idx/nrActiveCellPhaseFrames));
+        [peaki,peaky]=peakfinder(theNormalizedSignal);
+        peakx=xvector(peaki);
+        plot(peakx,peaky,'or');
+                        
+        maxPeak=max(peaky);
+        
+        % save for later use
+        ringTimePlotx(end+1)=idx;
+        ringTimePloty(end+1)=maxPeak;                
+        
+    end
+    
+    % save ring probability densitiess for later
+    multipleringTimePlotx{end+1}=ringTimePlotx;
+    multipleringTimePloty{end+1}=ringTimePloty;    
+    
+    % plot this ring probability density
+    h9=figure(9); clf;     
+    plot(ringTimePlotx,ringTimePloty,'-','LineWidth',3,'Color',mycolor);
+    xlabel('Cell phase progression [frames]');
+    ylabel('Highest peak / mean fluor value');
+    MW_makeplotlookbetter(15);
+    saveas(h9, [theoutputdir 'schnitzringintensityprogression'  num2str(schnitzIdx) '.tif']); 
+    
+    h8=figure(8); 
+    saveas(h8, [theoutputdir 'schnitzintensityprofileprogression'  num2str(schnitzIdx) '.tif']); 
+    
+    h7=figure(7); clf; imshow(littleOutputMatrix);
+    saveas(h7, [theoutputdir 'schnitzkymo'  num2str(schnitzIdx) '.tif']); 
+end
+
+%%
+h11=figure(11); hold on;    
+
+
+for i=1:numel(multipleringTimePlotx)    
+    
+    plot(multipleringTimePlotx{i},multipleringTimePloty{i},'-','LineWidth',1,'Color',mycolor);
+    
+end;
+
+xlabel('Cell phase progression [frames]');
+    ylabel('Highest peak / mean fluor value');
+    MW_makeplotlookbetter(15);
+
+saveas(h11, [theoutputdir 'ringTimingAll.tif']); 
 
 %% ring occurence vs. time
 
-% we now need time and 
+h10=figure(10); clf; hold on;    
+xlabel('Cell phase progression [normalized]');
+ylabel('Highest peak / mean fluor value');
+MW_makeplotlookbetter(15);
+
+multipleringTimePlotxNormalized=cell(1,numel(multipleringTimePlotx));
+
+for i=1:numel(multipleringTimePlotx)    
+    cellCycleMax = max(multipleringTimePlotx{i}-1);
+    
+    multipleringTimePlotxNormalized{i} = (multipleringTimePlotx{i}-1)./cellCycleMax;
+    plot(multipleringTimePlotxNormalized{i},multipleringTimePloty{i},'-','LineWidth',1,'Color',mycolor);
+    
+end;
+
+[meanValuesForBins, binCenters]=binnedaveraging(multipleringTimePloty,multipleringTimePlotxNormalized,bins)
+
+%plot(binCenters,meanValuesForBins,'ok','MarkerFaceColor','k','MarkerSize',10);
+errorbar(binCenters,meanValuesForBins,errorValuesForBins,'ok','MarkerFaceColor','k','MarkerSize',10);
+
+xlim([0,1])
+
+saveas(h10, [theoutputdir 'ringTimingNormalized.tif']); 
 
 %% more sanity checks
 
