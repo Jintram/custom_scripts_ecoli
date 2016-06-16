@@ -47,6 +47,7 @@ for i = 1:numel(binnedValues)
 end
 
 % calculate bin centers
-binCenters=bins(2:end)-(bins(2)-bins(1))/2;
+binSizes = (bins(2:end)-bins(1:end-1));
+binCenters = bins(2:end)-binSizes./2;
 
 end
