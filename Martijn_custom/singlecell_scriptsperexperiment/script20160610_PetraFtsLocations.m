@@ -529,10 +529,10 @@ for i=1:numel(multipleringTimePlotx)
     
 end;
 
-[meanValuesForBins, binCenters]=binnedaveraging(multipleringTimePloty,multipleringTimePlotxNormalized,bins)
+[meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins] = binnedaveraging(multipleringTimePloty,multipleringTimePlotxNormalized,bins);
 
 %plot(binCenters,meanValuesForBins,'ok','MarkerFaceColor','k','MarkerSize',10);
-errorbar(binCenters,meanValuesForBins,errorValuesForBins,'ok','MarkerFaceColor','k','MarkerSize',10);
+errorbar(binCenters,meanValuesForBins,stdValuesForBins,'ok','MarkerFaceColor','k','MarkerSize',10);
 
 xlim([0,1])
 
