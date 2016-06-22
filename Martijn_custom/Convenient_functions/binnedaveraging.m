@@ -1,5 +1,5 @@
 
-function [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins]=binnedaveraging(valuesy,valuesx,bins)
+function [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins]=binnedaveraging(valuesx,valuesy,bins)
 % function [meanValuesForBins, binCenters,errorValuesForBins]=binnedaveraging(valuesy,valuesx,bins)
 %
 % INPUTS

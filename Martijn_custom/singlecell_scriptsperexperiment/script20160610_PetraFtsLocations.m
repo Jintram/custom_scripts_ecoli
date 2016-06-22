@@ -11,89 +11,77 @@ scatterX={}; scatterY={};
 
 
 %%
-for datasetIndex = 1
+datasetIndex=1;
 
-    %%
-    %load ([p.tracksDir p.movieName '-skeletonData.mat']);
-    load (['G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-05-19_part2\pos' num2str(datasetIndex) 'crop\data\pos' num2str(datasetIndex) 'crop-skeletonData.mat']);
+figure(1); hold on;
+%clf;
+%hold on;
 
-    %%
-    %load(saveLocationMatFile([p.analysisDir 'straightenedPlots\' p.movieDate p.movieName '_straightFluorData.mat']);    
-    load(['G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-05-19_part2\pos' num2str(datasetIndex) 'crop\analysis\straightenedCells\2016-05-19pos' num2str(datasetIndex) 'crop_straightFluorData.mat']);
+pileofXmicron=[];
+pileofXPx = [];
+pileofmeanY=[];
+selectionVector=[];
+pileofLengthsOfBacteriaInMicrons=[];
+correspondingLengthsToLocations=[];
+correspondingLengthsToLocationsPx=[];
+for framenr=1:numel(allpeakXMicrons)
 
+    meanYFrame  = allpeakmeanY{framenr};
+    xpeaksFrame  = allpeakXMicrons{framenr};
+    lengthsFrame = allLengthsOfBacteriaInMicrons{framenr};
 
-    %%
+    xpeaksFramePx  = allpeakXPixels{framenr};
+    lengthsFramePx = allLengthsOfBacteriaInPixels{framenr};
 
-    figure(1); hold on;
-    %clf;
-    %hold on;
+    %disp(['adding ' num2str(numel(xpeaksFrame)) ' cells for frame ' num2str(framenr) '..']);
+    pileofLengthsOfBacteriaInMicrons =...
+        [pileofLengthsOfBacteriaInMicrons lengthsFrame];
 
-    pileofXmicron=[];
-    pileofXPx = [];
-    pileofmeanY=[];
-    selectionVector=[];
-    pileofLengthsOfBacteriaInMicrons=[];
-    correspondingLengthsToLocations=[];
-    correspondingLengthsToLocationsPx=[];
-    for framenr=1:numel(allpeakXMicrons)
+    for cellno = 1:numel(xpeaksFrame)
 
-        meanYFrame  = allpeakmeanY{framenr};
-        xpeaksFrame  = allpeakXMicrons{framenr};
-        lengthsFrame = allLengthsOfBacteriaInMicrons{framenr};
+        %plot(xpeaksFrame)
+        if ~isempty(xpeaksFrame)
 
-        xpeaksFramePx  = allpeakXPixels{framenr};
-        lengthsFramePx = allLengthsOfBacteriaInPixels{framenr};
-        
-        %disp(['adding ' num2str(numel(xpeaksFrame)) ' cells for frame ' num2str(framenr) '..']);
-        pileofLengthsOfBacteriaInMicrons =...
-            [pileofLengthsOfBacteriaInMicrons lengthsFrame];
+            % raw data
+            pileofXmicron = [pileofXmicron xpeaksFrame{cellno}'];
+            pileofXPx     = [pileofXPx xpeaksFramePx{cellno}'];
+            fluorPeaksThisCell = meanYFrame{cellno};
+            pileofmeanY = [pileofmeanY fluorPeaksThisCell];
 
-        for cellno = 1:numel(xpeaksFrame)
+            % create duplicate lengths for datapoints belonging to same
+            % bacteria
+            duplicatedLengths = ones(1,numel(xpeaksFrame{cellno}))*lengthsFrame(cellno);
+            correspondingLengthsToLocations = [correspondingLengthsToLocations duplicatedLengths];
+            % same w. pixels
+            duplicatedLengthsPx = ones(1,numel(xpeaksFrame{cellno}))*lengthsFramePx(cellno);
+            correspondingLengthsToLocationsPx = [correspondingLengthsToLocationsPx duplicatedLengthsPx];
 
-            %plot(xpeaksFrame)
-            if ~isempty(xpeaksFrame)
-
-                % raw data
-                pileofXmicron = [pileofXmicron xpeaksFrame{cellno}'];
-                pileofXPx     = [pileofXPx xpeaksFramePx{cellno}'];
-                fluorPeaksThisCell = meanYFrame{cellno};
-                pileofmeanY = [pileofmeanY fluorPeaksThisCell];
-
-                % create duplicate lengths for datapoints belonging to same
-                % bacteria
-                duplicatedLengths = ones(1,numel(xpeaksFrame{cellno}))*lengthsFrame(cellno);
-                correspondingLengthsToLocations = [correspondingLengthsToLocations duplicatedLengths];
-                % same w. pixels
-                duplicatedLengthsPx = ones(1,numel(xpeaksFrame{cellno}))*lengthsFramePx(cellno);
-                correspondingLengthsToLocationsPx = [correspondingLengthsToLocationsPx duplicatedLengthsPx];
-                
-                % select peaks that are >200
-                selectionVector = [selectionVector fluorPeaksThisCell>PEAKTRESHOLD];
-
-            end
-            %selectedataXmicron = ...
+            % select peaks that are >200
+            selectionVector = [selectionVector fluorPeaksThisCell>PEAKTRESHOLD];
 
         end
+        %selectedataXmicron = ...
 
     end
 
-    %plot(correspondingLengthsToLocations,pileofXmicron,'.')
-    %plot(correspondingLengthsToLocations,pileofXmicron./correspondingLengthsToLocations,'.')
-    indicesToSelect = find(selectionVector);
-    scatterX{datasetIndex}=correspondingLengthsToLocations(indicesToSelect);
-    scatterY{datasetIndex}=pileofXmicron(indicesToSelect)./correspondingLengthsToLocations(indicesToSelect);
-    plot(scatterX{datasetIndex},scatterY{datasetIndex},'x','Color',plotcolors(datasetIndex))
-
-    % and in Pixels
-    figure(101); hold on;
-    scatterXPx{datasetIndex}=correspondingLengthsToLocationsPx(indicesToSelect);
-    scatterYPx{datasetIndex}=pileofXPx(indicesToSelect)./correspondingLengthsToLocationsPx(indicesToSelect);
-    plot(scatterXPx{datasetIndex},scatterYPx{datasetIndex},'.','Color',plotcolors(datasetIndex))
-    
-    
-    %plot(allpeak)
-
 end
+
+%plot(correspondingLengthsToLocations,pileofXmicron,'.')
+%plot(correspondingLengthsToLocations,pileofXmicron./correspondingLengthsToLocations,'.')
+indicesToSelect = find(selectionVector);
+scatterX{datasetIndex}=correspondingLengthsToLocations(indicesToSelect);
+scatterY{datasetIndex}=pileofXmicron(indicesToSelect)./correspondingLengthsToLocations(indicesToSelect);
+plot(scatterX{datasetIndex},scatterY{datasetIndex},'x','Color',plotcolors(datasetIndex))
+
+% and in Pixels
+figure(101); hold on;
+scatterXPx{datasetIndex}=correspondingLengthsToLocationsPx(indicesToSelect);
+scatterYPx{datasetIndex}=pileofXPx(indicesToSelect)./correspondingLengthsToLocationsPx(indicesToSelect);
+plot(scatterXPx{datasetIndex},scatterYPx{datasetIndex},'.','Color',plotcolors(datasetIndex))
+
+
+%plot(allpeak)
+
 
 %% Sanity check
 MICRONSPERPIXEL=0.0431;
@@ -529,7 +517,9 @@ for i=1:numel(multipleringTimePlotx)
     
 end;
 
-[meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins] = binnedaveraging(multipleringTimePloty,multipleringTimePlotxNormalized,bins);
+someBins = linspace(min([multipleringTimePlotxNormalized{:}]), max([multipleringTimePlotxNormalized{:}]), 10);
+
+[meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins] = binnedaveraging(multipleringTimePlotxNormalized,multipleringTimePloty,someBins);
 
 %plot(binCenters,meanValuesForBins,'ok','MarkerFaceColor','k','MarkerSize',10);
 errorbar(binCenters,meanValuesForBins,stdValuesForBins,'ok','MarkerFaceColor','k','MarkerSize',10);

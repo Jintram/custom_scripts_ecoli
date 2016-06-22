@@ -2,9 +2,10 @@
 %% 
 % Plotting division ratios
 %WHATDATA = 'sulA';
-WHATDATA = 'temperature';
+%WHATDATA = 'temperature';
+WHATDATA = 'simulated';
 
-HISTNRBINS=20;
+HISTNRBINS=50;
 
 FIGURENUMBERS=[1 1 1 1 1 1 1]; % TODO this option does not work any more
 
@@ -15,11 +16,24 @@ PLOTCOLORS = linspecer(7);
 
 %LENGTHFIELD = 'areaPixels';
 %LENGTHFIELD = 'length_fitNew';
-LENGTHFIELD = 'length_skeleton';
+%LENGTHFIELD = 'length_skeleton';
+LENGTHFIELD = 'cellLengths';
 
+TIMEFIELD = 'time';
+TIMEFIELD = 'times';
+
+if ~exist('PLOTSAVEDIR','var') & ~exist('NOSAVEPLEASE','var');
+    error('Set PLOTSAVEDIR please. Or set NOSAVEPLEASE');
+end
+if ~exist('NOSAVEPLEASE','var')
+    NOSAVEPLEASE=0;
+end
+
+%{
+% Please execute this code to define plot dir and make log of scriptname
 PLOTSAVEDIR = 'U:\PROJECTS\B_filamentationRecovery\Contributions_Martijn\figures_fig_files\';
 makenoteinreadme(PLOTSAVEDIR,'script20160429_filamentRecoveryDivisionRatioss');
-
+%}
 
 %% The sulA datasets
 
@@ -38,6 +52,13 @@ elseif strcmp(WHATDATA, 'temperature')
         'G:\EXPERIMENTAL_DATA_2016\c_completely_analyzed\2016-03-23\pos4crop\data\pos4crop-Schnitz.mat',...
         ['G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos2crop\data\pos2crop-Schnitz.mat'],...
         }
+elseif strcmp(WHATDATA, 'simulated')
+    % now there already should be a simulated schnitzcells
+    datasetsPaths = ...
+        { ...
+        ...'D:\Local_Software\Martijn_extensions\Martijn_custom\filamentationrecovery\simulatedSchnitzcells\schnitz1_naivemodel_fastrecharge.mat', ...
+        'D:\Local_Software\Martijn_extensions\Martijn_custom\filamentationrecovery\simulatedSchnitzcells\schnitz1_naivemodel_longrecharge.mat' ...
+        };
 else
     error('No data loaded..');
 end
@@ -94,9 +115,10 @@ for datasetIdx = 1:numel(datasetsPaths)
     end
     %}
     
-    % Finding 2 daughters with each parent
+    %% Finding 2 daughters with each parent
     myLengthNewborns{datasetIdx} = []; myLengthParents{datasetIdx} = []; myLengthSumNewborns{datasetIdx}=[];
     myNewBornSchnitzNrs{datasetIdx} = []; %myDaughter1schnitzNrs{datasetIdx} = []; myDaughter2schnitzNrs{datasetIdx} = [];
+    
     for i = 1:numel(schnitzcells)
 
         LengthParent = schnitzcells(i).(LENGTHFIELD)(end);
@@ -128,13 +150,15 @@ for datasetIdx = 1:numel(datasetsPaths)
     end
 
     %% Gather data on interdivision time vs. lifetime of cell
-    lifeTimes{datasetIdx} = [schnitzcells.interDivTime];
+    if isfield(schnitzcells,'interDivTime')
+        lifeTimes{datasetIdx} = [schnitzcells.interDivTime];    
+    end
     birthTimes{datasetIdx} = NaN(1,numel(schnitzcells));
     allLengths{datasetIdx} = NaN(1,numel(schnitzcells));
     for i = 1:numel(schnitzcells)
         thisSchnitzLengths = schnitzcells(i).(LENGTHFIELD);
         allLengths{datasetIdx}(i) = thisSchnitzLengths(1);
-        birthTimes{datasetIdx}(i) = schnitzcells(i).time(1);
+        birthTimes{datasetIdx}(i) = schnitzcells(i).(TIMEFIELD)(1);
     end
     
 end
@@ -157,7 +181,8 @@ for datasetIdx = 1:numel(datasetsPaths)
         RIGHTX = 15000;
         LONGESTNORMALDIVSIZEPARENT = 2000;
     else
-        RIGHTX  = max(myLengthParents)*1.1;
+        RIGHTX  = max(myLengthParents{datasetIdx})*1.1;
+        LONGESTNORMALDIVSIZEPARENT=5;
     end
 
     % create figure
@@ -202,7 +227,7 @@ end
 h=figure(FIGURENUMBERS(end)+1); clf; hold on;
 
 % calculate hist
-[count,x] = hist([Ratios{:}],HISTNRBINS);
+[count,bincenters] = hist([Ratios{:}],HISTNRBINS);
 
 % helping lines
 N=5; highestcount=max(count);
@@ -220,7 +245,7 @@ if exist('histSkel','var') && exist('histArea','var')
     legend([l1,l2],{'Skeleton','Area'});
 else
     % plotting of one histogram
-    plot(x,count,'-','LineWidth',3);
+    plot(bincenters,count,'-','LineWidth',3);
 end
 
 % additional ticks
@@ -239,9 +264,9 @@ MW_makeplotlookbetter(15);
 
 % Save the histogram
 if strcmp(LENGTHFIELD, 'areaPixels')
-    histArea=[count;x];
+    histArea=[count;bincenters];
 elseif strcmp(LENGTHFIELD, 'length_skeleton')
-    histSkel=[count;x];
+    histSkel=[count;bincenters];
 end
 
 %% Sanity check
@@ -274,6 +299,7 @@ myColors = linspecer(numel(WINDOWBORDERS)-1);
 
 % calculate params
 mybins = linspace(0,1,HISTNRBINS);
+mycenters = mybins(2:end)-(mybins(2:end)-mybins(1:end-1))/2;
 
 for datasetIdx = 1:numel(datasetsPaths)
     %datasetIdx=1; % TEMP REMOVE   
@@ -311,7 +337,7 @@ for datasetIdx = 1:numel(datasetsPaths)
             plot([windowLeft, windowRight], [(j)/(2*nrLocations) (j)/(2*nrLocations)],'-','Color',[.5 .5 .5],'LineWidth',2);
         end        
         % histograms
-        [counts,centers]=hist(currentRatios,mybins);
+        [counts,centers]=hist(currentRatios,mycenters);        
         modcounts = (windowSize*counts/sum(counts)+windowLeft);
         plot(modcounts,centers,'-','Color',myColors(windowIndex,:),'LineWidth',LINEWIDTH)
         % cosmetics
@@ -325,8 +351,10 @@ for datasetIdx = 1:numel(datasetsPaths)
     end
 end
 
-saveas(h, [PLOTSAVEDIR WHATDATA '_ratios_histograms.fig']);
-saveas(h, [PLOTSAVEDIR WHATDATA '_ratios_histograms.tif']);
+if ~NOSAVEPLEASE
+    saveas(h, [PLOTSAVEDIR WHATDATA '_ratios_histograms.fig']);
+    saveas(h, [PLOTSAVEDIR WHATDATA '_ratios_histograms.tif']);
+end
 
 %% Plot lifetime against birth length
 
@@ -394,8 +422,10 @@ xlabel(['Birth size by ' LENGTHFIELD ' '],'Interpreter','None');
 ylabel('Lifetime [min]');
 MW_makeplotlookbetter(15)
 
-saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_histograms.fig']);
-saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_histograms.tif']);
+if ~NOSAVEPLEASE
+    saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_histograms.fig']);
+    saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_histograms.tif']);
+end
 
 %% Plot with time-coded ratios
 MINUTELIFETIMETRESHOLD=40;
@@ -462,11 +492,13 @@ for myfignum = 5:6
     MW_makeplotlookbetter(20);
 end
 
-saveas(h1, [PLOTSAVEDIR WHATDATA '_ratiosByInterdiv.fig']);
-saveas(h1, [PLOTSAVEDIR WHATDATA '_ratiosByInterdiv.tif']);
+if ~NOSAVEPLEASE
+    saveas(h1, [PLOTSAVEDIR WHATDATA '_ratiosByInterdiv.fig']);
+    saveas(h1, [PLOTSAVEDIR WHATDATA '_ratiosByInterdiv.tif']);
 
-saveas(h2, [PLOTSAVEDIR WHATDATA '_ratiosByInterdivSelected.fig']);
-saveas(h2, [PLOTSAVEDIR WHATDATA '_ratiosByInterdivSelected.tif']);
+    saveas(h2, [PLOTSAVEDIR WHATDATA '_ratiosByInterdivSelected.fig']);
+    saveas(h2, [PLOTSAVEDIR WHATDATA '_ratiosByInterdivSelected.tif']);
+end
 
 %% Histogram of lifetimes
 h=figure(FIGURENUMBERS(end)+7); clf; hold on
@@ -477,8 +509,10 @@ ylabel('Count')
 
 MW_makeplotlookbetter(20);
 
-saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_generalhistogram.fig']);
-saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_generalhistogram.tif']);
+if ~NOSAVEPLEASE
+    saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_generalhistogram.fig']);
+    saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_generalhistogram.tif']);
+end
 
 %%
 %{
