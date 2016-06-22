@@ -17,7 +17,7 @@ if ~exist('parameters','var')
     parameters.divisionType = 'nucleoidsizer'; % simplesizer nucleoidsizer nucleoidadder
     parameters.ringType = 'nucleoid'; % nucleoid alwaysrandom alwaysmiddle alwaystypical dynamicalwaystypical
     parameters.divisionDelay = parameters.mu/10; % 0
-    parameters.rechargeTime = parameters.mu/200; % 20
+    parameters.rechargeTime = parameters.mu/20; % 20 200
     parameters.divisionBlock=0;
     % clear parameters
 end
@@ -32,6 +32,8 @@ SWITCHTIME = 150; % 150
 
 SHOWNUCLEOIDS = 0;
 
+HOWMANYSTARTINGSCHNITZES=100;
+
 simulationtimes = 1:200; % simulation time
 
 % extrapolated parametes
@@ -44,16 +46,17 @@ parameters.rechargeTimeInMinutes = parameters.rechargeTime*60;
 
 % Initial conditions: create start of lineage
 simulatedschnitzcells = {};
-simulatedschnitzcells(1).P = -1; % parent
-simulatedschnitzcells(1).D = 0; simulatedschnitzcells(1).E = 0; % daughters
-simulatedschnitzcells(1).cellLengths = [INITIALLENGTH];
-simulatedschnitzcells(1).growthEfficiencies = [1];
-simulatedschnitzcells(1).relativeRingSites = {[]};
-simulatedschnitzcells(1).times = [simulationtimes(1)];
-simulatedschnitzcells(1).nucleoidDuplicationEvents = [simulationtimes(1)- (1-parameters.replicationPhase).*parameters.replicationTimeInMinutes];
-simulatedschnitzcells(1).nrNucleoids = [1];
-simulatedschnitzcells(1).nucleoidDuplicationEventsBoolean=[1];
-
+for schnitzIdx = 1:HOWMANYSTARTINGSCHNITZES
+    simulatedschnitzcells(schnitzIdx).P = -1; % parent
+    simulatedschnitzcells(schnitzIdx).D = 0; simulatedschnitzcells(schnitzIdx).E = 0; % daughters
+    simulatedschnitzcells(schnitzIdx).cellLengths = [INITIALLENGTH];
+    simulatedschnitzcells(schnitzIdx).growthEfficiencies = [1];
+    simulatedschnitzcells(schnitzIdx).relativeRingSites = {[]};
+    simulatedschnitzcells(schnitzIdx).times = [simulationtimes(1)];
+    simulatedschnitzcells(schnitzIdx).nucleoidDuplicationEvents = [simulationtimes(1)- (1-parameters.replicationPhase).*parameters.replicationTimeInMinutes];
+    simulatedschnitzcells(schnitzIdx).nrNucleoids = [1];
+    simulatedschnitzcells(schnitzIdx).nucleoidDuplicationEventsBoolean=[1];
+end
 %% Establish output directory if desired
 
 if SAVEYESNO==1
@@ -361,7 +364,12 @@ if SAVEYESNO
 end
 
 
+%{
 
+schnitzcells=simulatedschnitzcells;
+save('D:\Local_Software\Martijn_extensions\Martijn_custom\filamentationrecovery\simulatedSchnitzcells\schnitz1_longrecharge.mat','schnitzcells','parameters');
+
+%}
 
 
 
