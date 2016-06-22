@@ -2,7 +2,10 @@
 %% Load the dataset
 
 load('U:\ZZ_EXPERIMENTAL_DATA\C_Platereader\2015_11_28\alloutput.mat');
-PLOTDIR = 'U:\ZZ_EXPERIMENTAL_DATA\C_Platereader\2015_11_28\summaryPlots\rerun\'
+PLOTDIR = 'U:\ZZ_EXPERIMENTAL_DATA\C_Platereader\2015_11_28\summaryPlots\rerun2\'
+if ~exist(PLOTDIR,'dir')
+    mkdir(PLOTDIR)
+end
 
 %% Converting names to cAMP concentration values.
 
