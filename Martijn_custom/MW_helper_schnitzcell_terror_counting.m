@@ -12,8 +12,8 @@ end
 %% check for NaN values
 
 FIELDOFINTEREST = 'G6_mean';
-%FIELDOFINTEREST = 'schnitzcells.muP5_fitNew_atG6';
-%FIELDOFINTEREST = 'muP5_fitNew_cycCor';
+FIELDOFINTEREST = 'schnitzcells.muP5_fitNew_atG6';
+FIELDOFINTEREST = 'muP5_fitNew_cycCor';
 
 
 disp('NaN values:');
