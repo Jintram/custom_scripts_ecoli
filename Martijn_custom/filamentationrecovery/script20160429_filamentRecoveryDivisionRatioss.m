@@ -1,9 +1,9 @@
 
 %% 
 % Plotting division ratios
-%WHATDATA = 'sulA';
-%WHATDATA = 'temperature';
-WHATDATA = 'simulated';
+WHATDATA = 'sulA';
+WHATDATA = 'temperature';
+%WHATDATA = 'simulated';
 
 HISTNRBINS=50;
 
@@ -16,11 +16,11 @@ PLOTCOLORS = linspecer(7);
 
 %LENGTHFIELD = 'areaPixels';
 %LENGTHFIELD = 'length_fitNew';
-%LENGTHFIELD = 'length_skeleton';
-LENGTHFIELD = 'cellLengths';
+LENGTHFIELD = 'length_skeleton';
+%LENGTHFIELD = 'cellLengths';
 
 TIMEFIELD = 'time';
-TIMEFIELD = 'times';
+%TIMEFIELD = 'times';
 
 if ~exist('PLOTSAVEDIR','var') & ~exist('NOSAVEPLEASE','var');
     error('Set PLOTSAVEDIR please. Or set NOSAVEPLEASE');
@@ -186,7 +186,7 @@ for datasetIdx = 1:numel(datasetsPaths)
     end
 
     % create figure
-    figure(figureIndex); 
+    figure(1); 
 
     % plot helping lines at 1/2n
     % for i=1:5
@@ -224,7 +224,7 @@ for datasetIdx = 1:numel(datasetsPaths)
 end
 
 %% Now calculate overall histogram
-h=figure(FIGURENUMBERS(end)+1); clf; hold on;
+h=figure(2); clf; hold on;
 
 % calculate hist
 [count,bincenters] = hist([Ratios{:}],HISTNRBINS);
@@ -271,7 +271,7 @@ end
 
 %% Sanity check
 % load(datasetsPaths{2})
-figure(FIGURENUMBERS(end)+2); clf; hold on
+figure(3); clf; hold on
 
 % x=y line
 plot([1,10^6],[1,10^6],'-k')
@@ -285,16 +285,19 @@ end
 axis equal;
 xlim([0 max([myLengthSumNewborns{:}])]);
 ylim([0 max([myLengthParents{:}])]);
+xlabel('Summed length newborns');
+ylabel('Length of parent');
 
 %% Plot historgrams per window
 NRREGIMES = 4;
 WINDOWBORDERS = [5,10,17,20,30];
 WINDOWBORDERS = [2,9,16,23,30];
 WINDOWBORDERS = [2:7:30];
+WINDOWBORDERS = [3:6:30];
 LINEWIDTH =2;
 
 % figure stuff
-h=figure(FIGURENUMBERS(end)+3); clf; hold on
+h=figure(4); clf; hold on
 myColors = linspecer(numel(WINDOWBORDERS)-1);
 
 % calculate params
@@ -358,7 +361,7 @@ end
 
 %% Plot lifetime against birth length
 
-h=figure(FIGURENUMBERS(end)+4); clf; hold on
+h=figure(5); clf; hold on
 myColors = linspecer(numel(datasetsPaths));
 myPlotMarkers = 'os^vd<>';
 
@@ -430,8 +433,8 @@ end
 %% Plot with time-coded ratios
 MINUTELIFETIMETRESHOLD=40;
 
-h1=figure(FIGURENUMBERS(end)+5); clf; hold on
-h2=figure(FIGURENUMBERS(end)+6); clf; hold on
+h1=figure(6); clf; hold on
+h2=figure(7); clf; hold on
 
 % Get a colormap (is 64 long by default)
 timeColormap = colormap(jet); % winter
@@ -461,13 +464,13 @@ for datasetIdx = 1:numel(datasetsPaths)
         end
 
         % plot all datapoint to one figure
-        figure(FIGURENUMBERS(end)+5);
+        figure(6);
         plot(myLengthSumNewborns{datasetIdx}(i),Ratios{datasetIdx}(i),'o','MarkerSize',10,...
                 'MarkerEdgeColor',colorForThisDataPoint,...
                 'MarkerFaceColor',colorForThisDataPoint)
         
         % plot selection of datapoints to 2nd figure
-        figure(FIGURENUMBERS(end)+6);
+        figure(7);
         if currentTime>MINUTELIFETIMETRESHOLD % || isnan(currentLifeTime)
             plot(myLengthSumNewborns{datasetIdx}(i),Ratios{datasetIdx}(i),'o','MarkerSize',10,...
                 'MarkerEdgeColor',colorForThisDataPoint,...
@@ -477,8 +480,8 @@ for datasetIdx = 1:numel(datasetsPaths)
     
 end
 
-for myfignum = 5:6
-    figure(FIGURENUMBERS(end)+myfignum);
+for myfignum = 6:7
+    figure(myfignum);
 
     xlabel('Summed daughter length [um]');
     ylabel('L_d/L_p');
@@ -501,7 +504,7 @@ if ~NOSAVEPLEASE
 end
 
 %% Histogram of lifetimes
-h=figure(FIGURENUMBERS(end)+7); clf; hold on
+h=figure(8); clf; hold on
 
 hist([lifeTimes{:}],30)
 xlabel('Interdivision lifetime [min]');
@@ -513,6 +516,17 @@ if ~NOSAVEPLEASE
     saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_generalhistogram.fig']);
     saveas(h, [PLOTSAVEDIR WHATDATA '_lifetime_generalhistogram.tif']);
 end
+
+%% histogram of cell sizes
+
+figure(9); clf; hold on;
+allLengths = [schnitzcells(:).(LENGTHFIELD)];
+histogram(allLengths,100);
+
+xlabel('Length (um)');
+ylabel('Count');
+title('Cell lenghts observed during movie');
+MW_makeplotlookbetter(15);
 
 %%
 %{

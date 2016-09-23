@@ -1,4 +1,4 @@
-function [S, Sraw, w, NDtau] = general_get_autocorrelation(y1,lambda)
+function [S, NDtau,ccNormalizationFactor] = general_get_autocorrelation(y1,y2,lambda,settings)
 % This function calculatates the autocorrelation for a vector with
 % y-values. It can weigh certain parts of this vector more or less, and 
 % will do so by weighing vector W. If w=ones(N_ttotal), this function will
@@ -20,37 +20,18 @@ function [S, Sraw, w, NDtau] = general_get_autocorrelation(y1,lambda)
 % Some general stuff
 % ===
 % Total nr points
-N=length(y1); 
+N=length(y1); % assuming equal length
 % Importantly, use distances to mean ("mean removed y1").
 meanremoved_y1 = y1 - mean(y1); % 
+meanremoved_y2 = y2 - mean(y2);
 
-% Set appropriate weights 
-% ===
-% Create set of empty weights, fill next
-w=zeros(length(y1)+1); % +1 b/c indexing starts at 1 in matlab    
-%(Note that sum(w(:,NDtau+1) should equal length(y1) for correct 
-% weighing.)
-for NDtau = 0:N
-    for NDtstar = 1:(N-NDtau)
-        % For no bias, everything weighs as one.
-        if lambda==0
-            w(NDtstar,NDtau+1)=1;
-        else
-            % Get weighing, Daan method
-            if lambda(NDtstar) == 1
-                w(NDtstar,NDtau+1) = 1/lambda(NDtstar+NDtau);
-            else
-                w(NDtstar,NDtau+1) = .75/lambda(NDtstar+NDtau);
-            end
-            % Weighing, Nature Kiviet:
-            %{
-            lambdat1 = lambda(NDtstar); % count at point 1
-            lambdat2 = lambda(NDtstar+NDtau); % count at point 2
-            w(NDtstar,NDtau+1)=1/(2*lambdat1)+1/(2*lambdat2); % weighing factor
-            %}
-        end
-    end
-end         
+if isfield(settings,'maxtau')
+    maxtau = settings.maxtau;
+else
+    maxtau=length(meanremoved_y1);
+end  
+
+ccNormalizationFactor = sqrt(var(meanremoved_y1)*var(meanremoved_y2)) * N;
 
 % Actual correlation
 % ===
@@ -59,16 +40,16 @@ end
 % R(tau) = S(tau)/S(0)
 % In discrete form (tau -> N*Dtau = NDtau) etc 
 S = []; 
-for NDtau = 0:length(meanremoved_y1)
+for NDtau = -maxtau:maxtau % TODO dubbel check
 
     S_NDtau = [];
     %ws = []; % TEST
     
     % slide the window
-    for NDtstar = 1:(length(meanremoved_y1)-NDtau)
+    for NDtstar = maxtau+1:(length(meanremoved_y1)-maxtau) % TODO dubbel check
         
         % multiply two values
-        S_NDtau(end+1) = meanremoved_y1(NDtstar)*meanremoved_y1(NDtstar+NDtau)*w(NDtstar,NDtau+1);
+        S_NDtau(end+1) = meanremoved_y1(NDtstar)*meanremoved_y2(NDtstar+NDtau);
         
         % multiply two values TESTING
         %{
@@ -78,15 +59,13 @@ for NDtau = 0:length(meanremoved_y1)
         ws(NDtstar) = 1/(lambdat1*lambdat2);
         %}
     end
-    
-    % calculate average and record    
-    S(NDtau+1) = sum(S_NDtau)/sum(w(:,NDtau+1)); % +1 b/c matlab starts indexing at 1
+        
     %S(NDtau+1) = sum(S_NDtau)/mean(ws); % TESTING
-    Sraw(NDtau+1)= sum(S_NDtau);
+    S(NDtau+1+maxtau)= sum(S_NDtau);
         
 end
 
 % For convenience only
-NDtau = 0:length(meanremoved_y1);
+NDtau = -maxtau:maxtau;
 
 end
