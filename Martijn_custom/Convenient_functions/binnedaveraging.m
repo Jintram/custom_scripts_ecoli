@@ -1,6 +1,6 @@
 
 function [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins]=binnedaveraging(valuesx,valuesy,bins)
-% function [meanValuesForBins, binCenters,errorValuesForBins]=binnedaveraging(valuesy,valuesx,bins)
+% function [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins]=binnedaveraging(valuesx,valuesy,bins)
 %
 % INPUTS
 % - valuesy{i} gives a series of y values
@@ -37,17 +37,34 @@ end
 meanValuesForBins=NaN(1,numel(binnedValues));
 stdValuesForBins=NaN(1,numel(binnedValues));
 stdErrValuesForBins=NaN(1,numel(binnedValues));
+nanFlag=0;
 for i = 1:numel(binnedValues)
+    
+    % get current binnedValues
+    currentBinnedvalues = binnedValues{i};
+    
+    % filter out NaN values
+    nonNanIdxs = ~isnan(currentBinnedvalues);
+    currentBinnedvalues = currentBinnedvalues(nonNanIdxs);
+    if any(nonNanIdxs)
+        nanFlag = nanFlag+1; 
+    end
+    
     % calculate mean for this bin
-    meanValuesForBins(i) = mean(binnedValues{i});
+    meanValuesForBins(i) = mean(currentBinnedvalues);
     % calculate std for this bin
-    stdValuesForBins(i) = std(binnedValues{i});
+    stdValuesForBins(i) = std(currentBinnedvalues);
     % calculate standard error for this bin (i.e. /sqrt(n))
-    stdErrValuesForBins(i) = stdValuesForBins(i)/sqrt(numel(binnedValues{i}));
+    stdErrValuesForBins(i) = stdValuesForBins(i)/sqrt(numel(currentBinnedvalues));
 end
 
 % calculate bin centers
 binSizes = (bins(2:end)-bins(1:end-1));
 binCenters = bins(2:end)-binSizes./2;
+
+% display warning if nan values were filtered out
+if nanFlag>0
+    warning('Your data contained NaN values, these were ignored..');
+end
 
 end
