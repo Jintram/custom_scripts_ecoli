@@ -1,7 +1,11 @@
 
 %%
 
-PLOTOUTPUTDIRROOT = 'D:\Local_Software\Martijn_extensions\Martijn_custom\filamentationrecovery\divisionmodel_plots\';
+if ~exist('PLOTOUTPUTDIRROOT','var')
+    PLOTOUTPUTDIRROOT = 'D:\Local_Software\Martijn_extensions\Martijn_custom\filamentationrecovery\divisionmodel_plots\';
+    % PLOTOUTPUTDIRROOT='D:\Local_Software\Martijn_extensions\Martijn_custom\filamentationrecovery\divisionmodel_plots\2016_10_05_conservativemodel\'
+end
+
 if ~exist('SAVEYESNO','var')
     SAVEYESNO=0; 
     % SAVEYESNO=1;
@@ -14,17 +18,21 @@ if ~exist('parameters','var')
     parameters.divisionTime = 1; % for timer model to work, this needs to be equal to 1/mu
     parameters.divisionSize = 6;
     parameters.addedSize = 3;
-    parameters.divisionType = 'nucleoidsizer'; % simplesizer nucleoidsizer nucleoidadder
+    parameters.divisionType = 'nucleoidadder'; % simplesizer nucleoidsizer nucleoidadder
     parameters.ringType = 'nucleoid'; % nucleoid alwaysrandom alwaysmiddle alwaystypical dynamicalwaystypical
     parameters.divisionDelay = parameters.mu/10; % 0
     parameters.rechargeTime = parameters.mu/20; % 20 200
     parameters.divisionBlock=0;
+    
+    % noise parameters
+    parameters.fluctuationIntensity = 0.04; % 0.04 seems good value
+    parameters.relaxationTimeFluctuationsMinutes = 50; % 50 seems good value
+    
+    % Command to clear params:
     % clear parameters
 end
 
-% noise parameters
-parameters.fluctuationIntensity = 0.0; % 0.04 seems good value
-parameters.relaxationTimeFluctuationsMinutes = 50; % 50 seems good value
+
 
 INITIALLENGTH=3;
 FIG3XLIM=[100 200];
@@ -34,7 +42,7 @@ SHOWNUCLEOIDS = 0;
 
 HOWMANYSTARTINGSCHNITZES=100;
 
-simulationtimes = 1:200; % simulation time
+simulationtimes = 1:250; % simulation time
 
 % extrapolated parametes
 parameters.replicationTimeInMinutes = parameters.replicationTime*60;
@@ -72,7 +80,7 @@ if SAVEYESNO==1
 end
 
 
-%%
+%% simulation itself
 
 % filamentation part of simulation
 parameters.divisionBlock=1;
@@ -103,6 +111,15 @@ plot([simulatedschnitzcells(:).times],[simulatedschnitzcells(:).cellLengths],'.'
 plot([min(simulationtimes),max(simulationtimes)],[parameters.divisionSize,parameters.divisionSize],'-','Color',[.5 .5 .5])
 plot([min(simulationtimes),max(simulationtimes)],[parameters.divisionSize,parameters.divisionSize]/2,'-','Color',[.5 .5 .5])
 
+xlabel('Time [min]');
+ylabel('Cell lengths [\mum]');
+
+MW_makeplotlookbetter(20);
+
+if SAVEYESNO
+    saveas(h1,[plotoutputdir 'singlecellsize.fig']);
+    saveas(h1,[plotoutputdir 'singlecellsize.tif']);
+end
 
 %% extra calculations
 
@@ -243,6 +260,7 @@ for t = 2:numel(simulationtimes)
 end
 
 %%
+
 h3=figure(3); clf; hold on;
 % dummy markers for legend (appear at t<0)
 l1=plot(-1,0,'sk-','MarkerFaceColor','k','MarkerSize',5);
@@ -330,7 +348,7 @@ end
 h4=figure(4); clf; hold on;
 
 allLengths = [simulatedschnitzcells(:).cellLengths];
-[counts, locations]=hist(allLengths,30);
+[counts, locations]=hist(allLengths,100);
 meanLength = mean(allLengths);
 medianLength = median(allLengths);
 plot(locations, counts);

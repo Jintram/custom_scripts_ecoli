@@ -110,10 +110,10 @@ for schnitzIdx = activeSchnitzcells
         if parameters.divisionDelayInMinutes< (newtime-lastDuplicationEvent)... % delay after duplication
                 && parameters.rechargeTimeInMinutes< (newtime-lastDivisionEvent) ... delay after previous division
                 && ~parameters.divisionBlock
-        %if (newCellLength-lastDivisionSize)>parameters.addedSize
-            divide=1;
+            if (newCellLength-lastDivisionSize)>parameters.addedSize
+                divide=1;
+            end
         end
-        %end
         
     elseif strcmp(parameters.divisionType,'nucleoidtimer')
     
