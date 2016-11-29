@@ -1,5 +1,22 @@
 
+%% param settings
+WINDOWBORDERS   = [3:6:36];
+BARCOLORS       = [240,155,34; 45 177 65; 37 156 190; 131 84 162; 241 88 58]./255;
 
+
+%% Temperature datasets
+
+% skeletonDataPaths{x} should match with schnitzDataPaths{x}.
+
+% stored skeleton analysis
+skeletonDataPaths={...
+    'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos2crop\data\pos2crop-skeletonData.mat',...
+    'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos3crop\data\pos3crop-skeletonData.mat'};
+
+% stored fluorescence data
+fluorDataPaths={...
+    'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos2crop\analysis\straightenedCells\2016-04-07pos2crop_straightFluorData.mat',...
+    'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos3crop\analysis\straightenedCells\2016-04-07pos3crop_straightFluorData.mat'};
 
 
 %%
@@ -9,17 +26,19 @@ figure(101); clf;
 plotcolors = 'rrr';
 scatterX={}; scatterY={}; 
 
+PLOTHELPINGLINES=1;
 
 %%
-for datasetIndex = 2:3
+for datasetIndex = 1:numel(skeletonDataPaths)
 
     %%
     %load ([p.tracksDir p.movieName '-skeletonData.mat']);
-    load (['G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos' num2str(datasetIndex) 'crop\data\pos' num2str(datasetIndex) 'crop-skeletonData.mat']);
+    clear allpeakmeanY allpeakY;
+    load (skeletonDataPaths{datasetIndex});
 
     %%
     %load(saveLocationMatFile([p.analysisDir 'straightenedPlots\' p.movieDate p.movieName '_straightFluorData.mat']);
-    load (['G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos' num2str(datasetIndex) 'crop\analysis\straightenedCells\2016-04-07pos' num2str(datasetIndex) 'crop_straightFluorData.mat']);
+    load (fluorDataPaths{datasetIndex});
 
 
     %%
@@ -37,7 +56,12 @@ for datasetIndex = 2:3
     correspondingLengthsToLocationsPx=[];
     for framenr=1:numel(allpeakXMicrons)
 
-        meanYFrame  = allpeakmeanY{framenr};
+        if exist('allpeakY','var') % oops, have to resolve this later.. double param naming.. TODO
+            meanYFrame  = allpeakY{framenr};
+        else
+            meanYFrame  = allpeakmeanY{framenr};
+        end
+        
         xpeaksFrame  = allpeakXMicrons{framenr};
         lengthsFrame = allLengthsOfBacteriaInMicrons{framenr};
 
@@ -51,11 +75,19 @@ for datasetIndex = 2:3
         for cellno = 1:numel(xpeaksFrame)
 
             %plot(xpeaksFrame)
-            if ~isempty(xpeaksFrame)
+            if ~(isempty(xpeaksFrame) || isempty(meanYFrame))
 
                 % raw data
-                pileofXmicron = [pileofXmicron xpeaksFrame{cellno}'];
-                pileofXPx     = [pileofXPx xpeaksFramePx{cellno}'];
+                
+                sizexpeaksParam = size(xpeaksFrame{cellno});
+                if sizexpeaksParam(1) > sizexpeaksParam(2) % oops, have to resolve this later.. double param standards.. TODO
+                    pileofXmicron = [pileofXmicron xpeaksFrame{cellno}'];
+                    pileofXPx     = [pileofXPx xpeaksFramePx{cellno}'];
+                else
+                    pileofXmicron = [pileofXmicron xpeaksFrame{cellno}];
+                    pileofXPx     = [pileofXPx xpeaksFramePx{cellno}];
+                end
+                
                 fluorPeaksThisCell = meanYFrame{cellno};
                 pileofmeanY = [pileofmeanY fluorPeaksThisCell];
 
@@ -101,12 +133,14 @@ MICRONSPERPIXEL=0.0431;
 figure(1); hold on;
 plot(scatterXPx{datasetIndex}*MICRONSPERPIXEL,scatterYPx{datasetIndex},'.b')
 
-%% 
-NRCONTOURLINES=3;
+%% figure 2
+
+NRCONTOURLINES=2;
 MAKEUSEOFSYMMETRY=1;
 COLOR='b';
 
-figure(2); clf; hold on;
+h=figure(2); clf; hold on;
+set(h,'Position',[200,200,600+200,400+200]);
 
 if ~MAKEUSEOFSYMMETRY
     data = [[scatterX{:}]; [scatterY{:}]]';
@@ -114,20 +148,35 @@ else
     data = [[[scatterX{:}] [scatterX{:}]]; [[scatterY{:}], 1-[scatterY{:}]]]'; % symmetry data
 end
 
+
+
+scatter([scatterX{:}],[scatterY{:}],12^2,'filled','MarkerFaceColor',[.7 .7 .7],'MarkerFaceAlpha',0.15);
+%scatter([scatterX{:}],[scatterY{:}],75,'filled','MarkerFaceColor',[.7 .7 .7]);%,'MarkerFaceAlpha',3/8);
+if MAKEUSEOFSYMMETRY
+    scatter([scatterX{:}],1-[scatterY{:}],12^2,'filled','MarkerFaceColor',[.7 .7 .7],'MarkerFaceAlpha',0.15); % plot symmetric
+    %scatter([scatterX{:}],1-[scatterY{:}],75,'filled','MarkerFaceColor',[.7 .7 .7]); % plot symmetric
+end
+
+%{
 plot([scatterX{:}],[scatterY{:}],['.' COLOR],'MarkerSize',7);
 if MAKEUSEOFSYMMETRY
     plot([scatterX{:}],1-[scatterY{:}],['.' COLOR],'MarkerSize',7); % plot symmetric
 end
+%}
+
 [bandwidth,density,X,Y] = kde2d(data);      
 %[C, l1] = contour(X,Y,density,NRCONTOURLINES,'-k','LineWidth',2);
 
 % density corrected for data loss at higher lengths..
 %[C, l1] = contour(X,Y,density.*X,NRCONTOURLINES,'-k','LineWidth',2);
-[C, l1] = contour(X,Y,density.*X,NRCONTOURLINES,'-k','LineWidth',2);
+
+if ~exist('DONTPLOTCONTOURLINES','var')
+    [C, l1] = contour(X,Y,density.*X,NRCONTOURLINES,'-k','LineWidth',2);
+end
 
 %title('kde, density directed (pdf(x)*x)')
 xlabel(['Length of cell [' '\mu' 'm]']);
-ylabel('ftsA peaks location');
+ylabel('Relative FtsA peak locations');
 %figure(); hist([scatterX{:}])
 
 maxX = max([scatterX{:}]);
@@ -137,12 +186,32 @@ ylim([0,1]);
 MW_makeplotlookbetter(20);
 
 % plot helping lines at 1/2n
-N=5;
-for i=1:N
-    for j = 1:(i*2-1)
-        plot([0, maxX], [(j)/(2*i) (j)/(2*i)],'-','Color',[.5 .5 .5],'LineWidth',N-i+1)
+%{
+if PLOTHELPINGLINES
+    N=5;
+    for windowIndex=1:N
+        for j = 1:(windowIndex*2-1)
+            plot([0, maxX], [(j)/(2*windowIndex) (j)/(2*windowIndex)],'-','Color',[.5 .5 .5],'LineWidth',N-windowIndex+1)
+        end
     end
 end
+%}
+
+% plot helping lines at 1/2n
+if PLOTHELPINGLINES
+    N=5;
+    for windowIndex=1:(numel(WINDOWBORDERS)-1)
+        for j = 1:2:(windowIndex*2-1)
+            plot([WINDOWBORDERS(windowIndex), WINDOWBORDERS(windowIndex+1)], [(j)/(2*windowIndex) (j)/(2*windowIndex)],'-','Color',BARCOLORS(windowIndex,:),'LineWidth',8)
+        end
+    end
+end
+
+if exist('CUSTOMXLIM','var');
+   xlim(CUSTOMXLIM);
+end
+
+% saveas(2, 'D:\Local_Data\Dropbox\Dropbox\Filamentation recovery\MW\figures_new\matlab_export\rutger_ftsa_peaks_new.svg')
 
 %% Create overlay plot if division ratios are avaible
 NEWMAXX = 50;
@@ -153,8 +222,8 @@ figure(3); clf; hold on;
 % data that should be obtained from
 % script20160429_filamentRecoveryDivisionRatioss
 if exist('Ratios','var')
-    for datasetIdx = 1:numel(datasetsPaths)
-        plot(myLengthSumNewborns{datasetIdx},Ratios{datasetIdx},'o', 'Color', PLOTCOLORS(datasetIdx,:),'LineWidth',2);
+    for dataSetIndex = 1:numel(datasetsPaths)
+        plot(myLengthSumNewborns{dataSetIndex},Ratios{dataSetIndex},'o', 'Color', PLOTCOLORS(dataSetIndex,:),'LineWidth',2);
     end
 end
 
@@ -175,6 +244,135 @@ plot(c,n./(sum(n)*(c(2)-c(1))),'o-k','MarkerSize',15,'LineWidth',3);
 MW_makeplotlookbetter(20);
 xlabel('Cell length [um]');
 ylabel('Probability');
+
+%%
+NUMBINS=20;
+
+% 14-23 um regime
+% scatterX{2}, scatterY{2} give best current available data
+
+dataSetIndex=2;
+
+regionsDouble = {[0,0.5],[0,0.5],[0,2/6,.5],[0,2/8,.5]};
+
+theBinEdges = [0:.5/NUMBINS:0.5];
+thebinCenters=[theBinEdges(2:end)+theBinEdges(1:end-1)]./2;
+
+%WINDOWBORDERS = [14,23,31];
+%regions = {[0,2/6,4/6,1],[0,2/8,4/8,6/8,8/8]};
+%regionsDouble = {[0,2/6,.5],[0,2/8,.5]};
+
+eventsPerRatio = {}; pdf={}; normalizedPdf=  {}; ftsData=struct;
+for dataSetIndex = 1:numel(skeletonDataPaths)
+    for windowIndex=1:(numel(WINDOWBORDERS)-1)
+
+        relevantDataIndices = (scatterX{dataSetIndex}>WINDOWBORDERS(windowIndex) & scatterX{dataSetIndex}<WINDOWBORDERS(windowIndex+1));
+        selectedXdata = scatterX{dataSetIndex}(relevantDataIndices);
+        selectedYdata = scatterY{dataSetIndex}(relevantDataIndices);
+
+        % make use of symmetery
+        doubleDataX = [selectedXdata 1-selectedXdata];
+        doubleDataY = [selectedYdata 1-selectedYdata];
+
+        %plot(selectedXdata,selectedYdata,'.');
+        % how many divisions occured at one of the ratios in this regime?
+        % E.g . how many events occured inbetween 0 and 2/6 for regime 3?
+        eventsPerRatio = histcounts(doubleDataY,regionsDouble{windowIndex}); % note histogram() and histcounts() take edges as input, hist() does not
+
+        [count, theBinEdges] = histcounts(doubleDataY,theBinEdges); % note histcounts() takes edges as input, hist() does not
+        %count=h.Values;
+
+        dt=theBinEdges(2)-theBinEdges(1);
+        normalizedpdf = count./sum(count)*dt;
+
+        %plot(thebinCenters,count,'-','LineWidth',4);
+
+        disp(['Stats for regime ' num2str(windowIndex) ': ' num2str(WINDOWBORDERS(windowIndex)) 'um -' num2str(WINDOWBORDERS(windowIndex+1)) 'um' ]);
+        disp(num2str(eventsPerRatio));
+                        
+        ftsData.count{dataSetIndex}{windowIndex}           = count; % 
+        ftsData.eventsPerRatio{dataSetIndex}{windowIndex} = eventsPerRatio; % 
+        ftsData.normalizedPdf{dataSetIndex}{windowIndex}   = normalizedPdf;
+
+    end
+end
+
+ftsData.centers         = thebinCenters;
+
+% Store data and also create summary (mean, sum, normalized) params and store those
+for windowIndex = 1:(numel(WINDOWBORDERS)-1)
+    % determine average function
+    countsFromMultipleDatasets = arrayfun(@(x) ftsData.count{x}{windowIndex}, 1:numel(ftsData.count), 'UniformOutput', false);
+    ftsData.meanCounts{windowIndex}=mean(cell2mat(countsFromMultipleDatasets'));
+    ftsData.sumCounts{windowIndex}=sum(cell2mat(countsFromMultipleDatasets'));
+    
+    % normalize the pdf
+    dt=ftsData.centers(2)-ftsData.centers(1);
+    ftsData.normalizedPdf{windowIndex} = ftsData.sumCounts{windowIndex}./sum(ftsData.sumCounts{windowIndex})*dt;
+    
+    % sum the different event counts for the ratios
+    ratiocountsFromMultipleDatasets = arrayfun(@(x) ftsData.eventsPerRatio{x}{windowIndex}, 1:numel(ftsData.eventsPerRatio), 'UniformOutput', false);
+    ftsData.sumRatioCounts{windowIndex}=sum(cell2mat(ratiocountsFromMultipleDatasets'));
+end
+
+% plot it
+figure(5); clf; hold on;
+
+if ~exist('toPlotWindows')
+    toPlotWindows = 1:(numel(WINDOWBORDERS)-1);
+end
+for windowIndex=toPlotWindows
+    plot(ftsData.centers,ftsData.normalizedPdf{windowIndex},'-','LineWidth',4);
+end
+
+xlabel('Relative ring location, S_{ring}');
+ylabel(['Probability']);
+
+xlim([0,0.5])
+
+%ylim([0,max([pdf{:}])*1.2]);
+
+MW_makeplotlookbetter(15);
+
+%% 
+% Execute
+% script20160429_filamentRecoveryDivisionRatioss
+% first
+
+REGIME=3;
+
+colors=linspecer(2);
+figure(6); clf; hold on;
+
+theYlim = [0, max([histData.normalizedPdf{REGIME}*2 ftsData.normalizedPdf{REGIME}])*1.2];
+
+% plot ratios
+for fractions = 1:2:(2*REGIME)
+    ratio = fractions/(REGIME*2);
+    plot([ratio,ratio], theYlim,'-','Color',[.7 .7 .7],'LineWidth',3)
+end
+
+% observed rings
+l2=plot(ftsData.centers,ftsData.normalizedPdf{REGIME},'-','Color',colors(1,:),'LineWidth',3);
+%bar(ftsData.centers, ftsData.normalizedPdf{REGIME}),'FaceColor',[.7 .7 .7]);
+% observed divisions 
+l1=plot(histData.centers, histData.normalizedPdf{REGIME}*2,'-','Color','k','LineWidth',3); % 2* since renormalization to new xlimits
+%bar(histData.centers, histData.normalizedPdf{REGIME}*2,'FaceColor','k');
+
+% cosmetics
+legend([l1,l2],{'Observed divisions','Observed rings'});
+MW_makeplotlookbetter(15);
+xlim([0,.5]);
+ylim(theYlim)
+
+xlabel('Relative division location, S')
+%xlabel('L_{daughter}/L_{mother}');
+ylabel('Probability');
+
+% prints stats
+disp(['Div/FtsA stats for regime ' num2str(REGIME) ': ' num2str(WINDOWBORDERS(REGIME)) 'um -' num2str(WINDOWBORDERS(REGIME+1)) 'um' ]);
+disp(num2str(histData.sumRatioCounts{REGIME}));
+disp(num2str(ftsData.sumRatioCounts{REGIME}));
 
 %% more sanity checks
 
