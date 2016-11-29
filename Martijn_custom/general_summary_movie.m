@@ -1,7 +1,7 @@
 
 % initiate
 % myRange=[4:10]; % custom range
-myRange = settings.frameRangeFull; 
+myRange = ourSettings.frameRangeFull; 
 croppingRecteangle = [p.cropLeftTop p.cropRightBottom];
 
 % obtain paramter to plot

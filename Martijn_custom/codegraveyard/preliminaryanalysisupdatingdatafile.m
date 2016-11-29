@@ -9,7 +9,7 @@ EXCELREADSTART = 14; % line where list of parameters starts in Excel file.
 
 % One can execute this section again to reload settings 
 % Note that these are then not immediate parsed to the "p" struct.
-[settings, alldata] = MW_readsettingsfromexcelfile(CONFIGFILEPATH)
+[ourSettings, alldata] = MW_readsettingsfromexcelfile(CONFIGFILEPATH)
 
 % Double check whether to continue
 % This step is mainly to prevent accidentally running whole script 
@@ -22,56 +22,56 @@ end
 
 % Now make a vector with parameter values that schnitzcells scripts can handle. (and some misc. other admin)
 
-disp('Now creating ''p'' struct from settings struct.');
+disp('Now creating ''p'' struct from ourSettings struct.');
 
 % Create the p vector which holds all parameters and is fed into, and also
 % returned by most functions of the schnitzcells analysis software.
-% Use "settings" struct as a base.
+% Use "ourSettings" struct as a base.
 % DJK_initschnitz only checks for errors and adds a few parameters based on
 % the already given paramteres.
 % ===
 % TODO this can be done more elegantly (but note that existence of two
-% vectors, "settings" and "p", allows user to update "settings" vector 
+% vectors, "ourSettings" and "p", allows user to update "ourSettings" vector 
 % intermediately.
-p = DJK_initschnitz(settings.positionName,settings.movieDate,'e.coli.amolf','rootDir',...
-    settings.rootDir, 'cropLeftTop',settings.cropLeftTop, 'cropRightBottom',settings.cropRightBottom,...
-    'fluor1',settings.fluor1,'fluor2',settings.fluor2,'fluor3',settings.fluor3,...
-    'setup',settings.setup,'softwarePackage',settings.softwarePackage,'camera',settings.camera)
+p = DJK_initschnitz(ourSettings.positionName,ourSettings.movieDate,'e.coli.amolf','rootDir',...
+    ourSettings.rootDir, 'cropLeftTop',ourSettings.cropLeftTop, 'cropRightBottom',ourSettings.cropRightBottom,...
+    'fluor1',ourSettings.fluor1,'fluor2',ourSettings.fluor2,'fluor3',ourSettings.fluor3,...
+    'setup',ourSettings.setup,'softwarePackage',ourSettings.softwarePackage,'camera',ourSettings.camera)
 
 % Manually make sure image dir is correct
 % (This is done to accomodate cropping.)
-p.imageDir = [settings.rootDir settings.movieDate '\' settings.positionName '\']
+p.imageDir = [ourSettings.rootDir ourSettings.movieDate '\' ourSettings.positionName '\']
 
 % Set framerange according to analysis type
 if ANALYSISTYPE == 1 % fast analysis
-    currentFrameRange = settings.frameRangePreliminary;
+    currentFrameRange = ourSettings.frameRangePreliminary;
 elseif ANALYSISTYPE == 2 % full analysis
-    currentFrameRange = settings.frameRangeFull;
+    currentFrameRange = ourSettings.frameRangeFull;
 else
     error('No analysis type speficied');
 end
 
 
 % =========================================================================
-% (After loading settings from excel file.)
-p = DJK_initschnitz([settings.positionName settings.cropSuffix],settings.movieDate,'e.coli.amolf','rootDir',...
-    settings.rootDir, 'cropLeftTop',settings.cropLeftTop, 'cropRightBottom',settings.cropRightBottom,...
-    'fluor1',settings.fluor1,'fluor2',settings.fluor2,'fluor3',settings.fluor3,...
-    'setup',settings.setup,'softwarePackage',settings.softwarePackage,'camera',settings.camera)
+% (After loading ourSettings from excel file.)
+p = DJK_initschnitz([ourSettings.positionName ourSettings.cropSuffix],ourSettings.movieDate,'e.coli.amolf','rootDir',...
+    ourSettings.rootDir, 'cropLeftTop',ourSettings.cropLeftTop, 'cropRightBottom',ourSettings.cropRightBottom,...
+    'fluor1',ourSettings.fluor1,'fluor2',ourSettings.fluor2,'fluor3',ourSettings.fluor3,...
+    'setup',ourSettings.setup,'softwarePackage',ourSettings.softwarePackage,'camera',ourSettings.camera)
 % =========================================================================
 
 
 
     % Load this dataset using
     % =========================================================================
-    p = DJK_initschnitz([settings.positionName settings.cropSuffix], settings.movieDate,'e.coli.AMOLF','rootDir',...
-     settings.rootDir, 'cropLeftTop', settings.cropLeftTop, 'cropRightBottom', settings.cropRightBottom,...
-         'fluor1',settings.fluor1,...
-         'fluor2',settings.fluor2,...
-         'fluor3',settings.fluor3,...
-         'setup',settings.setup,...
-         'softwarePackage',settings.softwarePackage,...
-         'camera',settings.camera);
+    p = DJK_initschnitz([ourSettings.positionName ourSettings.cropSuffix], ourSettings.movieDate,'e.coli.AMOLF','rootDir',...
+     ourSettings.rootDir, 'cropLeftTop', ourSettings.cropLeftTop, 'cropRightBottom', ourSettings.cropRightBottom,...
+         'fluor1',ourSettings.fluor1,...
+         'fluor2',ourSettings.fluor2,...
+         'fluor3',ourSettings.fluor3,...
+         'setup',ourSettings.setup,...
+         'softwarePackage',ourSettings.softwarePackage,...
+         'camera',ourSettings.camera);
 
     [p,schnitzcells] = DJK_compileSchnitzImproved_3colors(p,'quickMode',1);
     % =========================================================================
@@ -138,8 +138,8 @@ if ANALYSISTYPE==1 % fast
         load([myOutputDir 'summaryParametersPreliminary.mat'],'thedata');
     end
     thedata(posNumber).summaryParameters = summaryParameters;
-    thedata(posNumber).settings = settings;
-    thedata(posNumber).p = p; % "settings" and "p" are a bit redundant for historic reasons.
+    thedata(posNumber).ourSettings = ourSettings;
+    thedata(posNumber).p = p; % "ourSettings" and "p" are a bit redundant for historic reasons.
     save([myOutputDir 'summaryParametersPreliminary.mat'],'thedata','summaryParametersNames');
     
 disp('Done making summary preliminary analysis.');    

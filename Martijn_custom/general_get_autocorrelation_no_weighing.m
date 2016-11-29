@@ -1,4 +1,4 @@
-function [S, NDtau] = general_get_autocorrelation(y1,lambda,settings)
+function [S, NDtau] = general_get_autocorrelation(y1,lambda,ourSettings)
 % This function calculatates the autocorrelation for a vector with
 % y-values. It can weigh certain parts of this vector more or less, and 
 % will do so by weighing vector W. If w=ones(N_ttotal), this function will
@@ -13,8 +13,8 @@ function [S, NDtau] = general_get_autocorrelation(y1,lambda,settings)
 %    vector to calculate autocorr for
 % lambda 
 %    weighing factor, lambda=0 no weighing
-% settings
-%    additional options, settings=struct (ie empty) no settings
+% ourSettings
+%    additional options, ourSettings=struct (ie empty) no ourSettings
 %
 
 % Some general stuff
@@ -24,8 +24,8 @@ N=length(y1);
 % Importantly, use distances to mean ("mean removed y1").
 meanremoved_y1 = y1 - mean(y1); % 
 
-if isfield(settings,'maxtau')
-    maxtau = settings.maxtau;
+if isfield(ourSettings,'maxtau')
+    maxtau = ourSettings.maxtau;
 else
     maxtau=length(meanremoved_y1);
 end  

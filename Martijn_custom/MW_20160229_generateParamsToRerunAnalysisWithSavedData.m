@@ -17,25 +17,25 @@ MYFLUOR = {'g','',''}; % fluors used, cells correspond to p.fluor1, etc
 
 % for settings
 % ===
-settings.mypathname = ['F:\A_Tans1_step1_incoming_not_backed_up\' crossCorrData(CROSSCORRINDEX).dateExperiment];
-settings.myID       = crossCorrData(CROSSCORRINDEX).groupID;
-settings.myGroupID  = crossCorrData(CROSSCORRINDEX).groupID;
+ourSettings.mypathname = ['F:\A_Tans1_step1_incoming_not_backed_up\' crossCorrData(CROSSCORRINDEX).dateExperiment];
+ourSettings.myID       = crossCorrData(CROSSCORRINDEX).groupID;
+ourSettings.myGroupID  = crossCorrData(CROSSCORRINDEX).groupID;
 
 % PARAMETERS TO SAVE?
-settings.fitTimeCrosscorr = crossCorrData(CROSSCORRINDEX).params.fitTime;
-settings.fitTimeMu        = crossCorrData(CROSSCORRINDEX).params.fitTime;
+ourSettings.fitTimeCrosscorr = crossCorrData(CROSSCORRINDEX).params.fitTime;
+ourSettings.fitTimeMu        = crossCorrData(CROSSCORRINDEX).params.fitTime;
 
-settings.timeFieldName    = crossCorrData(CROSSCORRINDEX).concentrationFieldNames{1};     
-settings.fluorFieldName   = crossCorrData(CROSSCORRINDEX).concentrationFieldNames{2};
-settings.muFieldName      = crossCorrData(CROSSCORRINDEX).concentrationFieldNames{3};
+ourSettings.timeFieldName    = crossCorrData(CROSSCORRINDEX).concentrationFieldNames{1};     
+ourSettings.fluorFieldName   = crossCorrData(CROSSCORRINDEX).concentrationFieldNames{2};
+ourSettings.muFieldName      = crossCorrData(CROSSCORRINDEX).concentrationFieldNames{3};
 
-settings.timeFieldNameDerivative  = crossCorrData(CROSSCORRINDEX).rateFieldNames{1};
-settings.fluorDerivativeFieldName = crossCorrData(CROSSCORRINDEX).rateFieldNames{2};
-settings.muFieldNameDerivative    = crossCorrData(CROSSCORRINDEX).rateFieldNames{3};
+ourSettings.timeFieldNameDerivative  = crossCorrData(CROSSCORRINDEX).rateFieldNames{1};
+ourSettings.fluorDerivativeFieldName = crossCorrData(CROSSCORRINDEX).rateFieldNames{2};
+ourSettings.muFieldNameDerivative    = crossCorrData(CROSSCORRINDEX).rateFieldNames{3};
 
-settings.badSchnitzes = crossCorrData(CROSSCORRINDEX).concentrationBadSchnitzes
+ourSettings.badSchnitzes = crossCorrData(CROSSCORRINDEX).concentrationBadSchnitzes
 
-settings.alreadyRemovedInMatFile = 0;
+ourSettings.alreadyRemovedInMatFile = 0;
 
 % for p
 % ===
@@ -52,7 +52,7 @@ p.fluor1 = MYFLUOR{1};
 p.fluor2 = MYFLUOR{2};
 p.fluor3 = MYFLUOR{3};
 
-p.dateDir = [settings.mypathname '\'];
+p.dateDir = [ourSettings.mypathname '\'];
 
 % now rerun the analysis
 % ===
@@ -68,20 +68,20 @@ crossCorrData(CROSSCORRINDEX).growthautoData = ...
 crossCorrData(CROSSCORRINDEX).growthautoFieldNames = ...
     output.growthautoFieldNames;
 crossCorrData(CROSSCORRINDEX).growthautoBadSchnitzes = ...
-    settings.badSchnitzes;
+    ourSettings.badSchnitzes;
 
 crossCorrData(CROSSCORRINDEX).concentrationautoCorrData = ...
     output.concentrationautoCorrData;
 crossCorrData(CROSSCORRINDEX).concentrationautoFieldNames = ...
     output.concentrationautoFieldNames;
 crossCorrData(CROSSCORRINDEX).concentrationautoBadSchnitzes = ...
-    settings.badSchnitzes;
+    ourSettings.badSchnitzes;
 
 crossCorrData(CROSSCORRINDEX).rateautoCorrData = ...
     output.rateautoCorrData;
 crossCorrData(CROSSCORRINDEX).rateautoFieldNames = ...
     output.rateautoFieldNames;
 crossCorrData(CROSSCORRINDEX).rateautoBadSchnitzes = ...
-    settings.badSchnitzes;
+    ourSettings.badSchnitzes;
 
 disp(['Done updated crossCorrData ' num2str(CROSSCORRINDEX) '.']);
