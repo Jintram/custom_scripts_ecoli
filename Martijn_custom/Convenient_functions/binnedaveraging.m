@@ -1,5 +1,5 @@
 
-function [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins]=binnedaveraging(valuesx,valuesy,bins)
+function [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins]=binnedaveraging(valuesx,valuesy,edges)
 % function [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins]=binnedaveraging(valuesx,valuesy,bins)
 %
 % INPUTS
@@ -18,17 +18,17 @@ function [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins]=bi
 %% Organize data per bin
 
 % loop over different x,y lines in data
-binnedValues = cell(1,numel(bins)-1);
+binnedValues = cell(1,numel(edges)-1);
 for i = 1:numel(valuesx)
     % loop over bins
-    for binIdx = 1:(numel(bins)-1)
+    for binIdx = 1:(numel(edges)-1)
         
         % select data from x,y line that falls into that bin
         
         % find indices of the data in this bin
-        applicableIndices = find(valuesx{i}>bins(binIdx) & valuesx{i}<bins(binIdx+1));        
+        applicableIndices = find(valuesx{i}>edges(binIdx) & valuesx{i}<edges(binIdx+1));
         % store all this data in binnedValues
-        binnedValues{binIdx} = [binnedValues{binIdx} valuesy{i}(applicableIndices)];
+        binnedValues{binIdx} = [binnedValues{binIdx} valuesy{i}(applicableIndices)];        
     end
 end
 %% Then calculate averages, standard deviation, etc
@@ -59,8 +59,8 @@ for i = 1:numel(binnedValues)
 end
 
 % calculate bin centers
-binSizes = (bins(2:end)-bins(1:end-1));
-binCenters = bins(2:end)-binSizes./2;
+binSizes = (edges(2:end)-edges(1:end-1));
+binCenters = edges(2:end)-binSizes./2;
 
 % display warning if nan values were filtered out
 if nanFlag>0
