@@ -69,20 +69,20 @@ end
 if strcmp(WHATDATA, 'sulA')
     datasetsPaths = ...
         { ...
-        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos1crop\data\pos1crop-Schnitz.mat',...
-        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos2crop\data\pos2crop-Schnitz.mat',...
-        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos3crop\data\pos3crop-Schnitz.mat',...
-        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos4crop\data\pos4crop-Schnitz.mat',...
-        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-08_sulA_recovery_200uM_IPTG\pos7crop\data\pos7crop-Schnitz.mat'...
+        'G:\EXPERIMENTAL_DATA_2016\2016-04-08_sulA_recovery_200uM_IPTG\pos1crop\data\pos1crop-Schnitz.mat',...
+        'G:\EXPERIMENTAL_DATA_2016\2016-04-08_sulA_recovery_200uM_IPTG\pos2crop\data\pos2crop-Schnitz.mat',...
+        'G:\EXPERIMENTAL_DATA_2016\2016-04-08_sulA_recovery_200uM_IPTG\pos3crop\data\pos3crop-Schnitz.mat',...
+        'G:\EXPERIMENTAL_DATA_2016\2016-04-08_sulA_recovery_200uM_IPTG\pos4crop\data\pos4crop-Schnitz.mat',...
+        'G:\EXPERIMENTAL_DATA_2016\2016-04-08_sulA_recovery_200uM_IPTG\pos7crop\data\pos7crop-Schnitz.mat'...
         }
     switchTimes = [0 0 0 0 0];
     SPECIALCASE=0;
 elseif strcmp(WHATDATA, 'temperature')
     datasetsPaths = ...
         { ...
-        'G:\EXPERIMENTAL_DATA_2016\c_completely_analyzed\2016-03-23\pos4crop\data\pos4crop-Schnitz.mat',...
+        'G:\EXPERIMENTAL_DATA_2016\2016-03-23_temperatureRecovery\pos4crop\data\pos4crop-Schnitz.mat',...
             ... No fluor signal
-        ['G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos2crop\data\pos2crop-Schnitz.mat'],...
+        ['G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\data\pos2crop-Schnitz.mat'],...
             ... 
         }
     switchTimes = [450, 329];
@@ -96,12 +96,18 @@ elseif strcmp(WHATDATA, 'tetracycline')
     
     % Or from Rutger's files
     ONESTOTAKE=[1:5]; % ONESTOTAKE=[1:5]; ONESTOTAKE=[6:8]; ONESTOTAKE=[9:11];
+    if exist('SPECIALONESTOTAKE','var')
+        ONESTOTAKE=SPECIALONESTOTAKE;
+        %clear SPECIALONESTOTAKE;
+    end
     disp(['Note that certain datasets are selected (' num2str(ONESTOTAKE) ').']);
     switchTimes = ...
-        [1373.5417      587.66667      261.13333        741.325      252.38333      987.86667        1017.95         997.05      881.90833      1018.7083         1394.6];
-        % determined by 
+        ...[1373.5417      587.66667      261.13333        741.325      252.38333      987.86667        1017.95         997.05      881.90833      1018.7083         1394.6]; % based on 50% max growth rate
+        ...[1.2156    0.5064    0.0512    0.6032    0.0948    0.8585    0.7400    0.7954    0.7673    0.8160    1.2737]*1.0e+03; % based on 1/10th max. growth rate
+        [890.9800  404.7500         0  529.7600  0]; % based on calculated switch times
+        %warning('change this back!!');
+        % switchTimes determined by 
         % script20161222_branchplottingrutgerdata
-        % which calculates time at which growth rate is restored halfway
     switchTimes = switchTimes(ONESTOTAKE);
     datasetsPaths = ...
         { ...
@@ -169,6 +175,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','loadData'}))
     %listWhichCorrectedQuickDiv={};
     myCellLengthsPerSchnitz = {}; 
     myAddedLengthPerSchnitz = {};
+    usedSchnitzes = {};
 
     for dataSetIndex = 1:numel(datasetsPaths)
 
@@ -211,12 +218,13 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','loadData'}))
         myLengthNewborns{dataSetIndex} = []; myLengthParents{dataSetIndex} = []; myLengthSumNewborns{dataSetIndex}=[];
         myNewBornSchnitzNrs{dataSetIndex} = []; %myDaughter1schnitzNrs{dataSetIndex} = []; myDaughter2schnitzNrs{dataSetIndex} = [];
         myLifeTimeParents{dataSetIndex}=[];
+        usedSchnitzes{dataSetIndex} = zeros(1,numel(schnitzcells));
         %myLengthParentsCorrectedQuickDiv{dataSetIndex}=[];
         %myLifeTimeParentsCorrectedQuickDiv{dataSetIndex}=[];
         %myLengthSumNewbornsCorrectedQuickDiv{dataSetIndex}=[];
         %listWhichCorrectedQuickDiv{dataSetIndex}=[];
         
-        for binIdx = 1:numel(schnitzcells)
+        for binIdx = 1:numel(schnitzcells) % todo: rename iteration parameter; incorrect name --> schnitzIdx
 
             LengthParent = schnitzcells(binIdx).(LENGTHFIELD)(end);
 
@@ -224,6 +232,11 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','loadData'}))
             daughterSchnitz2 = schnitzcells(binIdx).E;            
             
             if ~any([daughterSchnitz1,daughterSchnitz2]==0)
+                
+                % create administration which schnitzes were used for this
+                % calculation (last/dead ends are pro'lly excluded)
+                usedSchnitzes{dataSetIndex}(daughterSchnitz1) = 1;
+                usedSchnitzes{dataSetIndex}(daughterSchnitz2) = 1;
                 
                 % Then calculate ratios
                 lengthDaughterSchnitz1 = schnitzcells(daughterSchnitz1).(LENGTHFIELD)(1);
@@ -773,7 +786,8 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','lifeTimeVsBirthLength2'}))
             'MarkerFaceColor',markerColor,'MarkerEdgeColor','none','MarkerFaceAlpha',1);
     set(hS, 'SizeData', markerWidth^2);
 
-    errorbar(binCentersDynData,meanValuesForBinsDynData,stdValuesForBinsDynData,'ok','LineWidth',3,'MarkerFaceColor','k');
+    pointsWithMultipleDataIndices = stdValuesForBinsDynData>0;
+    errorbar(binCentersDynData(pointsWithMultipleDataIndices),meanValuesForBinsDynData(pointsWithMultipleDataIndices),stdValuesForBinsDynData(pointsWithMultipleDataIndices),'ok','LineWidth',3,'MarkerFaceColor','k');
 
     MW_makeplotlookbetter(20);
     xlabel('Birth size (\mum)');
@@ -879,7 +893,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','adderLengthLifetime'}))
     
     %%
     hFig2D=figure(103); clf; hold on;
-
+   
     markerColor=[.5 .5 .5];
 
     alldatax=[];alldatay=[];
@@ -900,7 +914,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','adderLengthLifetime'}))
 
         l=scatter(  myCellLengthsPerSchnitz{datasetIdx}(bornAfterSwitchIdxs),...
                     myAddedLengthPerSchnitz{datasetIdx}(bornAfterSwitchIdxs),...
-                    [],markerColors,'filled','MarkerFaceAlpha',.5)
+                    [],markerColors,'filled','MarkerFaceAlpha',.5);
 
         %l=scatter(  myCellLengthsPerSchnitz{datasetIdx}(bornAfterSwitchIdxs),...
         %    myAddedLengthPerSchnitz{datasetIdx}(bornAfterSwitchIdxs));
@@ -910,7 +924,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','adderLengthLifetime'}))
         alldatay = [alldatay myAddedLengthPerSchnitz{datasetIdx}(bornAfterSwitchIdxs)];
         
     end
-
+    
     [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins]=binnedaveraging({alldatax},{alldatay},linspace(0,20,10));
     errorbar(binCenters,meanValuesForBins,stdValuesForBins,'ok','LineWidth',2);
     
@@ -964,6 +978,8 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','rutgerPlotFinal'}))
     % now covered by a later figure (with color coding) and has been commented
     % out here..
 
+    ALPHA = .15; %.15;
+    
     MINUTELIFETIMETRESHOLD=20;
     if ~exist('PLOTHELPINGLINES','var')
         PLOTHELPINGLINES=1;
@@ -995,6 +1011,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','rutgerPlotFinal'}))
             % determine color if lifetime known
             if isnan(currentTime) || ~COLORCODEMARKERS
                 colorForThisDataPoint = [.7 .7 .7];
+                colorForThisDataPoint = [.2 .2 .2];
             else    
                 colorForThisDataPoint = ...
                     timeColormap(...
@@ -1007,14 +1024,14 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','rutgerPlotFinal'}))
             scatter(myLengthSumNewborns{dataSetIndex}(binIdx),Ratios{dataSetIndex}(binIdx),12^2,'filled',...
                     'MarkerEdgeColor',colorForThisDataPoint,...
                     'MarkerFaceColor',colorForThisDataPoint,...
-                    'MarkerFaceAlpha',0.15,...
-                    'MarkerEdgeAlpha',0.15);
+                    'MarkerFaceAlpha',ALPHA,...
+                    'MarkerEdgeAlpha',ALPHA);
             if USESYMMETRY
                 scatter(myLengthSumNewborns{dataSetIndex}(binIdx),1-Ratios{dataSetIndex}(binIdx),12^2,'filled',...
                     'MarkerEdgeColor',colorForThisDataPoint,...
                     'MarkerFaceColor',colorForThisDataPoint,...
-                    'MarkerFaceAlpha',0.15,...
-                    'MarkerEdgeAlpha',0.15);
+                    'MarkerFaceAlpha',ALPHA,...
+                    'MarkerEdgeAlpha',ALPHA);
             end
 
 
@@ -1110,6 +1127,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','rutgerPlotFinal'}))
     end
     
     figure1DHandle = h1;
+    hSupp5 = h1;
     
 end
 %% Histogram of lifetimes
@@ -1196,6 +1214,16 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','rutgerPlotBlackWhiteTimecoding'}))
 
     end
 
+    % plot helping lines at 1/2n
+    if PLOTHELPINGLINES
+        N=5;
+        for windowIndex=1:(numel(WINDOWBORDERS)-1)
+            for j = 1:2:(windowIndex*2-1)
+                plot([WINDOWBORDERS(windowIndex), WINDOWBORDERS(windowIndex+1)], [(j)/(2*windowIndex) (j)/(2*windowIndex)],'-','Color',BARCOLORS(windowIndex,:),'LineWidth',8)
+            end
+        end
+    end 
+    
     xlabel('Summed daughter length [um]');
     ylabel('Relative division location (S)');
 
@@ -1225,6 +1253,8 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','rutgerPlotBlackWhiteTimecoding'}))
         saveas(h1, [PLOTSAVEDIR 'divPlot\' WHATDATA  '_newRutgerPlot' suffix '.png']);
     end
 
+    hSupp5 = h1;
+    
 end
 %% Size time evolution plot
 if any(strcmp(RUNSECTIONSFILADIV,{'all','sizeTraces'}))
@@ -1235,11 +1265,11 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','sizeTraces'}))
     LINEWIDTH=6;
     FONTSIZE=20;
     SUBDIR = 'trace_dynamics\';
-    NRSTARTSCHNITZES = 1;
+    STARTSCHNITZES = 1;
     COLORDOTS = 0; % 1 or 0
     MAXTRACESHIGHLIGHTED=4;
 
-    traceColors = linspecer(NRSTARTSCHNITZES*numel(datasetsPaths));
+    traceColors = linspecer(numel(STARTSCHNITZES)*numel(datasetsPaths));
 
     myTraces={}; myDivisions = {};
     allTimeScatterData={}; allLengthScatterData={};
@@ -1279,7 +1309,14 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','sizeTraces'}))
         endOfLineages{dataSetIndex}= [theEndTimes; theEndLengths];
 
         % Now also make example traces
-        [myCurrentTraces, myCurrentDivisions] = MW_gettracefromschnitzcells(schnitzcells,NRSTARTSCHNITZES,TIMEFIELD,LENGTHFIELD,'longest');
+        if strcmp(WHATDATA,'temperature')
+            % [myCurrentTraces, myCurrentDivisions,randomSelectedTracesIdxs] = MW_gettracefromschnitzcells(schnitzcells,STARTSCHNITZES,TIMEFIELD,LENGTHFIELD,'random'); 
+            % randomSelectedTracesIdxs
+            selectedTraces = {[2     5    11    19    82    89   166   241],[6     7    76]};
+            [myCurrentTraces, myCurrentDivisions,traceIdxs] = MW_gettracefromschnitzcells(schnitzcells,STARTSCHNITZES,TIMEFIELD,LENGTHFIELD,selectedTraces{dataSetIndex});
+        else
+            [myCurrentTraces, myCurrentDivisions] = MW_gettracefromschnitzcells(schnitzcells,STARTSCHNITZES,TIMEFIELD,LENGTHFIELD,'longest');
+        end
         myTraces{dataSetIndex} = myCurrentTraces;
         myDivisions{dataSetIndex} = myCurrentDivisions;                    
 
@@ -1301,7 +1338,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','sizeTraces'}))
         schnitzcells=S_all_shifted{dataSetIndex};
     end
 
-    [myShortTrace, myShortTraceDivisions] = MW_gettracefromschnitzcells(schnitzcells,NRSTARTSCHNITZES,TIMEFIELD,LENGTHFIELD,'shortest');
+    [myShortTrace, myShortTraceDivisions] = MW_gettracefromschnitzcells(schnitzcells,STARTSCHNITZES,TIMEFIELD,LENGTHFIELD,'shortest');
     % now plot traces that were made
     % following short schnitzes
     startSchnitzIdx=1;
@@ -1310,7 +1347,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','sizeTraces'}))
     % following long schnitzes
     counter=0;
     for dataSetIndex = 1:min(numel(datasetsPaths),MAXTRACESHIGHLIGHTED)
-    for startSchnitzIdx = 1:NRSTARTSCHNITZES
+    for startSchnitzIdx = 1:STARTSCHNITZES
         counter=counter+1;
         plot(myTraces{dataSetIndex}{startSchnitzIdx}(:,1)-switchTimes(dataSetIndex),myTraces{dataSetIndex}{startSchnitzIdx}(:,2),'Color',traceColors(counter,:),'LineWidth',LINEWIDTH);
         plot(myDivisions{dataSetIndex}{startSchnitzIdx}(:,1)-switchTimes(dataSetIndex),myDivisions{dataSetIndex}{startSchnitzIdx}(:,2),'o','Color',traceColors(counter,:),'MarkerSize',MARKERSIZE,'MarkerFaceColor',traceColors(counter,:));
@@ -1350,6 +1387,8 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','sizeTraces'}))
     
     hFig2AC = hSizeTime;
     
+    % legend('1','2','3','4','5')
+    
 end
 %% 2nd plot for inset
 % ========
@@ -1369,7 +1408,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','sizeTraces'})) % part 2 for inset
     % now plot traces that were made
     counter=0;
     for dataSetIndex = 1:numel(datasetsPaths)
-    for startSchnitzIdx = 1:NRSTARTSCHNITZES    
+    for startSchnitzIdx = 1:STARTSCHNITZES    
         counter=counter+1;
         plot(myTraces{dataSetIndex}{startSchnitzIdx}(:,1),myTraces{dataSetIndex}{startSchnitzIdx}(:,2),'Color',traceColors(counter,:),'LineWidth',6);
         plot(myDivisions{dataSetIndex}{startSchnitzIdx}(:,1),myDivisions{dataSetIndex}{startSchnitzIdx}(:,2),'o','Color',traceColors(counter,:),'MarkerSize',INSETMARKERWIDTH,'MarkerFaceColor',traceColors(counter,:));
@@ -1454,6 +1493,132 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','birthSizeLifeTimeRingNorm'}))
 
 end    
     
+%%
+if any(strcmp(RUNSECTIONSFILADIV,{'all','SlocationAgainstTime'}))
+
+    NrDataSets = numel(datasetsPaths);
+    
+    markerColor=[.5 .5 .5];
+    markerWidth = 10;
+    ALPHA = .3;
+    myColors = linspecer(NrDataSets);
+
+    hSvsT=figure; hold on;
+
+    allTimes=[]; % just for calculating xlim
+    for dataSetIndx = 1:NrDataSets
+
+        markerColor=myColors(dataSetIndx,:);
+
+        tData = birthTimes{dataSetIndx}(find(usedSchnitzes{dataSetIndx}))-switchTimes(dataSetIndx);
+        sData = Ratios{dataSetIndx};
+
+        hS=scatter(tData,sData,'filled',...
+                'MarkerFaceColor',markerColor,'MarkerEdgeColor','none','MarkerFaceAlpha',1);
+        set(hS, 'SizeData', markerWidth^2,...
+                'MarkerFaceAlpha',ALPHA,...
+                'MarkerEdgeAlpha',ALPHA);
+
+        allTimes = [allTimes tData];
+    end
+
+
+    xlabel('Time [minutes]');
+    ylabel('Relative division location, S');
+    xlim(  [0,max(allTimes)]  );
+    MW_makeplotlookbetter(20);
+
+end
+
+%% Statistics on newborn cells
+if any(strcmp(RUNSECTIONSFILADIV,{'all','newbornStats'}))
+
+    allLengths = [myLengthNewborns{:}];
+    
+    hNBS = figure; clf; hold on;    
+    
+    [counts, edges] = histcounts(allLengths,100)
+    dx=edges(2)-edges(1);
+    centers = edges(2:end)-(dx)/2;
+
+    pdf = counts./sum(counts).*dx;
+    
+    plot(centers, pdf,'LineWidth',3)
+        
+    
+    MW_makeplotlookbetter(20);
+    xlabel('Size of newborn cells (\mum)');
+    ylabel('Probability');
+
+
+    %
+    %===
+    
+    under5 = allLengths<5;
+    [countsUnder5, edgesUnder5] = histcounts(allLengths(under5),200)
+    dxU5 = edgesUnder5(2)-edgesUnder5(1);
+    centersUnder5 = edgesUnder5(2:end)-(dxU5)/2;
+
+    pdfUnder5 = countsUnder5./sum(countsUnder5).*dxU5;
+    
+    hNBSInset = figure; clf; hold on;% inset
+    plot(centersUnder5,pdfUnder5,'LineWidth',3);
+    
+    set(gca,'YTick',[]); % note the counts are different w. main plot because the binsizes are different
+    
+    MW_makeplotlookbetter(20);
+    xlim([1,3]);
+
+    ymax = max(pdfUnder5)*1.1;
+    ylim([0,ymax]);
+    plot([1.78 1.78],[0,ymax],'LineWidth',3);
+    
+    disp(['Datapoints in distribution, N=' num2str(sum(counts))]);
+    
+end
+
+
+%% Division preference for location?
+if any(strcmp(RUNSECTIONSFILADIV,{'all','locationPreference'}))
+
+    regimeNr = 3;
+    regime = WINDOWBORDERS(regimeNr:regimeNr+1)
+    allParentLengths = [myLengthParents{:}];
+    allRatios = [Ratios{:}];
+
+    selectedDivisionIndices = allParentLengths>regime(1) & allParentLengths<regime(2);
+    selectedRatios = allRatios(selectedDivisionIndices);
+    
+    hlocPref = figure; clf; hold on; [n,centers]=hist(selectedRatios,50); bar(centers,n,'FaceColor',linspecer(1),'EdgeColor','k');
+    
+    %xlim([0,0.5]);
+    myylim=max(n)*1.1;
+    plot([.33 .33],[0,myylim],':k','LineWidth',3);
+    plot([.66 .66],[0,myylim],':k','LineWidth',3);
+    ylim([0,myylim])
+
+    site1=[0,0.33];
+    site2=[0.33,0.66];
+    site3=[0.66,1];
+    indicesSite1 = selectedRatios<site1(2);
+    indicesSite2 = selectedRatios>site2(1) & selectedRatios<site2(2);
+    indicesSite3 = selectedRatios>site3(2);
+    DivsInSite1 = selectedRatios(indicesSite1);
+    DivsInSite2 = selectedRatios(indicesSite2);
+    DivsInSite3 = selectedRatios(indicesSite3);
+    n1=numel(DivsInSite1);
+    n2=numel(DivsInSite2);
+    n3=numel(DivsInSite3);
+
+    disp(['Stats this regime: ' num2str(n1) ' cells divide <.33 and ' num2str(n2) ' divide between .33-..66.']);
+    
+    plot([1/6,0.5,5/6],[0 0 0],'^k','MarkerFaceColor','k','MarkerSize',14);
+
+    xlabel('Relative division location, S');
+    ylabel('Count');
+    MW_makeplotlookbetter(20);
+
+end
 
 %% grandmother plot
 %{

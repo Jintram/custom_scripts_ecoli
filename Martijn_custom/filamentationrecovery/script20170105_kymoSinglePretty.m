@@ -4,8 +4,8 @@ OUTLINECOLOR = [48, 197, 221]/255;
 
 %% Load data
 
-load('G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos2crop\analysis\straightenedCells\2016-04-07pos2crop_straightFluorData.mat')
-load('G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos2crop\data\pos2crop-Schnitz.mat');
+load('G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\analysis\straightenedCells\2016-04-07pos2crop_straightFluorData.mat')
+load('G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\data\pos2crop-Schnitz.mat');
 
 micronsPerPixel = 0.0431; % see G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos2crop_parameters.mat, p struct
 
@@ -32,7 +32,7 @@ end
 
 %% Create kymograph of desired schnitz
 if ~exist('SCHNITZIDX','var')
-    SCHNITZIDX=11;
+    SCHNITZIDX=11; % SCHNITZIDX=11;
 end
 
 % for ring timing plots
@@ -142,7 +142,9 @@ xlabel('Time (min)');
 %ylabel(['FtsA-YFP signal' 10 'along cellular axis (a.u.)']);
 ylabel('Cellular axis (\mum)')
 
-MW_makeplotlookbetter(10);
+ylim([0,size(littleOutputMatrix,2)]) % not sure why needed, but addresses issue
+
+MW_makeplotlookbetter(20);
 
 %h.PaperUnits = 'centimeters';
 %h.PaperPosition = [0 0 13.1 6.6];

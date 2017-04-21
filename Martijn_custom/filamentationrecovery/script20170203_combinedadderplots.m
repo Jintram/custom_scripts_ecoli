@@ -1,7 +1,7 @@
 
 % Set up
 clear combinedDataAdder;
-YLIMbirthlife=[0,200];
+YLIMbirthlife=[0,150];
 
 %% First collect two other conditions
 

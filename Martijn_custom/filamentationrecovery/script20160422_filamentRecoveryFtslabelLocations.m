@@ -15,18 +15,47 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','loadData'}))
 
     % stored skeleton analysis
     skeletonDataPaths={...
-        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos2crop\data\pos2crop-skeletonData.mat',...
-        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos3crop\data\pos3crop-skeletonData.mat'};
+        'G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\data\pos2crop-skeletonData.mat',...
+        'G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos3crop\data\pos3crop-skeletonData.mat'};
+        % per frame the skeleton
 
     % stored fluorescence data
     fluorDataPaths={...
-        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos2crop\analysis\straightenedCells\2016-04-07pos2crop_straightFluorData.mat',...
-        'G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos3crop\analysis\straightenedCells\2016-04-07pos3crop_straightFluorData.mat'};
+        'G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\analysis\straightenedCells\2016-04-07pos2crop_straightFluorData.mat',...
+        'G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos3crop\analysis\straightenedCells\2016-04-07pos3crop_straightFluorData.mat'};
         %(note that kymograph was chosen from G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos2crop), first 20 frames
         %kymographs are made with script20160610_PetraFtsLocations    
 
+    schnitzDataPaths={
+        'G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\data\pos2crop-Schnitz.mat',...
+        'G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos3crop\data\pos3crop-Schnitz.mat'};
 end    
     
+%% convert schnitzcells data to ages per frame per cell
+if any(strcmp(RUNSECTIONSFILEFTS,{'all','getAges'}))
+
+    allAgesPerFrame = {};
+    for datasetIndex = 1:numel(schnitzDataPaths)
+
+        load(schnitzDataPaths{datasetIndex});
+        allAgesPerFrame{datasetIndex} = {};
+        for schnitzIdx = 1:numel(schnitzcells)
+            for frameIdx = 1:numel(schnitzcells(schnitzIdx).frame_nrs)
+
+                % get frame nr and cell nr.
+                currentFrameNr = schnitzcells(schnitzIdx).frame_nrs(frameIdx); 
+                currentCellNo  = schnitzcells(schnitzIdx).cellno(frameIdx);
+
+                % store age of cell accordingly
+                allAgesPerFrame{datasetIndex}{currentFrameNr}(currentCellNo) = schnitzcells(schnitzIdx).time(frameIdx) - schnitzcells(schnitzIdx).birthTime;
+
+            end
+        end
+    
+    end
+        
+end
+
 %%
 
 if any(strcmp(RUNSECTIONSFILEFTS,{'all','analyzeData'}))
@@ -36,6 +65,7 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','analyzeData'}))
     figure(101); clf;
     plotcolors = 'rrr';
     scatterX={}; scatterY={}; 
+    lifeTimesScatter = {};
 
     PLOTHELPINGLINES=1;
 
@@ -66,6 +96,7 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','analyzeData'}))
         pileofLengthsOfBacteriaInMicrons=[];
         correspondingLengthsToLocations=[];
         correspondingLengthsToLocationsPx=[];
+        correspondingLifeTimesToLocations=[];
         for framenr=1:numel(allpeakXMicrons)
 
             if exist('allpeakY','var') % oops, have to resolve this later.. double param naming.. TODO
@@ -110,7 +141,10 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','analyzeData'}))
                     % same w. pixels
                     duplicatedLengthsPx = ones(1,numel(xpeaksFrame{cellno}))*lengthsFramePx(cellno);
                     correspondingLengthsToLocationsPx = [correspondingLengthsToLocationsPx duplicatedLengthsPx];
-
+                    % same w. lifetime cell
+                    duplicatedLifetimes = ones(1,numel(xpeaksFrame{cellno}))*allAgesPerFrame{datasetIndex}{framenr}(cellno);
+                    correspondingLifeTimesToLocations = [correspondingLifeTimesToLocations duplicatedLifetimes];
+                    
                     % select peaks that are >200
                     selectionVector = [selectionVector fluorPeaksThisCell>PEAKTRESHOLD];
 
@@ -126,6 +160,7 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','analyzeData'}))
         indicesToSelect = find(selectionVector);
         scatterX{datasetIndex}=correspondingLengthsToLocations(indicesToSelect);
         scatterY{datasetIndex}=pileofXmicron(indicesToSelect)./correspondingLengthsToLocations(indicesToSelect);
+        lifeTimesScatter{datasetIndex} = correspondingLifeTimesToLocations(indicesToSelect);
         plot(scatterX{datasetIndex},scatterY{datasetIndex},'x','Color',plotcolors(datasetIndex))
 
         % and in Pixels
@@ -144,13 +179,19 @@ end
 %% Sanity check
 if any(strcmp(RUNSECTIONSFILEFTS,{'all','LengthVsDivisionLocation'}))
 
-    MICRONSPERPIXEL=0.0431;
+    for datasetIndex = 1:numel(skeletonDataPaths)
+    
+        MICRONSPERPIXEL=0.0431;
 
-    figure(1); hold on;
-    plot(scatterXPx{datasetIndex}*MICRONSPERPIXEL,scatterYPx{datasetIndex},'.b')
+        figure(1); hold on;
+        plot(scatterXPx{datasetIndex}*MICRONSPERPIXEL,scatterYPx{datasetIndex},'.b')
 
+    end
+    clear datasetIndex
     %% figure 2, make a scatter plot (ratio S vs length L)
 
+    MARKERCOLOR = [.5 .5 .5];
+    ALPHA = .10;
     NRCONTOURLINES=0;
     MAKEUSEOFSYMMETRY=1;
     COLOR='b';
@@ -163,15 +204,48 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','LengthVsDivisionLocation'}))
     else
         data = [[[scatterX{:}] [scatterX{:}]]; [[scatterY{:}], 1-[scatterY{:}]]]'; % symmetry data
     end
+       
+    if ~exist('PAINTWITHTIME','var')
+        scatter([scatterX{:}],[scatterY{:}],12^2,'filled','MarkerFaceColor',MARKERCOLOR,'MarkerFaceAlpha',ALPHA);
+        %scatter([scatterX{:}],[scatterY{:}],75,'filled','MarkerFaceColor',[.7 .7 .7]);%,'MarkerFaceAlpha',3/8);
+        if MAKEUSEOFSYMMETRY
+            scatter([scatterX{:}],1-[scatterY{:}],12^2,'filled','MarkerFaceColor',MARKERCOLOR,'MarkerFaceAlpha',ALPHA); % plot symmetric
+            %scatter([scatterX{:}],1-[scatterY{:}],75,'filled','MarkerFaceColor',[.7 .7 .7]); % plot symmetric
+        end
+    else
+        % calcalate ages matching colors
+        % Note that a load of data comes from cells that are growing but not
+        % dividing, so the age of these cells is meaningless; rearrangements
+        % are due to growth..
+        allTimeDataScatter = [lifeTimesScatter{:}];
+        maxAllTimeDataScatter=max(allTimeDataScatter);
+        allTimeDataScatterNormalized = allTimeDataScatter./maxAllTimeDataScatter;
+        myTimecolormap = [makeColorMap([1 0 0],[0 1 0],[0 0 1]); repmat([0 0 1],200,1)];
+        allTimesColors = myTimecolormap(int64(allTimeDataScatterNormalized*299)+1,:);
 
 
+        scatter([scatterX{:}],[scatterY{:}],12^2,allTimesColors);%'filled','MarkerFaceColor',[.7 .7 .7],'MarkerFaceAlpha',0.15);
+        colormap(myTimecolormap);  
 
-    scatter([scatterX{:}],[scatterY{:}],12^2,'filled','MarkerFaceColor',[.7 .7 .7],'MarkerFaceAlpha',0.15);
-    %scatter([scatterX{:}],[scatterY{:}],75,'filled','MarkerFaceColor',[.7 .7 .7]);%,'MarkerFaceAlpha',3/8);
-    if MAKEUSEOFSYMMETRY
-        scatter([scatterX{:}],1-[scatterY{:}],12^2,'filled','MarkerFaceColor',[.7 .7 .7],'MarkerFaceAlpha',0.15); % plot symmetric
-        %scatter([scatterX{:}],1-[scatterY{:}],75,'filled','MarkerFaceColor',[.7 .7 .7]); % plot symmetric
+        hcb=colorbar;
+
+        inputSettings.rangeIn = [0,1];
+        inputSettings.desiredSpacing = 50;
+        inputSettings.rangeOut = [0,maxAllTimeDataScatter];
+        [tickLocationsOldMetric, correspondingLabels] = labelremapping(inputSettings);
+
+        set(hcb,'YTick',tickLocationsOldMetric,'YTickLabel',correspondingLabels)    
+        
+        %{
+        % Plot cells of certain age (young) -- comment out above scatter to use
+        youngCellIndices = allTimeDataScatter<90;
+        xData=[scatterX{:}];
+        yData=[scatterY{:}];
+        scatter(xData(youngCellIndices),yData(youngCellIndices),12^2,allTimesColors(youngCellIndices));%'filled','MarkerFaceColor',[.7 .7 .7],'MarkerFaceAlpha',0.15);
+        scatter(xData(youngCellIndices),1-yData(youngCellIndices),12^2,allTimesColors(youngCellIndices));%'filled','MarkerFaceColor',[.7 .7 .7],'MarkerFaceAlpha',0.15);
+        %}
     end
+    %}
 
     %{
     plot([scatterX{:}],[scatterY{:}],['.' COLOR],'MarkerSize',7);
