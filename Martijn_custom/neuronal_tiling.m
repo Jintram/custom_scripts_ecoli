@@ -2,6 +2,8 @@
 
 %% This creates a set of 200x200 images based on a microscope dataset
 
+OUTPUTFOLDER = 'H:\2017_neural_training\set1\';
+
 theDataPath      = 'H:\EXPERIMENTAL_DATA_2017\2017-01-06_asc990_aKG_lac\';
 posName          = 'pos3crop';
 
@@ -13,7 +15,7 @@ dirContents = dir(theImagePath);
 
 filesOfInterest = find(cellfun(@(x) ~isempty(x), strfind({dirContents.name},'pos3crop-p-2-')));
 
-frameImageName = dirContents(filesOfInterest(1)).name;
+frameImageName = dirContents(filesOfInterest(321)).name;
 frameImagePath = [theImagePath frameImageName];
 myImg = imread(frameImagePath);
 
@@ -61,7 +63,7 @@ mySegmentation2(cellGradient>0)=2;
 
 figure; imshow(mySegmentation2,[]);
 
-%%
+%% Determine coordinates of tiles
 figure(1); imshow(myImg,[]);
 figure(2); imshow(mySegmentation,[]);
 
@@ -90,15 +92,22 @@ end
 
 %%
 
+% go over tiles and show them
 for tileIdx = 1:numel(tileCoordinateSetX)
     tileIdx
     
-    figure(3); cla; imshow(currentTile,[]);
-    currentTile = myImg(tileCoordinateSetY{tileIdx}(1):tileCoordinateSetY{tileIdx}(2),tileCoordinateSetX{tileIdx}(1):tileCoordinateSetX{tileIdx}(2));
-
-   
-        
+    currentTileImg = myImg(tileCoordinateSetY{tileIdx}(1):tileCoordinateSetY{tileIdx}(2),tileCoordinateSetX{tileIdx}(1):tileCoordinateSetX{tileIdx}(2));
+    currentTileSeg = mySegmentation2(tileCoordinateSetY{tileIdx}(1):tileCoordinateSetY{tileIdx}(2),tileCoordinateSetX{tileIdx}(1):tileCoordinateSetX{tileIdx}(2));
     
-    pause(.1)
+    figure(3); cla; imshow(currentTileImg,[]);
+    figure(4); cla; imshow(currentTileSeg,[]);
+ 
+    saveas(3,[OUTPUTFOLDER 'img_' sprintf('%04d', tileIdx) '.tif']); % accomodate more datasets later
+    saveas(4,[OUTPUTFOLDER 'seg_' sprintf('%04d', tileIdx) '.tif']);
+    
+    %pause(.1)
 end
 
+close(3); close(4);
+
+% OUTPUTFOLDER

@@ -29,7 +29,7 @@ if ~isfield(inputSettings,'desiredSpacing')
     error('Please set inputSettings.desiredSpacing.');
 end
 if ~isfield(inputSettings,'desiredDecimalsTicks')
-    desiredDecimalsTicks=1;
+    inputSettings.desiredDecimalsTicks=1;
 end
 
 if isfield(inputSettings,'rangeOut')

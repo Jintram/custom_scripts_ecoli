@@ -13,8 +13,8 @@ pmf = @(k,n,p) nchoosek(n,k) .* p.^k .* (1-p).^(n-k);
 pmf_arrayfun = @(k,n,p) arrayfun(@(k) pmf(k,n,p), k);
 
 
-k=[1:288];
-n=288;
+n=51;% 288;
+k=[1:n];
 p=0.66;
 pmf_values = pmf_arrayfun(k,n,p);
 
