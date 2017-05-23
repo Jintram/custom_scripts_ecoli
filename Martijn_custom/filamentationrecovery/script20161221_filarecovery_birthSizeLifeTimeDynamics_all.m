@@ -21,6 +21,8 @@ combinedDynamicsData.(WHATDATA).VarByMeanForBinsDynData = stdValuesForBinsDynDat
 combinedDynamicsData.(WHATDATA).selectedXdata = selectedXdata; % selected for after switchtime
 combinedDynamicsData.(WHATDATA).selectedYdata = selectedYdata;
 
+% figure;plot(combinedDynamicsData.(WHATDATA).binCentersDynData,combinedDynamicsData.(WHATDATA).meanValuesForBinsDynData.*combinedDynamicsData.(WHATDATA).binCentersDynData,'o'); ylim([0,max(combinedDynamicsData.(WHATDATA).meanValuesForBinsDynData.*combinedDynamicsData.(WHATDATA).binCentersDynData)*1.2]);
+
 %% dataset II
 WHATDATA = 'temperature';
 LENGTHFIELD = 'length_skeleton';

@@ -6,7 +6,7 @@ function [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins]=bi
 % - valuesy{i} gives a series of y values
 % - valuesx{i} gives the corresponding x values
 %     numel(valuesy) should equal numle(valuesx)
-% - bins defines the bins
+% - edges defines the edges of the bins
 %
 % OUTPUTS
 % - meanValuesForBins:  mean value for all datapoints in that bin

@@ -70,7 +70,8 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','analyzeData'}))
     PLOTHELPINGLINES=1;
 
     %% Collect all peak locations
-
+    peakCountsPerCell = [];
+    lengthsPerCell    = [];
     for datasetIndex = 1:numel(skeletonDataPaths)
 
         %%
@@ -146,7 +147,12 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','analyzeData'}))
                     correspondingLifeTimesToLocations = [correspondingLifeTimesToLocations duplicatedLifetimes];
                     
                     % select peaks that are >200
-                    selectionVector = [selectionVector fluorPeaksThisCell>PEAKTRESHOLD];
+                    peaksToSelect = fluorPeaksThisCell>PEAKTRESHOLD;
+                    selectionVector = [selectionVector peaksToSelect];
+                    
+                    % create additional stats 
+                    peakCountsPerCell = [peakCountsPerCell sum(peaksToSelect)];
+                    lengthsPerCell    = [lengthsPerCell lengthsFrame(cellno)];
 
                 end
                 %selectedataXmicron = ...
@@ -322,7 +328,32 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','LengthVsDivisionLocation'}))
     hFig3c = h;
     
 end
+   
+%% Create plot that shows nr of rings with length for temp. data
+error('Remove this section.');
+if any(strcmp(RUNSECTIONSFILEFTS,{'all','ringCountVsLength'}))
+    hFigS7B = figure; 
+
+    dx = 2;
+    ringBinedges = 0:dx:40; % edges
+    ringBins = ringBinedges(2:end)-dx/2; % centers
+    ringCounts=histcounts([scatterX{:}],ringBinedges); 
+    plot(ringBins,ringCounts,'o-','LineWidth',2); 
     
+    dx = 2;
+    ringBinedges = 0:dx:40; % edges
+    ringBins = ringBinedges(2:end)-dx/2; % centers
+    ringCounts=histcounts([scatterX{:}],ringBinedges); 
+    plot(ringBins,ringCounts,'o-','LineWidth',2); 
+    
+    xlabel('Cell length');
+    ylabel('Ring count');
+    MW_makeplotlookbetter(20);
+    
+    xlim([0,40]); 
+    ylim([0,max(ringCounts)*1.2]);
+end
+
 %% Create overlay plot if division ratios are avaible
 
 if any(strcmp(RUNSECTIONSFILEFTS,{'all','divisionLocations'}))

@@ -1492,7 +1492,133 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','birthSizeLifeTimeRingNorm'}))
     MW_makeplotlookbetter(20);
 
 end    
+
+%% now re-normalize temperature interdivision data by actual ring count
+if any(strcmp(RUNSECTIONSFILADIV,{'all','interdivVsLengthNormalizedWithRingCount'}))
+
+    % determine binning for these plots
+    ringBinedges = [0:2:40];
     
+    % we need also the distribution of lengths
+    
+    % this data comes from script20161221_filarecovery_birthSizeLifeTimeDynamics_all.m
+    dataX=combinedDynamicsData.(WHATDATA).selectedXdata;
+    dataY=combinedDynamicsData.(WHATDATA).selectedYdata;                  
+    
+    % the following data (peakCountsPerCell, lengthsPerCell) is collected  in 
+    % script20160422_filamentRecoveryFtslabelLocations analyzeData
+    ringPdf   = histcounts(peakCountsPerCell,ringBinedges);
+    lengthPdf = histcounts(lengthsPerCell,ringBinedges);
+    ringCountsPerBacterium = ringCounts./lengthPdf;
+    
+    % Create a figure that shows the distribution of rings
+    hFig7A = figure; clf; hold on;
+    
+    [meanValuesForBinsDynData, binCentersDynData,stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({lengthsPerCell},{peakCountsPerCell},ringBinedges);
+    plot(binCentersDynData,meanValuesForBinsDynData,'ro','MarkerSize',15);
+    
+    scatter(lengthsPerCell,peakCountsPerCell,7^2,[.7 .7 .7],'MarkerFaceColor',[.7 .7 .7]);
+    plot(ringBins,ringCountsPerBacterium,'ok','MarkerFaceColor','k','MarkerSize',10);
+    xlabel('Length of cell'); ylabel('Number of rings');
+    MW_makeplotlookbetter(20);
+    
+    % create matching normalization array
+    %ringCountsNormalized = ringCountsPerBacterium./max(ringCountsPerBacterium); has inf value unfortunately
+    normalizationArray = NaN(size(dataX));
+    myBinColors = linspecer(numel(ringBins));
+    fillColorArray = NaN(size(dataX));
+    for idx = 1:numel(dataX)
+        % find which bin it belongs to 
+        delta=abs(ringBins-dataX(idx));
+        correspondingBinIdx=find(min(delta)==delta);
+        correspondingRingCount = ringCountsPerBacterium(correspondingBinIdx);
+
+        normalizationArray(idx) = correspondingRingCount;
+        % cosmetic to show which bin was used
+        fillColorArray(idx) = myBinColors(correspondingBinIdx);
+    end
+
+    normalizedDataY = dataY.*normalizationArray;
+
+    hFigS7C = figure; clf; hold on;
+    scatter(dataX,normalizedDataY,7^2,fillColorArray);
+    xlim([0,40]); 
+    ylim([0,max(normalizedDataY)]); 
+    xlabel('Length of cell (\mum)');
+    ylabel('Interdivision time * ring count');
+    MW_makeplotlookbetter(20);
+
+    [meanValuesForBinsDynData, binCentersDynData,stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({dataX},{normalizedDataY},ringBinedges);
+    errorbar(binCentersDynData,meanValuesForBinsDynData,stdValuesForBinsDynData,'ok-','LineWidth',3,'MarkerFaceColor','k');    
+    
+    % 
+    figure(); clf; hold on;
+    [meanValuesForBinsDynData, binCentersDynData,stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({dataX},{dataY},ringBinedges);    
+    errorbar(binCentersDynData,meanValuesForBinsDynData.*binCentersDynData,stdValuesForBinsDynData,'ok-','LineWidth',3,'MarkerFaceColor','k');    
+
+    %%
+    figure; clf; hold on; threeColors=linspecer(3);
+    dataXtet=combinedDynamicsData.('tetracycline').selectedXdata;
+    dataYtet=combinedDynamicsData.('tetracycline').selectedYdata;
+    [tetYmean, tetXmean, stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({dataXtet},{dataYtet},ringBinedges);    
+    selectedIdx = dataXtet<20;
+    fitPowersTet = polyfit(dataXtet(selectedIdx),dataYtet(selectedIdx).*dataXtet(selectedIdx),1)
+    plot(dataXtet(noNanIdx),dataYtet(noNanIdx).*dataXtet(noNanIdx),'.');
+    plot([0:60],[0:60].*fitPowersTet(1)+fitPowersTet(2),'-');
+    
+    figure; clf; hold on;
+    plot(dataXtet, dataYtet,'o','Color',threeColors(1,:),'MarkerFaceColor',threeColors(1,:),'MarkerSize',3)
+    plot(tetXmean(noNanIdx),tetYmean(noNanIdx),'o','Color','k','MarkerFaceColor','k','MarkerSize',10);
+    %plot([0:60],([0:60].*fitPowers(1)+fitPowers(2))./[0:60],'k:','LineWidth',5);
+    plot([0:60],fitPowersTet(1)+fitPowersTet(2)./[0:60],'k:','LineWidth',5);
+    
+    xlim([0,40]);
+    ylim([0,100]);
+    
+    xlabel('Length of cell (\mum)');
+    ylabel('Interdivision time');
+    MW_makeplotlookbetter(20);
+    
+    %% temperature fit
+    figure; clf; hold on;
+    plot(dataX, dataY,'o','Color',threeColors(2,:),'MarkerFaceColor',threeColors(2,:),'MarkerSize',3);
+    [Ymean, Xmean, stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({dataX},{dataY},ringBinedges);    
+    selectedIdx = dataX<20;
+    fitPowersTemp = polyfit(dataX(selectedIdx),dataY(selectedIdx).*dataX(selectedIdx),1)
+    
+    plot(Xmean(noNanIdx),Ymean(noNanIdx),'ok','MarkerFaceColor','k','MarkerSize',10);
+    %plot([0:60],([0:60].*fitPowers(1)+fitPowers(2))./[0:60],'k:','LineWidth',5);
+    plot([0:60],fitPowersTemp(1)+fitPowersTemp(2)./[0:60],'k:','LineWidth',5);
+    
+    xlim([0,40]);
+    ylim([0,100]);
+    
+    xlabel('Length of cell (\mum)');
+    ylabel('Interdivision time');
+    MW_makeplotlookbetter(20);
+    
+    %% sulA fit
+    figure; clf; hold on;
+    dataXsul=combinedDynamicsData.('sulA').selectedXdata;
+    dataYsul=combinedDynamicsData.('sulA').selectedYdata;
+    
+    plot(dataXsul, dataYsul,'o','Color',threeColors(3,:),'MarkerFaceColor',threeColors(3,:),'MarkerSize',3);
+    [Ymean, Xmean, stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({dataXsul},{dataYsul},ringBinedges);    
+    selectedIdx = dataXsul<20;
+    fitPowersTemp = polyfit(dataXsul(selectedIdx),dataYsul(selectedIdx).*dataXsul(selectedIdx),1)
+    
+    plot(Xmean(noNanIdx),Ymean(noNanIdx),'ok','MarkerFaceColor','k','MarkerSize',10);
+    %plot([0:60],([0:60].*fitPowers(1)+fitPowers(2))./[0:60],'k:','LineWidth',5);
+    plot([0:60],fitPowersTemp(1)+fitPowersTemp(2)./[0:60],'k:','LineWidth',5);
+    
+    xlim([0,40]);
+    ylim([0,100]);
+    
+    xlabel('Length of cell (\mum)');
+    ylabel('Interdivision time');
+    MW_makeplotlookbetter(20);
+    
+end
 %%
 if any(strcmp(RUNSECTIONSFILADIV,{'all','SlocationAgainstTime'}))
 
