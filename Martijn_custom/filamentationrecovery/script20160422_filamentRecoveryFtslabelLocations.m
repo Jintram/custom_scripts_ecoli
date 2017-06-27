@@ -271,7 +271,7 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','LengthVsDivisionLocation'}))
     end
 
     %title('kde, density directed (pdf(x)*x)')
-    xlabel(['Length of cell [' '\mu' 'm]']);
+    xlabel(['Length of cell (µm)']);
     ylabel(['Relative FtsA peak locations']);
     %figure(); hist([scatterX{:}])
 
@@ -329,31 +329,6 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','LengthVsDivisionLocation'}))
     
 end
    
-%% Create plot that shows nr of rings with length for temp. data
-error('Remove this section.');
-if any(strcmp(RUNSECTIONSFILEFTS,{'all','ringCountVsLength'}))
-    hFigS7B = figure; 
-
-    dx = 2;
-    ringBinedges = 0:dx:40; % edges
-    ringBins = ringBinedges(2:end)-dx/2; % centers
-    ringCounts=histcounts([scatterX{:}],ringBinedges); 
-    plot(ringBins,ringCounts,'o-','LineWidth',2); 
-    
-    dx = 2;
-    ringBinedges = 0:dx:40; % edges
-    ringBins = ringBinedges(2:end)-dx/2; % centers
-    ringCounts=histcounts([scatterX{:}],ringBinedges); 
-    plot(ringBins,ringCounts,'o-','LineWidth',2); 
-    
-    xlabel('Cell length');
-    ylabel('Ring count');
-    MW_makeplotlookbetter(20);
-    
-    xlim([0,40]); 
-    ylim([0,max(ringCounts)*1.2]);
-end
-
 %% Create overlay plot if division ratios are avaible
 
 if any(strcmp(RUNSECTIONSFILEFTS,{'all','divisionLocations'}))

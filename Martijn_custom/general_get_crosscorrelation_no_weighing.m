@@ -17,7 +17,7 @@ function [S, NDtau,ccNormalizationFactor] = general_get_autocorrelation(y1,y2,la
 %    additional options, ourSettings=struct (ie empty) no ourSettings
 %
 
-% Some general stuff
+%% Some general stuff
 % ===
 % Total nr points
 N=length(y1); % assuming equal length
@@ -33,14 +33,14 @@ end
 
 ccNormalizationFactor = sqrt(var(meanremoved_y1)*var(meanremoved_y2)) * N;
 
-% Actual correlation
+%% Actual correlation
 % ===
 % Give me 
 % S(tau) = 1/((t_total-tau)) sum_0^(t_total-tau) [ (y1(tstar)y2(tstar+tau)) dtstar ]
 % R(tau) = S(tau)/S(0)
 % In discrete form (tau -> N*Dtau = NDtau) etc 
 S = []; 
-for NDtau = -maxtau:maxtau % TODO dubbel check
+for NDtau = -maxtau:maxtau % delay -- TODO dubbel check
 
     S_NDtau = [];
     %ws = []; % TEST

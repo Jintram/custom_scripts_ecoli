@@ -16,6 +16,12 @@ function [tickLocationsOldMetric, correspondingLabels] = labelremapping(inputSet
 % Use the command 
 % set(gca, 'XTick',tickLocationsOldMetric,'XTickLabel',correspondingLabels);
 % To set it.
+% 
+% Example:
+% inputSettings.rangeIn = [0,1]; % original range of axis
+% inputSettings.desiredSpacing = 2; %  desired spacing of axis in new metric
+% inputSettings.rangeOut = [0,max(timeValues)]; % the desired target range
+% [tickLocationsOldMetric, correspondingLabels] = labelremapping(inputSettings) 
 
 %% 
 if ~exist('inputSettings','var')

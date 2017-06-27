@@ -5,7 +5,7 @@
 
 %%
 
-load('G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos2crop\segmentation\pos2cropseg137.mat');
+load('G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\segmentation\pos2cropseg137.mat');
 
 % normalize both phsub and yreg
 yregnorm = double(yreg); 

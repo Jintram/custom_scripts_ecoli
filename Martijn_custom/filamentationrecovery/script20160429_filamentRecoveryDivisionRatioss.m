@@ -15,6 +15,7 @@ if ~exist('WHATDATA','var')
 end
 
 WINDOWBORDERS   = [3:6:36];
+%WINDOWBORDERS   = [1.8:5.2:28];
 BARCOLORS       = [240,155,34; 45 177 65; 37 156 190; 131 84 162; 241 88 58]./255;
 
 USESYMMETRY=1;
@@ -181,7 +182,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','loadData'}))
 
         if ~exist('simulatedschnitzcells','var')
             if ~SPECIALCASE
-                schnitzcells = loadandrename(datasetsPaths{dataSetIndex});            
+                schnitzcells = loadandrename(datasetsPaths{dataSetIndex});
             else
                 schnitzcells=S_all_shifted{dataSetIndex};
             end
@@ -782,15 +783,18 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','lifeTimeVsBirthLength2'}))
     [meanValuesForBinsDynData, binCentersDynData,stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({selectedXdata},{selectedYdata},myBins);
 
     markerWidth=7; markerColor = [.7 .7 .7];
-    hS=scatter(selectedXdata,selectedYdata,'filled',...
-            'MarkerFaceColor',markerColor,'MarkerEdgeColor','none','MarkerFaceAlpha',1);
+    hS=scatter(selectedXdata,selectedYdata,...
+            7^2,[.5 .5 .5],'filled','MarkerFaceAlpha',.3);
+            %'filled','MarkerFaceColor',markerColor,'MarkerEdgeColor','none','MarkerFaceAlpha',1);            
     set(hS, 'SizeData', markerWidth^2);
 
     pointsWithMultipleDataIndices = stdValuesForBinsDynData>0;
-    errorbar(binCentersDynData(pointsWithMultipleDataIndices),meanValuesForBinsDynData(pointsWithMultipleDataIndices),stdValuesForBinsDynData(pointsWithMultipleDataIndices),'ok','LineWidth',3,'MarkerFaceColor','k');
+    errorbar(binCentersDynData(pointsWithMultipleDataIndices),meanValuesForBinsDynData(pointsWithMultipleDataIndices),stdValuesForBinsDynData(pointsWithMultipleDataIndices),...
+        '-ok','Color','k','MarkerSize',5,'LineWidth',2);
+        %'ok','LineWidth',3,'MarkerFaceColor','k');
 
     MW_makeplotlookbetter(20);
-    xlabel('Birth size (\mum)');
+    xlabel('Birth size (µm)');
     ylabel('Interdivision time (min)');
 
     if exist('YLIMbirthlife','var')
@@ -867,7 +871,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','lifeTimeVsBirthLengthPDFs'}))
             set(l,'Color',myColors(binIdx,:));
 
             lines(end+1) = l;
-            legendTitles{end+1} = ['' sprintf('%0.1f', binCentersDynData(binIdx)) '\mum (N=' num2str(totalCount) ')'];
+            legendTitles{end+1} = ['' sprintf('%0.1f', binCentersDynData(binIdx)) '?m (N=' num2str(totalCount) ')'];
         end
         
     end
@@ -931,7 +935,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','adderLengthLifetime'}))
     %
     ylim([0,4]); 
     xlim([0,20]);
-    xlabel('Cell length'); ylabel('Added length \Delta (\mum)');
+    xlabel('Cell length'); ylabel('Added length \Delta (?m)');
     MW_makeplotlookbetter(20);
 
     colormap(myColors);
@@ -960,7 +964,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','adderLengthLifetime'}))
             lHandles(end+1)=plot(yCentersNorm,currentPdfNorm,'LineWidth',2);
         end
         
-        legendTitles{end+1} = ['L_b=' sprintf('%0.1f', xCenters(binIdx)) '\mum (N=' num2str(totalN) ')'];
+        legendTitles{end+1} = ['L_b=' sprintf('%0.1f', xCenters(binIdx)) '?m (N=' num2str(totalN) ')'];
         
     end
     
@@ -1011,7 +1015,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','rutgerPlotFinal'}))
             % determine color if lifetime known
             if isnan(currentTime) || ~COLORCODEMARKERS
                 colorForThisDataPoint = [.7 .7 .7];
-                colorForThisDataPoint = [.2 .2 .2];
+                %colorForThisDataPoint = [.2 .2 .2];
             else    
                 colorForThisDataPoint = ...
                     timeColormap(...
@@ -1056,8 +1060,8 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','rutgerPlotFinal'}))
     for myfignum = h1.Number%:h2.Number
         figure(myfignum);
 
-        xlabel('Length of mother cell [\mum]');
-        ylabel('Relative division location, S');
+        xlabel('Length of mother cell \it{L_m}\rm (?m)');
+        ylabel('Relative division location \itS\rm');
 
         MW_makeplotlookbetter(20);
 
@@ -1357,7 +1361,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','sizeTraces'}))
     % cosmetics
     MW_makeplotlookbetter(FONTSIZE);
     xlabel('Time (min)');
-    ylabel('Cell length (um)');
+    ylabel('Cell length (?m)');
     %xlim([0,120]);
 
     if exist('MYTLIM','var')
@@ -1496,40 +1500,56 @@ end
 %% now re-normalize temperature interdivision data by actual ring count
 if any(strcmp(RUNSECTIONSFILADIV,{'all','interdivVsLengthNormalizedWithRingCount'}))
 
+    threeColors=linspecer(3);
+    
     % determine binning for these plots
     ringBinedges = [0:2:40];
     
-    % we need also the distribution of lengths
+    % We want all interdiv. statistics which are put in combinedDynamicsData
+    % in script20161221_filarecovery_birthSizeLifeTimeDynamics_all.m
     
-    % this data comes from script20161221_filarecovery_birthSizeLifeTimeDynamics_all.m
-    dataX=combinedDynamicsData.(WHATDATA).selectedXdata;
-    dataY=combinedDynamicsData.(WHATDATA).selectedYdata;                  
+    % First select temperature data
+    dataXtemp=combinedDynamicsData.(WHATDATA).selectedXdata;
+    dataYtemp=combinedDynamicsData.(WHATDATA).selectedYdata;                         
     
+    % Create a figure that shows the distribution of rings
+    hFigS7 = [];    
+    hFigS7(1) = figure; clf; hold on;
+    
+    scatter(lengthsPerCell,peakCountsPerCell,5^2,[.7 .7 .7],'MarkerFaceColor',[.7 .7 .7]);   
+    
+    % mean
+    [meanValuesForBinsDynData, binCentersDynData,stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({lengthsPerCell},{peakCountsPerCell},ringBinedges);
+    plot(binCentersDynData,meanValuesForBinsDynData,'ok','MarkerFaceColor','k','MarkerSize',10);    
+    
+    % fit
+    selectedIndices = lengthsPerCell<40;
+    ringNrFit = polyfit(lengthsPerCell(selectedIndices),peakCountsPerCell(selectedIndices),1)
+    plot([0:50],[0:50]*ringNrFit(1)+ringNrFit(2),'r-');
+    
+    xlabel('Length of cell'); ylabel('Number of rings');
+    MW_makeplotlookbetter(20);
+    
+    % Alternative way of getting averages of data above:
     % the following data (peakCountsPerCell, lengthsPerCell) is collected  in 
     % script20160422_filamentRecoveryFtslabelLocations analyzeData
+    %{
     ringPdf   = histcounts(peakCountsPerCell,ringBinedges);
     lengthPdf = histcounts(lengthsPerCell,ringBinedges);
     ringCountsPerBacterium = ringCounts./lengthPdf;
     
-    % Create a figure that shows the distribution of rings
-    hFig7A = figure; clf; hold on;
-    
-    [meanValuesForBinsDynData, binCentersDynData,stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({lengthsPerCell},{peakCountsPerCell},ringBinedges);
-    plot(binCentersDynData,meanValuesForBinsDynData,'ro','MarkerSize',15);
-    
-    scatter(lengthsPerCell,peakCountsPerCell,7^2,[.7 .7 .7],'MarkerFaceColor',[.7 .7 .7]);
     plot(ringBins,ringCountsPerBacterium,'ok','MarkerFaceColor','k','MarkerSize',10);
-    xlabel('Length of cell'); ylabel('Number of rings');
-    MW_makeplotlookbetter(20);
+    %}
     
+    %{
     % create matching normalization array
     %ringCountsNormalized = ringCountsPerBacterium./max(ringCountsPerBacterium); has inf value unfortunately
-    normalizationArray = NaN(size(dataX));
+    normalizationArray = NaN(size(dataXtemp));
     myBinColors = linspecer(numel(ringBins));
-    fillColorArray = NaN(size(dataX));
-    for idx = 1:numel(dataX)
+    fillColorArray = NaN(size(dataXtemp));
+    for idx = 1:numel(dataXtemp)
         % find which bin it belongs to 
-        delta=abs(ringBins-dataX(idx));
+        delta=abs(ringBins-dataXtemp(idx));
         correspondingBinIdx=find(min(delta)==delta);
         correspondingRingCount = ringCountsPerBacterium(correspondingBinIdx);
 
@@ -1538,83 +1558,91 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','interdivVsLengthNormalizedWithRingCount
         fillColorArray(idx) = myBinColors(correspondingBinIdx);
     end
 
-    normalizedDataY = dataY.*normalizationArray;
-
+    normalizeddataYtemp = dataYtemp.*normalizationArray;   
+    
     hFigS7C = figure; clf; hold on;
-    scatter(dataX,normalizedDataY,7^2,fillColorArray);
+    scatter(dataXtemp,normalizeddataYtemp,7^2,fillColorArray);
     xlim([0,40]); 
-    ylim([0,max(normalizedDataY)]); 
-    xlabel('Length of cell (\mum)');
+    ylim([0,max(normalizeddataYtemp)]); 
+    xlabel('Length of cell (?m)');
     ylabel('Interdivision time * ring count');
     MW_makeplotlookbetter(20);
 
-    [meanValuesForBinsDynData, binCentersDynData,stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({dataX},{normalizedDataY},ringBinedges);
+    [meanValuesForBinsDynData, binCentersDynData,stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({dataXtemp},{normalizeddataYtemp},ringBinedges);
     errorbar(binCentersDynData,meanValuesForBinsDynData,stdValuesForBinsDynData,'ok-','LineWidth',3,'MarkerFaceColor','k');    
     
     % 
     figure(); clf; hold on;
-    [meanValuesForBinsDynData, binCentersDynData,stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({dataX},{dataY},ringBinedges);    
+    [meanValuesForBinsDynData, binCentersDynData,stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({dataXtemp},{dataYtemp},ringBinedges);    
     errorbar(binCentersDynData,meanValuesForBinsDynData.*binCentersDynData,stdValuesForBinsDynData,'ok-','LineWidth',3,'MarkerFaceColor','k');    
-
-    %%
-    figure; clf; hold on; threeColors=linspecer(3);
+    %}        
+    
+    %% fit the temperature w. 1/L
+    hFigS7(2) = figure; clf; hold on;
+    l=plot(dataXtemp, dataYtemp,'o','Color',threeColors(2,:),'MarkerFaceColor',threeColors(2,:),'MarkerSize',3);
+    legend(l,'Temperature');
+    [Ymean, Xmean, stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({dataXtemp},{dataYtemp},ringBinedges);    
+    selectedIdx = dataXtemp>0;% & dataXtemp<20;
+    fitPowersTemp = polyfit(dataXtemp(selectedIdx),dataYtemp(selectedIdx).*dataXtemp(selectedIdx),1)
+    
+    plot(Xmean,Ymean,'ok','MarkerFaceColor','k','MarkerSize',10);
+    %plot([0:60],([0:60].*fitPowers(1)+fitPowers(2))./[0:60],'k:','LineWidth',5);
+    plot([0:60],fitPowersTemp(1)+fitPowersTemp(2)./[0:60],'k:','LineWidth',5);
+    
+    xlim([0,40]);
+    ylim([0,100]);
+    
+    xlabel('Length of cell (?m)');
+    ylabel('Interdivision time');
+    MW_makeplotlookbetter(20);
+    
+    %% fit the tetracycline data    
     dataXtet=combinedDynamicsData.('tetracycline').selectedXdata;
     dataYtet=combinedDynamicsData.('tetracycline').selectedYdata;
     [tetYmean, tetXmean, stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({dataXtet},{dataYtet},ringBinedges);    
-    selectedIdx = dataXtet<20;
+    selectedIdx = dataXtet>0;% & dataXtet<20;
     fitPowersTet = polyfit(dataXtet(selectedIdx),dataYtet(selectedIdx).*dataXtet(selectedIdx),1)
-    plot(dataXtet(noNanIdx),dataYtet(noNanIdx).*dataXtet(noNanIdx),'.');
+    %{
+    % Plot transformed data
+    figure; clf; hold on; 
+    plot(dataXtet,dataYtet.*dataXtet,'.');
     plot([0:60],[0:60].*fitPowersTet(1)+fitPowersTet(2),'-');
+    %}
     
-    figure; clf; hold on;
-    plot(dataXtet, dataYtet,'o','Color',threeColors(1,:),'MarkerFaceColor',threeColors(1,:),'MarkerSize',3)
-    plot(tetXmean(noNanIdx),tetYmean(noNanIdx),'o','Color','k','MarkerFaceColor','k','MarkerSize',10);
+    % plot with 
+    hFigS7(3) = figure; clf; hold on;
+    l=plot(dataXtet, dataYtet,'o','Color',threeColors(1,:),'MarkerFaceColor',threeColors(1,:),'MarkerSize',3)
+    legend(l,'Tetracycline');
+    plot(tetXmean,tetYmean,'o','Color','k','MarkerFaceColor','k','MarkerSize',10);
     %plot([0:60],([0:60].*fitPowers(1)+fitPowers(2))./[0:60],'k:','LineWidth',5);
     plot([0:60],fitPowersTet(1)+fitPowersTet(2)./[0:60],'k:','LineWidth',5);
     
     xlim([0,40]);
     ylim([0,100]);
     
-    xlabel('Length of cell (\mum)');
+    xlabel('Length of cell (?m)');
     ylabel('Interdivision time');
-    MW_makeplotlookbetter(20);
+    MW_makeplotlookbetter(20);      
     
-    %% temperature fit
-    figure; clf; hold on;
-    plot(dataX, dataY,'o','Color',threeColors(2,:),'MarkerFaceColor',threeColors(2,:),'MarkerSize',3);
-    [Ymean, Xmean, stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({dataX},{dataY},ringBinedges);    
-    selectedIdx = dataX<20;
-    fitPowersTemp = polyfit(dataX(selectedIdx),dataY(selectedIdx).*dataX(selectedIdx),1)
-    
-    plot(Xmean(noNanIdx),Ymean(noNanIdx),'ok','MarkerFaceColor','k','MarkerSize',10);
-    %plot([0:60],([0:60].*fitPowers(1)+fitPowers(2))./[0:60],'k:','LineWidth',5);
-    plot([0:60],fitPowersTemp(1)+fitPowersTemp(2)./[0:60],'k:','LineWidth',5);
-    
-    xlim([0,40]);
-    ylim([0,100]);
-    
-    xlabel('Length of cell (\mum)');
-    ylabel('Interdivision time');
-    MW_makeplotlookbetter(20);
-    
-    %% sulA fit
-    figure; clf; hold on;
+    %% fit sulA to 1/L
+    hFigS7(4) = figure; clf; hold on;
     dataXsul=combinedDynamicsData.('sulA').selectedXdata;
     dataYsul=combinedDynamicsData.('sulA').selectedYdata;
     
-    plot(dataXsul, dataYsul,'o','Color',threeColors(3,:),'MarkerFaceColor',threeColors(3,:),'MarkerSize',3);
+    l=plot(dataXsul, dataYsul,'o','Color',threeColors(3,:),'MarkerFaceColor',threeColors(3,:),'MarkerSize',3);
+    legend(l,'SulA');
     [Ymean, Xmean, stdValuesForBinsDynData,stdErrValuesForBins]=binnedaveraging({dataXsul},{dataYsul},ringBinedges);    
-    selectedIdx = dataXsul<20;
+    selectedIdx = dataXsul>0;% & dataXsul<20;
     fitPowersTemp = polyfit(dataXsul(selectedIdx),dataYsul(selectedIdx).*dataXsul(selectedIdx),1)
     
-    plot(Xmean(noNanIdx),Ymean(noNanIdx),'ok','MarkerFaceColor','k','MarkerSize',10);
+    plot(Xmean,Ymean,'ok','MarkerFaceColor','k','MarkerSize',10);
     %plot([0:60],([0:60].*fitPowers(1)+fitPowers(2))./[0:60],'k:','LineWidth',5);
     plot([0:60],fitPowersTemp(1)+fitPowersTemp(2)./[0:60],'k:','LineWidth',5);
     
     xlim([0,40]);
     ylim([0,100]);
     
-    xlabel('Length of cell (\mum)');
+    xlabel('Length of cell (?m)');
     ylabel('Interdivision time');
     MW_makeplotlookbetter(20);
     
@@ -1673,7 +1701,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','newbornStats'}))
         
     
     MW_makeplotlookbetter(20);
-    xlabel('Size of newborn cells (\mum)');
+    xlabel('Size of newborn cells (?m)');
     ylabel('Probability');
 
 

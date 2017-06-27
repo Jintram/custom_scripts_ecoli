@@ -140,7 +140,7 @@ xlim([.5, nrActiveCellPhaseFrames+.5]);
 
 xlabel('Time (min)');
 %ylabel(['FtsA-YFP signal' 10 'along cellular axis (a.u.)']);
-ylabel('Cellular axis (\mum)')
+ylabel('Cellular axis (µm)')
 
 ylim([0,size(littleOutputMatrix,2)]) % not sure why needed, but addresses issue
 

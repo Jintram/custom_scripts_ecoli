@@ -119,6 +119,10 @@ if ~exist('STOPRELOADING','var')
 end
 
 %% Set parameters
+
+% Some need to be reset, because also used in previous sections
+TOPLOTFIELDNAMES    = {'concentrationCorrData', 'rateCorrData'}; % this is always the case
+
 if ~exist('GROUPSTOPLOT','var')
     GROUPSTOPLOT={'CRP_s70_chromosomal','chromoCRP_cAMP800','chromoCRP_cAMPLOW80','chromoCRP_cAMPHIGH5000'};
 end
@@ -127,10 +131,6 @@ if ~exist('FILENAMESperGroupPartI','var')
 end
 if ~exist('FILENAMESperGroupPartII','var')
     FILENAMESperGroupPartII = {'CONST_','RCRP_'}; % Note that color1=const, color2 = rcrp
-end
-
-if ~exist('TOPLOTFIELDNAMES','var')
-    TOPLOTFIELDNAMES    = {'concentrationCorrData', 'rateCorrData'}; % this is always the case                      
 end
 
 if ~exist('TITLESforgroupsPartI','var')
@@ -143,10 +143,10 @@ end
 Line1Colors = linspecer(numel(GROUPSTOPLOT));
 Line2Colors = ones(numel(GROUPSTOPLOT),3)*0; % also allows gray
 
-%% Do it using loop
+%% Actually plotting the cross-corrs Daan style: do it using loop
 
 optionsStruct=struct;
-
+gatheredCCs = struct;
 for groupIdx = 1:numel(GROUPSTOPLOT)
     for dualColorIdx = 1:2
         
@@ -157,8 +157,11 @@ for groupIdx = 1:numel(GROUPSTOPLOT)
 
         % plotting script
         optionsStruct.STOPRELOADING=1;
-        [hCC,output]=plottingGeneral_v2_CCs(DATASETSTOPLOT,DUALCOLORINDICES,LINECOLORS,SELECTIONFIELD,TOPLOTFIELDNAMES,optionsStruct)        
+        [hCC,output]=plottingGeneral_v2_CCs(DATASETSTOPLOT,DUALCOLORINDICES,LINECOLORS,SELECTIONFIELD,TOPLOTFIELDNAMES,optionsStruct); 
 
+        % save average lines in struct also
+        gatheredCCs.(GROUPSTOPLOT{groupIdx}).data = output;        
+        
         % plot cosmetics
         figure(hCC.Number); 
         title([TITLESforgroupsPartI{groupIdx},TITLESforgroupsPartII{dualColorIdx}]);
@@ -228,7 +231,9 @@ SHOWRAWPLOTS=0;
 
 % Output (sub)directory
 SUBDIR = 'overview_PDF\';
-if ~exist([PLOTOUTDIR SUBDIR],'dir'), mkdir(myOutputDir), end % create if doesnt exist
+if ~exist([PLOTOUTDIR SUBDIR],'dir'), mkdir([PLOTOUTDIR SUBDIR]), end % create if doesnt exist
+
+disp('Section done');
 
 %% Now gather info per dataset..
 gatheredOutput = struct;
@@ -239,8 +244,11 @@ for idx=1:numel(GROUPSTOPLOT)
     plottingGeneral_v2_PDF
     % store output
     gatheredOutput.(GROUPSTOPLOT{idx}) = output;
+        % note this will have the structure gatheredOutput.(somefieldname).somedata{datasetIdx}{fieldIdx}
 end
-    
+   
+
+disp('Info gathering done');
 
 %% Now plot the PDFs, and calculate the noises
 
@@ -511,6 +519,7 @@ for groupIdx=1:numel(GROUPSTOPLOT)
     
 end
 
+disp('section done');
 
 %% Now go over the figures once again and adjust cosmetics, then save
 for setIdx = 1:numel(setsToScatterPlot)

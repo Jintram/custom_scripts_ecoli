@@ -102,10 +102,11 @@ for dataSetindex = 1:numel(DATATOPLOT)
 end
 
 ylim([0,100]);
-xlabel('Birth size (\mum)');
+xlabel('Birth size (µm)');
 ylabel('Interdivision time (min)');
 MW_makeplotlookbetter(20);
 
 legend(legendLines,{'Tetracycline', 'Temperature', 'SulA'});
+legend boxoff  
 
 hFigSIIC = h;

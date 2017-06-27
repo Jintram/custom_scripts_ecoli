@@ -82,7 +82,9 @@ for dataIdx = 1:3
     x=combinedDataAdder.(DATASETNAMES{dataIdx}).binCenters;
     err=combinedDataAdder.(DATASETNAMES{dataIdx}).stdValuesForBins;
 
-    lErr=errorbar(x,y,err,'o-','LineWidth',2,'Color',mycolors(dataIdx,:))
+    lErr=errorbar(x,y,err,...                
+                '-o','Color',mycolors(dataIdx,:),'MarkerSize',5,'LineWidth',2)
+                %'o-','LineWidth',2,'Color',mycolors(dataIdx,:))
    
 %end
 %for dataIdx = 1:3
@@ -90,7 +92,9 @@ for dataIdx = 1:3
     y=combinedDataAdder.(DATASETNAMES{dataIdx}).meanValuesForBins;
     x=combinedDataAdder.(DATASETNAMES{dataIdx}).binCenters;
 
-    plot(x,y,'o-','LineWidth',2,'Color',mycolors(dataIdx,:),'MarkerFaceColor',mycolors(dataIdx,:))
+    %plot(x,y,...
+    %    '-o','Color',mycolors(dataIdx,:),'MarkerSize',5,'LineWidth',2);
+        %'o-','LineWidth',2,'Color',mycolors(dataIdx,:),'MarkerFaceColor',mycolors(dataIdx,:))
    
     %
     xlim([0,40]);
@@ -99,11 +103,13 @@ for dataIdx = 1:3
 
     % 
     MW_makeplotlookbetter(20);
-    xlabel('Birth size');
-    ylabel('Added length (\mum)');
+    xlabel('Birth size (µm)');
+    ylabel('Added length (µm)');
     
-    % 
-    legend(lErr,LEGENDNAMES{dataIdx});
+    % Legend
+    % ==
+    %legend(lErr,LEGENDNAMES{dataIdx});
+    %legend boxoff
     
 end
 
