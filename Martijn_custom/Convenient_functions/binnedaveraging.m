@@ -1,5 +1,5 @@
 
-function [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins, counts]=binnedaveraging(valuesx,valuesy,edges)
+function [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins, counts,binnedValues,medianValuesForBins]=binnedaveraging(valuesx,valuesy,edges)
 % function [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins]=binnedaveraging(valuesx,valuesy,bins)
 %
 % INPUTS
@@ -35,6 +35,7 @@ end
 
 % loop over bins again
 meanValuesForBins=NaN(1,numel(binnedValues));
+medianValuesForBins=NaN(1,numel(binnedValues));
 stdValuesForBins=NaN(1,numel(binnedValues));
 stdErrValuesForBins=NaN(1,numel(binnedValues));
 counts=NaN(1,numel(binnedValues));
@@ -53,6 +54,8 @@ for i = 1:numel(binnedValues)
     
     % calculate mean for this bin
     meanValuesForBins(i) = mean(currentBinnedvalues);
+    % calculate mean for this bin
+    medianValuesForBins(i) = median(currentBinnedvalues);
     % calculate std for this bin
     stdValuesForBins(i) = std(currentBinnedvalues);
     % calculate standard error for this bin (i.e. /sqrt(n))
