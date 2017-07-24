@@ -104,8 +104,8 @@ elseif strcmp(WHATDATA, 'tetracycline')
     disp(['Note that certain datasets are selected (' num2str(ONESTOTAKE) ').']);
     switchTimes = ...
         ...[1373.5417      587.66667      261.13333        741.325      252.38333      987.86667        1017.95         997.05      881.90833      1018.7083         1394.6]; % based on 50% max growth rate
-        ...[1.2156    0.5064    0.0512    0.6032    0.0948    0.8585    0.7400    0.7954    0.7673    0.8160    1.2737]*1.0e+03; % based on 1/10th max. growth rate
-        [890.9800  404.7500         0  529.7600  0]; % based on calculated switch times
+        [1.2156    0.5064    0.0512    0.6032    0.0948    0.8585    0.7400    0.7954    0.7673    0.8160    1.2737]*1.0e+03; % based on 1/10th max. growth rate
+        %[890.9800  404.7500         0  529.7600  0]; % based on calculated switch times
         %warning('change this back!!');
         % switchTimes determined by 
         % script20161222_branchplottingrutgerdata
@@ -1228,8 +1228,10 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','rutgerPlotBlackWhiteTimecoding'}))
         end
     end 
     
-    xlabel('Summed daughter length [um]');
-    ylabel('Relative division location (S)');
+    %xlabel('Summed daughter length (µm)');
+    xlabel('Mother length (µm)');
+    %ylabel('Relative division location (S)');
+    ylabel('Division location, S');
 
     MW_makeplotlookbetter(20);
 
@@ -1361,7 +1363,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','sizeTraces'}))
     % cosmetics
     MW_makeplotlookbetter(FONTSIZE);
     xlabel('Time (min)');
-    ylabel('Cell length (?m)');
+    ylabel('Cell length (µm)');
     %xlim([0,120]);
 
     if exist('MYTLIM','var')
@@ -1649,7 +1651,15 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','interdivVsLengthNormalizedWithRingCount
 end
 %%
 if any(strcmp(RUNSECTIONSFILADIV,{'all','SlocationAgainstTime'}))
-
+        
+    if ~exist('MYSUBPLOT')
+        MYSUBPLOT=1;
+    end
+    
+    hSvsT=figure(5); 
+    if MYSUBPLOT==1, clf; hold on; end;
+    subplot(1,3,MYSUBPLOT); hold on; 
+    
     NrDataSets = numel(datasetsPaths);
     
     markerColor=[.5 .5 .5];
@@ -1657,7 +1667,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','SlocationAgainstTime'}))
     ALPHA = .3;
     myColors = linspecer(NrDataSets);
 
-    hSvsT=figure; hold on;
+    
 
     allTimes=[]; % just for calculating xlim
     for dataSetIndx = 1:NrDataSets
@@ -1677,8 +1687,12 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','SlocationAgainstTime'}))
     end
 
 
-    xlabel('Time [minutes]');
-    ylabel('Relative division location, S');
+    if MYSUBPLOT==2
+        xlabel('Time [minutes]');
+    end
+    if MYSUBPLOT==1
+        ylabel('Division location, S');
+    end
     xlim(  [0,max(allTimes)]  );
     MW_makeplotlookbetter(20);
 

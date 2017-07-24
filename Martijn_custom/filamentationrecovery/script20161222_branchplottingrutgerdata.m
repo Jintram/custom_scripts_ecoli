@@ -41,7 +41,9 @@ OUTPUTFOLDER = 'D:\Local_Data\Dropbox\Dropbox\Filamentation recovery\MW\figures_
 SUBFOLDER = 'rutgerdatabranches\';
 if ~exist([OUTPUTFOLDER SUBFOLDER],'dir'), mkdir([OUTPUTFOLDER SUBFOLDER]), end
 
-ONESTOANALYZE=[1:11];
+if ~exist('ONESTOANALYZE','var')
+    ONESTOANALYZE=[1:11];
+end
 ONESTOPLOT=[1:5];
 datasetsPaths = ...
 { ...
@@ -62,8 +64,8 @@ datasetsPaths = ...
 'G:\FilamentationRecoveryData\Rutger\F schijf AmolfBackup_3april2014\USE_DIV\10uM_pos1.mat',...
 'G:\FilamentationRecoveryData\Rutger\F schijf AmolfBackup_3april2014\USE_DIV\10uM_pos3.mat',...
 'G:\FilamentationRecoveryData\Rutger\F schijf AmolfBackup_3april2014\USE_DIV\10uM_pos6_long.mat',...        
-}
-datasetsPaths={datasetsPaths{ONESTOANALYZE}};
+};
+datasetsPaths={datasetsPaths{ONESTOANALYZE}}
 
 datasetNames=...
     {'1uM_pos3_long.mat','1uM_pos4.mat','1uM_pos4_long.mat','1uM_pos5.mat',...
@@ -159,8 +161,26 @@ end
 
 ylim([0,1.5]);
 
-xlabel('time, t [s]');
+xlabel('time, t [min]');
 ylabel('growth rate [dbl/hr]');
 MW_makeplotlookbetter(15);
 
 shiftTimes
+
+%%
+hTraces= figure; clf; hold on;
+
+shiftTimes=[]; % could use "myTimes" instead to get actual switch times
+for ii=1:numel(datasetsPaths) %(datasetsPaths)
+    
+    shiftTimes(ii) = switchPoints{ii}(1,end);    
+    plot(gatheredOutput{ii}.binCenters-myTimes(ii),gatheredOutput{ii}.meanValuesForBins,'LineWidth',2);
+    
+end
+
+ylim([0,1.1]);
+xlim([-1250,500]);
+
+xlabel('Time (min)');
+ylabel('Growth rate (dbl/hr)');
+MW_makeplotlookbetter(20);
