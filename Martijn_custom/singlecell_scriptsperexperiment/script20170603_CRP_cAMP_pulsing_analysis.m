@@ -13,7 +13,7 @@ CUSTOMYLIM=[0,1.2];
 load('H:\EXPERIMENTAL_DATA_2017\2017-03-22_asc1004_cAMP_pulsing\pos2smallcrop2\data\pos2smallcrop2-Schnitz.mat');
 
 % for comparison I could also load the older data from
-%load('G:\EXPERIMENTAL_DATA_2016\2016-12-08_asc990_lac\\pos2crop\data\pos2crop-Schnitz.mat')
+%load('G:\EXPERIMENTAL_DATA_2016\2016-12-08_asc990_lac\pos2crop\data\pos2crop-Schnitz.mat')
 % ^ Data from previous experiment with wild type cells on gel pad.
 
 myThreeColors = linspecer(3);
@@ -48,6 +48,7 @@ figure(4); figure(5);
 
 outputSimple=[]; theYLim = [];
 for fieldIndex = 1:numel(XFIELDS)
+    %%
     
     FIELDX = XFIELDS{fieldIndex};
     FIELDY = YFIELDS{fieldIndex};
@@ -56,11 +57,22 @@ for fieldIndex = 1:numel(XFIELDS)
     allX  = [schnitzcells.(FIELDX)]/60;
     allY = [schnitzcells.(FIELDY)];
 
-    %% average line
+    %% average line, also binnedValues for violins later
+    
+    uniqueTimes = unique(allX); dtime = uniqueTimes(2)-uniqueTimes(1); % assuming equidistant timing
+    myTimeBins=[uniqueTimes-dtime/2 uniqueTimes(end)];
+    [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins, counts, binnedValues] = ...
+        binnedaveraging({allX},{allY},myTimeBins);
 
-    [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins] = ...
-        binnedaveraging({allX},{allY},0:.1:20);
+    if ~exist('STOPVIOLIN','var')
+        h=figure(fieldIndex+200); clf; hold on;
+        set(h,'Position',[100,100,1500+100,300+100]);
+        violin({binnedValues{counts>0}});
+        xlabel('Time (hrs)');
+        ylabel(TITLES(fieldIndex));
+    end
 
+    
     %%
     h1=figure(fieldIndex); clf; hold on;
     title(TITLES(fieldIndex));
@@ -70,6 +82,7 @@ for fieldIndex = 1:numel(XFIELDS)
     noNanIdx = ~isnan(meanValuesForBins);
     plot(binCenters(noNanIdx),meanValuesForBins(noNanIdx),'-k','LineWidth',3);
 
+    
     xlim([0,max(allX)]);
     maxAverageValue = max(meanValuesForBins(noNanIdx));
     theYLim{fieldIndex} = [-maxAverageValue/2 maxAverageValue*2];
@@ -157,8 +170,13 @@ end
 SETS = {[1,3],[2,3],[1,2]}
 SETNAMES = {'R(CRP,\mu)','R(\sigma70,\mu)','R(CRP,\sigma70)'};
 
+figure(11); figure(12); figure(13); 
+
 for setIdx= 1:numel(SETS)
 
+    % set up figure    
+    h1=figure(10+setIdx); clf; hold on;        
+    
     % which 2 y-signals do we want cross-corr of?
     currentSet = SETS{setIdx};
     
@@ -176,10 +194,8 @@ for setIdx= 1:numel(SETS)
             noise1, ...
             noise2, ...
             MAXLAGS,'coeff');
-    
-    % plot
-    h1=figure(numel(XFIELDS)+1+setIdx); clf; hold on;        
-        
+       
+    % title    
     title(SETNAMES{setIdx});
     
     % axes
@@ -187,7 +203,7 @@ for setIdx= 1:numel(SETS)
     plot([0,0],[-1,1],'-k');
 
     % correlation function
-    plot(tau, Rtau,'-o','LineWidth',3)
+    plot(tau, Rtau,'-o','LineWidth',3)    
 
     xlim([-MAXLAGS,MAXLAGS]);
     ylim([-1,1]);
@@ -204,21 +220,25 @@ end
 
 %% scatter plots (+binned average)
 
+% 
 SETSscatter = {[1,3],[2,3]};
+    % set 1,3 is the CRP vs. growth rate plot
 
+figure(21); figure(22);
+allY1={};allY2={};
 for setIdx= 1:numel(SETSscatter)
 
-    SET = SETSscatter{setIdx};
+    % set up figure
+    h1=figure(20+setIdx); clf; hold on;
+    
+    currentSet = SETSscatter{setIdx};
 
     % get data
-    allY1=outputSimple.(YFIELDS{SET(1)}).ally;
-    allY2=outputSimple.(YFIELDS{SET(2)}).ally;
-
-    % plot
-    h1=figure(numel(XFIELDS)+1+numel(SETS)+setIdx); clf; hold on;
-
+    allY1{setIdx}=outputSimple.(YFIELDS{currentSet(1)}).ally;
+    allY2{setIdx}=outputSimple.(YFIELDS{currentSet(2)}).ally;
+    
     MYCOLOR=[0.2157 0.4941 0.7216];
-    scatter(allY1,allY2,3^2,'filled',...
+    scatter(allY1{setIdx},allY2{setIdx},3^2,'filled',...
                         'MarkerEdgeColor','None',...
                         'MarkerFaceColor',MYCOLOR,...
                         'MarkerFaceAlpha',.2,...
@@ -228,11 +248,11 @@ for setIdx= 1:numel(SETSscatter)
     plot(allY1,allY2,'.');
     %}
 
-    xlabel(TITLES{SET(1)});
-    ylabel(TITLES{SET(2)});
+    xlabel(TITLES{currentSet(1)});
+    ylabel(TITLES{currentSet(2)});
 
     [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins, counts] = ...
-            binnedaveraging({allY1},{allY2},linspace(0,max(allY1),40));
+            binnedaveraging({allY1{setIdx}},{allY2{setIdx}},linspace(0,max(allY1{setIdx}),40));
 
     MW_makeplotlookbetter(20);
 
@@ -246,17 +266,96 @@ for setIdx= 1:numel(SETSscatter)
         saveas(h1,[OUTPUTFOLDER 'fig' num2str(numel(XFIELDS)+1+numel(SETS)+setIdx) '.tif'])
     end
     
+    % make a fit (also to determine optimum)
+    xval =binCenters(toShow);
+    yval =meanValuesForBins(toShow);
+    
+    % use custom function to interpolate point inbetween
+    [fittedLineX,fittedLineY] = polyinterpolate(xval,yval,3,20);
+
+    % plot that interpolation
+    plot(fittedLineX,fittedLineY,'r-','LineWidth',3);
+    
+    % if CRP plot, give top
+    if setIdx==1
+        topIndex = find(max(fittedLineY)==fittedLineY);
+        TopY = fittedLineY(topIndex);
+        TopX = fittedLineX(topIndex);
+        plot(TopX,TopY,'sr','MarkerSize',15,'LineWidth',2);
+        disp(['Top of curve is at: ' num2str(TopX) ',' num2str(TopY)]);
+    end
 end
 
 referenceFigNumber=numel(XFIELDS)+1+numel(SETS)+numel(SETSscatter);
 
+%% Now let's see how the trend in the constitutive compares for cells having high vs. low cAMP
+% Execute previous section first
+
+selectedIdxs={};
+selectedIdxs{1} = allY1{1}<TopX; % low
+selectedIdxs{2} = allY1{1}>=TopX; % high
+
+figure(23); clf; hold on;
+figure(24); clf; hold on;
+
+TITLEhighLow= {'Left from top','Right from top'};
+
+resultingMeanLines={};
+for setIdx = 1:2
+    
+    figure(22+setIdx);
+    
+    for highLowIndex=1:2
+        
+        subplot(1,2,highLowIndex); hold on;
+        currentSelectedIdx=selectedIdxs{highLowIndex};
+        
+        plot(allY1{setIdx}(currentSelectedIdx),allY2{setIdx}(currentSelectedIdx),'.');
+        ylim([0,2]);
+
+        [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins, counts] = ...
+                    binnedaveraging({allY1{setIdx}(currentSelectedIdx)},{allY2{setIdx}(currentSelectedIdx)},linspace(0,max(allY1{setIdx}(currentSelectedIdx)),40));
+
+        toShow = counts>50;
+        errorbar(binCenters(toShow),meanValuesForBins(toShow),stdValuesForBins(toShow),'k-','LineWidth',2)
+
+        resultingMeanLines{setIdx}{highLowIndex} = [binCenters(toShow);meanValuesForBins(toShow)];
+        
+        currentSet = SETSscatter{setIdx};
+        title(TITLEhighLow{highLowIndex});
+        xlabel(TITLES{currentSet(1)});
+        ylabel(TITLES{currentSet(2)});
+        MW_makeplotlookbetter(20);
+        
+    end
+    
+    % update graphs with matching trend lines
+    for highLowIndex=1:2
+        subplot(1,2,highLowIndex); hold on;
+        
+        plot(resultingMeanLines{setIdx}{3-highLowIndex}(1,:),resultingMeanLines{setIdx}{3-highLowIndex}(2,:),...
+             '-','Color',[.5 .5 .5],'LineWidth',2);
+        
+    end
+end
+
+% save figs
+if exist('OUTPUTFOLDER','var')
+    for h = 23:24
+        saveas(h,[OUTPUTFOLDER 'fig' num2str(h) '.tif'])
+        saveas(h,[OUTPUTFOLDER 'fig' num2str(h) '.tif'])
+    end
+end
+
 %% Towbin divides CRP signal by constitutive signal 
 
-YFIELDS = {'Y6_mean'    'C6_mean'    'muP9_fitNew_cycCor'}; % see below for order
+figure(30);
 
-allCRP=outputSimple.(YFIELDS{1}).ally;
-allCONSTI=outputSimple.(YFIELDS{2}).ally;
-allGROWTH=outputSimple.(YFIELDS{3}).ally;
+YFIELDSTOWBIN = {'Y6_mean'    'C6_mean'    'muP9_fitNew_cycCor'}; % see below for order
+
+allCRP=outputSimple.(YFIELDSTOWBIN{1}).ally;
+allCONSTI=outputSimple.(YFIELDSTOWBIN{2}).ally;
+allGROWTH=outputSimple.(YFIELDSTOWBIN{3}).ally;
 
 normalizedSignals = allCRP./allCONSTI;
 desiredBins = linspace(0,max(normalizedSignals),40)
@@ -267,7 +366,7 @@ toShow = countsCRP>50;
 binDistance=binCentersYCRP(2)-binCentersYCRP(1);
 
 %
-h1=figure(101); clf; hold on;
+h1=figure(30); clf; hold on;
 scatter(normalizedSignals,allGROWTH,3^2,'filled',...
                         'MarkerEdgeColor','None',...
                         'MarkerFaceColor',MYCOLOR,...
@@ -291,11 +390,13 @@ end
 
 %% How does the system evolve over time?
 
+figure(40);
+
 timeValues = outputSimple.('Y6_mean').x;
 CRPvalues  = outputSimple.('Y6_mean').y;
 growthvalues  = outputSimple.('muP9_fitNew_cycCor').y;
 
-h1=figure(referenceFigNumber+1); clf; hold on; 
+h1=figure(40); clf; hold on; 
 % saving the figure
 SIZE=[17,6.8]; OFFSET = [2,2]; set(h1,'Units','centimeters','Position',[OFFSET SIZE]*2)
 set(h1,'RendererMode','manual','Renderer','Painters');
@@ -378,14 +479,15 @@ TIMEFIELD='time';
 % obtain last schnitzes
 lastSchnitzes = MW_getschnitzesinlastframe(schnitzcells);
 
-YFIELDS = {'muP9_fitNew_all','C6_mean_all','Y6_mean_all'}
+YFIELDSTRACES = {'muP9_fitNew_all','C6_mean_all','Y6_mean_all'}
 % obtain traces for all of them
-[myTraces] = MW_gettracefromschnitzcellsreverse(schnitzcells,lastSchnitzes,TIMEFIELD,YFIELDS);
+[myTraces] = MW_gettracefromschnitzcellsreverse(schnitzcells,lastSchnitzes,TIMEFIELD,YFIELDSTRACES);
 
 %% plot traces
-IDX=15;
 
-h1=figure(referenceFigNumber+2); clf; hold on; 
+IDX=10;
+
+h1=figure(50); clf; hold on; 
 divisionPointsToPlot = find(myTraces(IDX).divisionIndices);
 plot(myTraces(IDX).time./60,...
     myTraces(IDX).muP9_fitNew_all,'-','LineWidth',2);
@@ -393,9 +495,11 @@ plot(myTraces(IDX).time(divisionPointsToPlot)./60,...
      myTraces(IDX).muP9_fitNew_all(divisionPointsToPlot),'s','LineWidth',3);
 
 xlim([0,max(myTraces(IDX).time./60)]); 
-ylim([-1,3]);
+theYLim = [-1,3];
+ylim(theYLim);
  
 % plot points in time where we switched medium again
+lineY = theYLim;
 lines=[]; myThreeColors = linspecer(3);
 for idx=1:numel(switchTimesHrsCorrected)
 
@@ -417,16 +521,17 @@ saveas(h1,[OUTPUTFOLDER 'fig' num2str(referenceFigNumber+2) '.tif'])
 %% now plot time evolution for single cells
 IDX=13;
 
+figure(60);
+
 selectionIdxs=~isnan(myTraces(IDX).Y6_mean_all);
 
 time = myTraces(IDX).time(selectionIdxs)./60;
 y1   = myTraces(IDX).Y6_mean_all(selectionIdxs);
 y2   = myTraces(IDX).muP9_fitNew_all(selectionIdxs);
 
-figNr = referenceFigNumber+2;
-
 highlightPointCategories=valuesOfSwitchDisplayed;
 
+figNr=60;
 h = timeevolutionplot(time,y1,y2,switchIndices,highlightPointCategories,figNr);
 
 schnitzEnd = myTraces(IDX).lineageSchnitzNrs(end);
@@ -452,7 +557,218 @@ y=[schnitzcells(:).C5_mean];
 noiseS70    = std(y)/mean(y)
 meanS70     = mean(y)
 
-%% Some additional plots 
+%% Let's make a scatter plot, time coded, for selected data
+% TODO: this code needs to be cleaned and a few loops need to be made to
+% create all the plots..
+
+figure(71); clf; hold on; figure(72); clf; hold on;
+figure(73); clf; hold on; figure(74); clf; hold on;
+figure(75); clf; hold on; figure(76); clf; hold on;
+
+% we have two full five-hour periods
+% 5.8267-10.8275 (low signal)
+% 10.8275-15.8281 (high signal)
+
+TWOTITLES={'Low cAMP','High cAMP'};
+
+% Prepare the data
+% ===
+
+% gather data
+gatheredScatterData.allTimeValues = [outputSimple.('muP9_fitNew_cycCor').allx];
+gatheredScatterData.allGrowthValues = [outputSimple.('muP9_fitNew_cycCor').ally];
+
+gatheredScatterData.allCRPValues = [outputSimple.('Y6_mean').ally];
+gatheredScatterData.allConstiValues = [outputSimple.('C6_mean').ally];
+
+gatheredScatterData.allProdTimes    = [schnitzcells(:).time_atdC]/60;
+gatheredScatterData.allProdGrowth   = [schnitzcells(:).muP9_fitNew_atdC5_cycCor]; % again just because acq. times don't match
+gatheredScatterData.allProdCRP      = [schnitzcells(:).dY5_cycCor];
+gatheredScatterData.allProdConsti   = [schnitzcells(:).dC5_cycCor];
+
+% loop over the two time windows
+for highLowWindowIndex = 1:2
+    
+    % define the window
+    if highLowWindowIndex==1 % low            
+            point1=switchTimesHrsCorrectedDisplayed(6); point2=switchTimesHrsCorrectedDisplayed(7);
+    elseif highLowWindowIndex==2 % high
+            point1=switchTimesHrsCorrectedDisplayed(7); point2=switchTimesHrsCorrectedDisplayed(8);
+    end
+
+    % select data for fluor fields for time window 
+    gatheredScatterData.selectedIndices{highLowWindowIndex} = gatheredScatterData.allTimeValues>point1 & gatheredScatterData.allTimeValues<point2;
+    gatheredScatterData.selectedTime{highLowWindowIndex}   = gatheredScatterData.allTimeValues(gatheredScatterData.selectedIndices{highLowWindowIndex});
+    gatheredScatterData.selectedGrowth{highLowWindowIndex} = gatheredScatterData.allGrowthValues(gatheredScatterData.selectedIndices{highLowWindowIndex});
+    gatheredScatterData.selectedCRP{highLowWindowIndex}    = gatheredScatterData.allCRPValues(gatheredScatterData.selectedIndices{highLowWindowIndex}); 
+    gatheredScatterData.selectedConsti{highLowWindowIndex} = gatheredScatterData.allConstiValues(gatheredScatterData.selectedIndices{highLowWindowIndex});
+
+    % select data for production fields for time window 
+    gatheredScatterData.selectedProdIndicesProd{highLowWindowIndex} = gatheredScatterData.allProdTimes>point1 & gatheredScatterData.allProdTimes<point2;
+    gatheredScatterData.selectedProdTime{highLowWindowIndex}   = gatheredScatterData.allProdTimes(gatheredScatterData.selectedProdIndicesProd{highLowWindowIndex});
+    gatheredScatterData.selectedProdGrowth{highLowWindowIndex} = gatheredScatterData.allProdGrowth(gatheredScatterData.selectedProdIndicesProd{highLowWindowIndex});
+    gatheredScatterData.selectedProdCRP{highLowWindowIndex}    = gatheredScatterData.allProdCRP(gatheredScatterData.selectedProdIndicesProd{highLowWindowIndex}); 
+    gatheredScatterData.selectedProdConsti{highLowWindowIndex} = gatheredScatterData.allProdConsti(gatheredScatterData.selectedProdIndicesProd{highLowWindowIndex}); 
+    
+end
+
+% define the cases we want to plot:
+TFIELDS2 = {'selectedProdTime',      'selectedProdTime',         'selectedTime',     'selectedTime',         'selectedTime',     'selectedProdTime'};
+XFIELDS2 = {'selectedProdCRP',       'selectedProdConsti',       'selectedCRP',      'selectedConsti',       'selectedCRP',      'selectedProdCRP'};
+YFIELDS2 = {'selectedProdGrowth',    'selectedProdGrowth',       'selectedGrowth',   'selectedGrowth',       'selectedConsti',   'selectedProdConsti'};
+NAMESX  = {'Production CRP',        'Production consti.',       'CRP label',        'Consitutive label',    'CRP label',        'Prod. CRP'};
+NAMESY  = {'Growth (dbl/hr)',       'Growth (dbl/hr)',          'Growth (dbl/hr)',  'Growth (dbl/hr)',      'Consti. label',    'Prod. consti.'};
+
+% For loop
+myThreeColors = linspecer(3);
+for caseIdx = 1:numel(TFIELDS2)
+    %%
+    minValY = Inf; maxValY = 0;
+    minValX = Inf; maxValX = 0;
+    fitLines=[]; sL=[];
+    storedFitLines={};
+    for highLowWindowIndex = 1:2
+        %
+        figure(70+caseIdx); hold on;
+        currentAxis=subplot(2,1,highLowWindowIndex); hold on;
+
+        if highLowWindowIndex==1
+            % low
+            point1=switchTimesHrsCorrectedDisplayed(6);
+            point2=switchTimesHrsCorrectedDisplayed(7);
+            MYCOLOR=myThreeColors(2,:);        
+        elseif highLowWindowIndex==2
+            % high
+            point1=switchTimesHrsCorrectedDisplayed(7);
+            point2=switchTimesHrsCorrectedDisplayed(8);
+            MYCOLOR=myThreeColors(3,:);        
+        else
+            error('Timeframe issue');
+        end
+       
+        currentTField = TFIELDS2{caseIdx};
+        currentXField = XFIELDS2{caseIdx};
+        currentYField = YFIELDS2{caseIdx};
+
+        Tsignal = gatheredScatterData.(currentTField){highLowWindowIndex};
+        Xsignal = gatheredScatterData.(currentXField){highLowWindowIndex};
+        Ysignal = gatheredScatterData.(currentYField){highLowWindowIndex};        
+
+        if exist('SPECIALCASE','var')
+            % normalize y signal in special case
+            Xsignal=Xsignal./gatheredScatterData.('selectedProdGrowth'){highLowWindowIndex};
+            Ysignal=Ysignal./gatheredScatterData.('selectedProdGrowth'){highLowWindowIndex};
+        end
+        
+        % create the color gradients for time
+        % re-normalize the time points
+        TsignalNorm = int16((Tsignal-min(Tsignal))./(max(Tsignal)-min(Tsignal))*99+1);
+        colorsForTime = timeColorGradient{highLowWindowIndex}(TsignalNorm,:);
+
+        % make the scatter plot
+        sL(end+1)=scatter(Xsignal,Ysignal,3^2,colorsForTime);
+
+    %     sL(end+1)=scatter(Xsignal,Ysignal,3^2,colorsForTime,'filled',...
+    %                             'MarkerEdgeColor','None',...
+    %                             'MarkerFaceColor',MYCOLOR,...
+    %                             'MarkerFaceAlpha',.5,...
+    %                             'MarkerEdgeAlpha',.5);
+
+        % again also weighed average and cosmetisc
+
+        xlabel(NAMESX{caseIdx});
+        ylabel(NAMESY{caseIdx});
+        if exist('SPECIALCASE','var')
+            xlabel([NAMESX{caseIdx} '/µ']);
+            ylabel([NAMESY{caseIdx} '/µ']);
+        end
+
+        myBins=linspace(0,max(Xsignal),40);
+        if exist('SPECIALCASE','var')
+            myBins=linspace(0,20000,40);
+        end
+        %if ~isempty(strfind(currentYField,'Growth')), myBins=[0:.1:2]; end
+        [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins, counts] = ...
+                binnedaveraging({Xsignal},{Ysignal},myBins);
+
+        MW_makeplotlookbetter(20);       
+
+        toShow = counts>50;
+        %errorbar(binCenters(toShow),meanValuesForBins(toShow),stdValuesForBins(toShow),'k-','LineWidth',2)
+        fitLines(end+1)=plot(binCenters(toShow),meanValuesForBins(toShow),'-s','Color',MYCOLOR/2,'LineWidth',2);
+
+        minValX=min([minValX binCenters(toShow)]);
+        maxValX=max([maxValX binCenters(toShow)]);    
+
+        minValY=min([minValY meanValuesForBins(toShow)]);
+        maxValY=max([maxValY meanValuesForBins(toShow)]);    
+        
+        legend(fitLines(end),TWOTITLES{highLowWindowIndex})
+
+        storedFitLines{highLowWindowIndex} = [binCenters(toShow);meanValuesForBins(toShow)];
+
+        % Set appropriate color bars ------------------------------------------
+
+        colormap(currentAxis,timeColorGradient{highLowWindowIndex});
+        hC=colorbar();
+
+        ylabel(hC, 'Time (hrs)')
+
+        inputSettings.rangeIn = [0,1]; % original range of axis
+        inputSettings.desiredSpacing = max(Tsignal); %  desired spacing of axis in new metric
+        inputSettings.rangeOut = [0,max(Tsignal)]; % the desired target range
+        [tickLocationsOldMetric, correspondingLabels] = labelremapping(inputSettings);
+
+        set(hC, 'YTickLabel',correspondingLabels, 'XTick',tickLocationsOldMetric)
+        
+    end
+
+    for highLowWindowIndex=1:2
+        subplot(2,1,highLowWindowIndex); hold on;
+        xlim([-.1*maxValX maxValX*1.2]);
+        ylim([-.1*maxValY maxValY*1.2])
+        %if ~isempty(strfind(currentYField,'Growth')), ylim([0,1.5]); end  
+
+        %MYCOLOR=myThreeColors(4-timeFrame,:);
+        fitLines(end+1)=plot(storedFitLines{3-highLowWindowIndex}(1,:),storedFitLines{3-highLowWindowIndex}(2,:),'-','Color',[.5 .5 .5],'LineWidth',3);
+    end
+
+    uistack(fitLines(1), 'top')
+    uistack(fitLines(2), 'top')
+    %uistack(h(2), 'top')
+
+    %legend(sL,{'43uM','2100uM cAMP'});
+    
+
+end
+
+disp('Section done');
+
+%% now time code ratio's
+
+% make two nice gradients
+% red to deep purple/
+
+someGradientColors = linspecer(5);
+
+timeColorGradient={};
+timeColorGradient{1} = makeColorMap(someGradientColors(1,:),someGradientColors(3,:),100);
+timeColorGradient{2} = makeColorMap(someGradientColors(2,:),someGradientColors(4,:),100);
+
+timeColorGradient{1} = autumn(100);
+timeColorGradient{2} = winter(100);
+
+
+%{
+% show first few colors in fig
+figure; hold on;
+plot(1,1,'o','MarkerSize',20,'LineWidth',3,'Color',someGradientColors(1,:))
+plot(1,2,'o','MarkerSize',20,'LineWidth',3,'Color',someGradientColors(2,:))
+plot(1,3,'o','MarkerSize',20,'LineWidth',3,'Color',someGradientColors(3,:))
+plot(1,4,'o','MarkerSize',20,'LineWidth',3,'Color',someGradientColors(4,:))
+%}
+
+
 
 
 

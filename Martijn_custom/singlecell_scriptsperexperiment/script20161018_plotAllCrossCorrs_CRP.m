@@ -3,12 +3,17 @@
 
 % CONFIGFILE='U:\ZZ_EXPERIMENTAL_DATA\Data_per_project\CRPcAMP\config_projectCRPcAMP.m';
 
+warning('TODO: move the files in the output folder (also .docx files) and change path here..');
 PLOTOUTDIR = '\\storage01\data\AMOLF\users\wehrens\ZZ_EXPERIMENTAL_DATA\A_Step5_Plots\CRPcAMP\';
 EXTENSIONS = {'png','svg','fig'};
 
 some_colors;
 
 % =========================================================================
+
+%%
+% Measure timing
+tic;
 
 %% Part I =================================================================
 
@@ -121,11 +126,16 @@ end
 %% Set parameters
 
 % Some need to be reset, because also used in previous sections
-TOPLOTFIELDNAMES    = {'concentrationCorrData', 'rateCorrData'}; % this is always the case
+TOPLOTFIELDNAMES = {'concentrationCorrData', 'rateCorrData'}; % this is always the case
 
 if ~exist('GROUPSTOPLOT','var')
     GROUPSTOPLOT={'CRP_s70_chromosomal','chromoCRP_cAMP800','chromoCRP_cAMPLOW80','chromoCRP_cAMPHIGH5000'};
 end
+
+if ~exist('FLUORCOLORS','var')
+    FLUORCOLORS={'C','Y'};
+end
+
 if ~exist('FILENAMESperGroupPartI','var')
     FILENAMESperGroupPartI = {'WT_','MED_','LOW_','HIGH_'};
 end
@@ -144,23 +154,34 @@ Line1Colors = linspecer(numel(GROUPSTOPLOT));
 Line2Colors = ones(numel(GROUPSTOPLOT),3)*0; % also allows gray
 
 %% Actually plotting the cross-corrs Daan style: do it using loop
+SUBDIR = 'overview_ccs\';
+if ~exist([PLOTOUTDIR SUBDIR],'dir')
+    mkdir([PLOTOUTDIR SUBDIR]);
+end
 
 optionsStruct=struct;
 gatheredCCs = struct;
 for groupIdx = 1:numel(GROUPSTOPLOT)
     for dualColorIdx = 1:2
         
+        % The following code plots multiple cross-correlations into one
+        % plot.
+        
         % parameters that are used by plotting script
-        DATASETSTOPLOT = {GROUPSTOPLOT{groupIdx} GROUPSTOPLOT{groupIdx}};
+        % ===
+        % the datasets the CCs come from; here usually the same
+        currentDataSetsToPlot = {GROUPSTOPLOT{groupIdx} GROUPSTOPLOT{groupIdx}};
+        % # of the two parameters that the cross-corr is calculated for
         DUALCOLORINDICES =  [dualColorIdx dualColorIdx];
+        % colors of the two lines
         LINECOLORS = {Line1Colors(groupIdx,:), Line2Colors(groupIdx,:)};
 
         % plotting script
         optionsStruct.STOPRELOADING=1;
-        [hCC,output]=plottingGeneral_v2_CCs(DATASETSTOPLOT,DUALCOLORINDICES,LINECOLORS,SELECTIONFIELD,TOPLOTFIELDNAMES,optionsStruct); 
+        [hCC,output]=plottingGeneral_v2_CCs(currentDataSetsToPlot,DUALCOLORINDICES,LINECOLORS,SELECTIONFIELD,TOPLOTFIELDNAMES,optionsStruct); 
 
         % save average lines in struct also
-        gatheredCCs.(GROUPSTOPLOT{groupIdx}).data = output;        
+        gatheredCCs.(GROUPSTOPLOT{groupIdx}).data.(FLUORCOLORS{dualColorIdx}) = output;        
         
         % plot cosmetics
         figure(hCC.Number); 
@@ -186,6 +207,146 @@ end
 disp('Done plotting Cross corrs');
 winopen([PLOTOUTDIR SUBDIR]);
 
+%% Repeat for autocorrelations
+TOPLOTFIELDNAMESAUTOCORR={'concentrationautoCorrData', 'rateautoCorrData','growthautoData'};
+TITLESAUTOCORR={'Concentration','Rate','Growth rate'};
+LEGENDNAMES={'E-E','p-p','\mu-\mu'};
+% note that handling of autocorrelations for growth rates is a bit awkward
+% as it is done twice for fluor1 and fluor2
+
+optionsStructAC=struct;
+gatheredACs = struct;
+for groupIdx = 1:numel(GROUPSTOPLOT)
+    for dualColorIdx = 1:2
+        
+        % parameters that are used by plotting script
+        currentDataSetsToPlot = {GROUPSTOPLOT{groupIdx} GROUPSTOPLOT{groupIdx} GROUPSTOPLOT{groupIdx}};
+        DUALCOLORINDICES =  [dualColorIdx dualColorIdx dualColorIdx];
+        LINECOLORS = {Line1Colors(groupIdx,:), Line2Colors(groupIdx,:) [.5 .5 .5]};
+
+        % plotting script
+        optionsStructAC.STOPRELOADING=1;
+        optionsStructAC.LEGENDNAMES=LEGENDNAMES;
+        [hAC,output]=plottingGeneral_v2_CCs(currentDataSetsToPlot,DUALCOLORINDICES,LINECOLORS,SELECTIONFIELD,TOPLOTFIELDNAMESAUTOCORR,optionsStructAC); 
+
+        % save average lines in struct also
+        gatheredACs.(GROUPSTOPLOT{groupIdx}).data.(FLUORCOLORS{dualColorIdx}) = output;        
+        
+        % plot cosmetics
+        figure(hAC.Number); 
+        title([TITLESforgroupsPartI{groupIdx},TITLESforgroupsPartII{dualColorIdx}]);
+        xlim([0,10*output.hrsPerDoublingMean]);              
+        
+    end
+end
+
+%% Repeat for CCs between two colors 
+TOPLOTFIELDNAMESCOLORCORR={'concentrationDualCrossCorrData', 'rateDualCrossCorrData'};
+TITLESAUTOCORR={'Concentration','Rate'};
+LEGENDNAMES={'E_{consti.}-E_{CRP}','p_{consti.}-p_{CRP}'};
+% note that handling of autocorrelations for growth rates is a bit awkward
+% as it is done twice for fluor1 and fluor2
+
+fieldNamesCheckPerGroup={};
+optionsStructCY=struct;
+gatheredCYs = struct;
+for groupIdx = 1:numel(GROUPSTOPLOT)
+    for dualColorIdx = 1
+        
+        % parameters that are used by plotting script
+        currentDataSetsToPlot = {GROUPSTOPLOT{groupIdx} GROUPSTOPLOT{groupIdx}};
+        DUALCOLORINDICES =  [dualColorIdx dualColorIdx];
+        LINECOLORS = {Line1Colors(groupIdx,:), Line2Colors(groupIdx,:)};
+
+        % plotting script
+        optionsStructCY.STOPRELOADING=1;
+        optionsStructCY.LEGENDNAMES=LEGENDNAMES;
+        [hCY,output]=plottingGeneral_v2_CCs(currentDataSetsToPlot,DUALCOLORINDICES,LINECOLORS,SELECTIONFIELD,TOPLOTFIELDNAMESCOLORCORR,optionsStructCY); 
+
+        % save average lines in struct also
+        gatheredCYs.(GROUPSTOPLOT{groupIdx}).data.CY = output;        
+        
+        % plot cosmetics
+        figure(hCY.Number); 
+        title([TITLESforgroupsPartI{groupIdx}]);
+        xlim([-10*output.hrsPerDoublingMean,10*output.hrsPerDoublingMean]);                  
+            
+    end            
+    
+    % Tell user X-order of fields for R(X1,X2)
+    fieldNamesCheckPerGroup{groupIdx} = crossCorrData(output.idxsCrossCorrData).rateDualCrossCorrFieldNames;
+            
+end
+
+fieldNamesCheckPerGroup
+disp('It might be a good idea to double-check the order of your fieldnames, since this depends on the order in the config. file.');
+% so far it has been R(C,Y), so R(const., CRP)
+
+%% Plot autocorrelations in combined plot
+
+SUBDIR = 'overview_autocorr\';
+TYPENAMES={'Conc_','Rate_','Growth_'};
+
+if ~exist([PLOTOUTDIR SUBDIR],'dir')
+    mkdir([PLOTOUTDIR SUBDIR]);
+end
+
+for typeIndex=1:3
+for dualColorIdx=1:2
+
+    %%
+    hCombinedAC = figure(); clf; hold on; 
+    lines=[]; alltaus=[]; allRS =[];
+    for groupIdx= 1:numel(GROUPSTOPLOT)
+
+        % title
+        title([TITLESAUTOCORR{typeIndex} ' ' TITLESforgroupsPartII{dualColorIdx}]);
+        if typeIndex==3 % for growth rate TITLESforgroupsPartII is redundant
+            title([TITLESAUTOCORR{typeIndex}]);
+        end
+
+        tau=gatheredACs.(GROUPSTOPLOT{groupIdx}).data.(FLUORCOLORS{dualColorIdx}).datatau{typeIndex};
+        R=gatheredACs.(GROUPSTOPLOT{groupIdx}).data.(FLUORCOLORS{dualColorIdx}).datacorrelation{typeIndex};
+        hrsPerDoublingMean=gatheredACs.(GROUPSTOPLOT{groupIdx}).data.(FLUORCOLORS{dualColorIdx}).hrsPerDoublingMean;
+            % note lines 1-3 correspond to 
+            % TOPLOTFIELDNAMESAUTOCORR={'concentrationautoCorrData', 'rateautoCorrData','growthautoData'}
+
+        lineColor=Line1Colors(groupIdx,:);
+        lines(end+1)=plot(tau,R,'-','LineWidth',2,'Color',lineColor);
+
+        % plot the mean hrs per doubling as a bar
+        plot([0,hrsPerDoublingMean],[-0.03*groupIdx,-.03*groupIdx],'-','LineWidth',4,'Color', lineColor);
+
+        % gather data pile for x and ylims
+        alltaus=[alltaus tau];
+        allRs  =[allRS R -0.03*groupIdx-.02];
+    end
+        
+    myXlim=[0,max(alltaus)];
+    xlim(myXlim);
+
+    myYlim=[min(allRs),1.01];
+    ylim(myYlim);
+
+    plot([myXlim],[0,0],'-k');
+
+    legend(lines,LEGENDNAMES);
+
+    xlabel('Time (hrs)');
+    ylabel('Autocorrelation');
+    MW_makeplotlookbetter(20);
+    
+    % Save plot
+    for extIdx = 1:numel(EXTENSIONS)
+        fileName = [PLOTOUTDIR SUBDIR EXTENSIONS{extIdx} '_autocorr_' TYPENAMES{typeIndex} FILENAMESperGroupPartII{dualColorIdx} '.' EXTENSIONS{extIdx}];
+        if strcmp(EXTENSIONS{extIdx},'eps'), saveas(hCombinedAC,fileName,'epsc'); else saveas(hCombinedAC,fileName); end
+    end
+    
+end
+end
+
+disp('Done plotting Auto corrs');
+winopen([PLOTOUTDIR SUBDIR]);
 
 %% ========================================================================
 % PART III-B. Now make make probability densities etc.
@@ -424,6 +585,7 @@ for groupIdx=1:numel(GROUPSTOPLOT)
     
 end
 
+
 %% Now do the same thing again but make scatter plots..
 % -------------------------------------------------------------------------
 
@@ -573,10 +735,231 @@ end
 
 winopen([PLOTOUTDIR SUBDIR]);
 
+%% Get a better estimate of the variance, also important for modeling
+
+% GROUPSTOPLOT was set earlier to determine which groups to plot
+% Also, mycolors=linspecer(numel(GROUPSTOPLOT));
+
+YFIELDSVARIANCE=    {'muP9_fitNew_all'   , 'dY5_sum'            ,'dC5_sum', 'C6_mean' ,'Y6_mean'};
+NAMESVARIANCE  =    {'Variance in growth', 'Variance CRP prod.' ,'Variance consti. prod.','Var. in CRP label','Var. consti. label'};
+INDICESSELECTION =  {0                   , 'indices_at_dC'       , 'indices_at_dC','indices_at_C','indices_at_C'};
+    % 0=no selection
+
+gatheredVarianceOutput = struct; countVar=0;
+for groupIdx=1:numel(GROUPSTOPLOT)
+
+    %% find datasets w. this identifier
+    currentGroup = GROUPSTOPLOT{groupIdx};
+    dataIdxs = find(strcmp({crossCorrData(:).groupID},currentGroup));
+
+    disp(['Looking at : ' currentGroup]);
+    
+    % Loading applicable schnitzes and continue:
+    for dataSetsInGroupIdx = 1:numel(dataIdxs)
+
+        currentDataIdx = dataIdxs(dataSetsInGroupIdx);
+        
+        % Load the schnitz file
+        clear schnitzcells
+        load(crossCorrData(currentDataIdx).schnitzfile,'schnitzcells');
+
+        % Fix it if necessary with an additional field
+        if ~isfield(schnitzcells, 'indices_at_C')
+            disp('Editing saved schnitzcells struct.');
+            schnitzcells = MW_addToSchnitzes_indices_atXdX(crossCorrData(currentDataIdx).schnitzfile, 'C');
+        end
+
+        % administration
+        countVar=countVar+1;
+        
+        % Find the variance for different fields in the schnitzcells struct
+        for fieldIndex = 1:numel(YFIELDSVARIANCE)    
+
+            %%
+            fieldOfInterest = YFIELDSVARIANCE{fieldIndex};
+
+            allFrames    = [schnitzcells.frame_nrs];
+            allTimes     = [schnitzcells.time];
+
+            % This is necessary for fields that are not present for all
+            % timepoints
+            if ischar(INDICESSELECTION{fieldIndex})
+                indicesToSelect= find([schnitzcells.(INDICESSELECTION{fieldIndex})]);
+            else
+                indicesToSelect= 1:numel(allFrames);
+            end
+
+            % get applicable frames    
+            theFrames    = allFrames(indicesToSelect);
+            uniqueFrames = sort(unique(theFrames));
+
+            % get applicable times    
+            theTimes     = allTimes(indicesToSelect);
+            uniqueTimes  = sort(unique(theTimes));
+
+            % Load the field of interest
+            theY      = [schnitzcells.(fieldOfInterest)];
+
+            % calculate variances per frame and store them
+            count=0;
+            variances = NaN(1,numel(uniqueFrames)); variancesNormalized = NaN(1,numel(uniqueFrames));
+            for frameNr = uniqueFrames
+
+                count=count+1;
+                selectionIdxs = theFrames==frameNr;    
+                growthThisFrame = theY(selectionIdxs);
+                growthThisFrame = growthThisFrame(~isnan(growthThisFrame));
+                growthThisFrameNormalized = growthThisFrame./mean(growthThisFrame);
+                variances(count) = var(growthThisFrame);
+                variancesNormalized(count) = var(growthThisFrameNormalized);
+            end
+
+            % calculate an estimated variance based on last 10 frames
+            meanVariance  = mean(variancesNormalized(end-9:end));
+            medianVariance= median(variancesNormalized(end-9:end));            
+            stdVariance   = std(variancesNormalized(end-9:end));                                    
+
+            h=figure(); clf; hold on;
+            %bar(uniqueTimes/60,variancesNormalized);%,'-o','LineWidth',2)
+            plot(uniqueTimes/60,variancesNormalized,'.','LineWidth',2);          
+            title(['Population based variance' 10 'Median last 10 frms = ' num2str(medianVariance) ' +/- ' num2str(stdVariance) '.']);
+            xlabel('Time (hrs)'); 
+            ylabel([NAMESVARIANCE{fieldIndex}]);
+            MW_makeplotlookbetter(20);
+
+            
+            gatheredVarianceOutput.(fieldOfInterest).meanVariances(countVar)       = ...
+                meanVariance;
+            gatheredVarianceOutput.(fieldOfInterest).medianVariances(countVar)     = ...
+                medianVariance;
+            gatheredVarianceOutput.(fieldOfInterest).stdVariances(countVar)        = ...
+                stdVariance;
+            gatheredVarianceOutput.(fieldOfInterest).NormalizedVariancesTimeseries{countVar} = ...
+                [uniqueTimes;variancesNormalized];
+            gatheredVarianceOutput.(fieldOfInterest).groupNames{countVar}          = ...
+                currentGroup;
+            gatheredVarianceOutput.(fieldOfInterest).groupIdx(countVar)          = ...
+                groupIdx;
+            
+                
+            %{
+            gatheredVarianceOutput(groupIdx).(fieldOfInterest).meanVariance{dataSetsInGroupIdx} = ...
+                meanVariance;
+            gatheredVarianceOutput(groupIdx).(fieldOfInterest).medianVariance{dataSetsInGroupIdx} = ...
+                medianVariance;
+            gatheredVarianceOutput(groupIdx).(fieldOfInterest).stdVariance{dataSetsInGroupIdx} = ...
+                stdVariance;
+            gatheredVarianceOutput(groupIdx).(fieldOfInterest).NormalizedVariancesTimeseries{dataSetsInGroupIdx} = ...
+                [uniqueTimes;variancesNormalized];
+            gatheredVarianceOutput(groupIdx).(fieldOfInterest).groupName= currentGroup;
+            %}
+            
+        end        
+        
+    end
+end
+
+disp('Variance analysis done..');
+
+%% Now make a plot to compare them
+disp([gatheredVarianceOutput.(YFIELDSVARIANCE{1}).groupNames]);
+for fieldIdx = 1:5
+
+    figure; clf; hold on;   
+
+    %{
+    legendLines=[]; barcounter=0; barvalues{fieldIdx}=[];
+    for groupIndex = 1:numel(GROUPSTOPLOT)
+
+        currentGroup=GROUPSTOPLOT{groupIndex};
+
+        % go over datasets
+        for i = 1:numel(gatheredOutput.(currentGroup).allData)        
+
+            barcounter=barcounter+1;
+
+            % plot
+            theNoiseValue=gatheredOutput.(currentGroup).noises{i}{fieldIdx};
+            l=bar(barcounter,theNoiseValue,'FaceColor',mycolors(groupIndex,:));%,'LineWidth',2);
+            barvalues{fieldIdx}(barcounter)=theNoiseValue;
+
+        end
+
+        legendLines(end+1)=l;
+
+    end
+    %}
+
+    % plot
+    legendLines=[]; lastGroupIdx=0;
+    for i=1:numel(gatheredVarianceOutput.(YFIELDSVARIANCE{fieldIdx}).medianVariances)
+
+        X=i;
+        Y=gatheredVarianceOutput.(YFIELDSVARIANCE{fieldIdx}).medianVariances(i);
+        %Y=gatheredVarianceOutput.(YFIELDSVARIANCE{fieldIdx}).meanVariances(i);
+        errY=gatheredVarianceOutput.(YFIELDSVARIANCE{fieldIdx}).stdVariances(i);
+        groupIdx=gatheredVarianceOutput.(YFIELDSVARIANCE{fieldIdx}).groupIdx(i);
+        theColor = mycolors(groupIdx,:);
+
+        errorbar(X,Y,errY,'LineWidth',3,'Color','k');
+        l=bar(X,Y,'FaceColor',theColor);    
+
+        if (groupIdx~=lastGroupIdx)
+            legendLines(end+1)=l;
+        end
+        lastGroupIdx=groupIdx;
+
+    end
+
+    % cosmetics
+    barLocs    = 1:numel(gatheredVarianceOutput.(YFIELDSVARIANCE{fieldIdx}).meanVariances);
+    labelNames = gatheredVarianceOutput.(YFIELDSVARIANCE{fieldIdx}).groupNames;
+    set(gca,'TickLabelInterpreter','none'); 
+    set(gca,'XTick',barLocs,'XTickLabel',labelNames);
+    set(gca,'XTickLabelRotation',45)
+    ylabel(NAMESVARIANCE{fieldIdx}); % Variance based on normalized growth
+    MW_makeplotlookbetter(15);    
+
+    legend(legendLines,LEGENDNAMES);
+    xlabel('Replicates');
+
+    disp([YFIELDSVARIANCE{fieldIdx} '='    num2str(gatheredVarianceOutput.(YFIELDSVARIANCE{fieldIdx}).meanVariances)]);
+    
+end
+
+disp('Section done');
+
+%%
+fieldIdx = 5;
+
+legendLines=[]; lastGroupIdx=0;
+figure; clf; hold on;
+for i=1:numel(gatheredVarianceOutput.(YFIELDSVARIANCE{fieldIdx}).medianVariances)
+    groupIdx=gatheredVarianceOutput.(YFIELDSVARIANCE{fieldIdx}).groupIdx(i);
+    theColor = mycolors(groupIdx,:);
+    dataLine = gatheredVarianceOutput.(YFIELDSVARIANCE{fieldIdx}).NormalizedVariancesTimeseries{i};
+    l=plot(dataLine(1,:)./60,dataLine(2,:),'-','Color',theColor,'LineWidth',1)    
+    
+    if (groupIdx~=lastGroupIdx)
+        legendLines(end+1)=l;
+    end
+    lastGroupIdx=groupIdx;
+end
+
+legend(legendLines,LEGENDNAMES);
+xlabel('Time (hrs)');
+ylabel(NAMESVARIANCE{fieldIdx});
+MW_makeplotlookbetter(20);
+
+ylim([0,0.7]);
+
 %%
 
 winopen(PLOTOUTDIR);
 disp('One script to rule them all done.');      
+
+t2=toc;
+disp(['Done in ' num2str(t2/60) ' minutes']);
 
 
 
