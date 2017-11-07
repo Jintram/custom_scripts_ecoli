@@ -40,6 +40,20 @@ TITLES  = {'CRP signal','Const. signal','Growth rate','CRP production rate','Con
 XFIELDS = {'time_atY','time_atC','time_atY','time_atdY','time_atdC'};
 YFIELDS = {'Y6_mean','C6_mean','muP9_fitNew_cycCor','dY5_sum','dC5_sum'};
 
+%% Set up some cosmetic stuff
+
+% make two nice gradients
+% red to deep purple/
+
+someGradientColors = linspecer(5);
+
+timeColorGradient={};
+timeColorGradient{1} = makeColorMap(someGradientColors(1,:),someGradientColors(3,:),100);
+timeColorGradient{2} = makeColorMap(someGradientColors(2,:),someGradientColors(4,:),100);
+
+timeColorGradient{1} = autumn(100);
+timeColorGradient{2} = winter(100);
+
 %% plot signal evolving over time for growth, fluor label concentrations and production
 
 % Open figures already here to find them back easily later
@@ -744,19 +758,7 @@ end
 
 disp('Section done');
 
-%% now time code ratio's
-
-% make two nice gradients
-% red to deep purple/
-
-someGradientColors = linspecer(5);
-
-timeColorGradient={};
-timeColorGradient{1} = makeColorMap(someGradientColors(1,:),someGradientColors(3,:),100);
-timeColorGradient{2} = makeColorMap(someGradientColors(2,:),someGradientColors(4,:),100);
-
-timeColorGradient{1} = autumn(100);
-timeColorGradient{2} = winter(100);
+%%
 
 
 %{

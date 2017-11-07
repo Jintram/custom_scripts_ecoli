@@ -28,6 +28,10 @@ for groupIdx= 1:numel(GROUPSTOPLOT)
     CY_conc_consti_CRP    = [gatheredCYs.(currentGroupName).data.CY.datatau{1}; gatheredCYs.(currentGroupName).data.CY.datacorrelation{1}]';
     CY_prod_consti_CRP    = [gatheredCYs.(currentGroupName).data.CY.datatau{2}; gatheredCYs.(currentGroupName).data.CY.datacorrelation{2}]';
     
+    % coss-correlation function for prod-concentration within same fluor
+    CC_prodConcConsti = [gatheredPEs.(currentGroupName).data.C.datatau{1}; gatheredPEs.(currentGroupName).data.C.datacorrelation{1}]';
+    CC_prodConcCRP    = [gatheredPEs.(currentGroupName).data.Y.datatau{1}; gatheredPEs.(currentGroupName).data.Y.datacorrelation{1}]';
+    
     % autocorrelations        
     % ===
     AC_conc_CRP     = [gatheredACs.(currentGroupName).data.Y.datatau{1}; gatheredACs.(currentGroupName).data.Y.datacorrelation{1}]';        
@@ -45,6 +49,9 @@ for groupIdx= 1:numel(GROUPSTOPLOT)
     save(['U:\Mathematica\CRP_LaurensKrah\data\' currentGroupName '_' 'CC_prod_growth_CRP.mat'],    'CC_prod_growth_CRP');
     save(['U:\Mathematica\CRP_LaurensKrah\data\' currentGroupName '_' 'CC_conc_growth_consti.mat'], 'CC_conc_growth_consti');
     save(['U:\Mathematica\CRP_LaurensKrah\data\' currentGroupName '_' 'CC_prod_growth_consti.mat'], 'CC_prod_growth_consti');
+    
+    save(['U:\Mathematica\CRP_LaurensKrah\data\' currentGroupName '_' 'CC_prodConcConsti.mat'],    'CC_prodConcConsti');    
+    save(['U:\Mathematica\CRP_LaurensKrah\data\' currentGroupName '_' 'CC_prodConcCRP.mat'],       'CC_prodConcCRP');
     
     save(['U:\Mathematica\CRP_LaurensKrah\data\' currentGroupName '_' 'AC_conc_CRP.mat'],     'AC_conc_CRP');
     save(['U:\Mathematica\CRP_LaurensKrah\data\' currentGroupName '_' 'AC_prod_CRP.mat'],     'AC_prod_CRP');

@@ -31,9 +31,31 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','loadData'}))
         'G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos3crop\data\pos3crop-Schnitz.mat'};
 end    
     
+%% Data re. nucleoids
+
+if any(strcmp(RUNSECTIONSFILEFTS,{'loadNucleoidData'}))
+
+    %%
+    % skeletonDataPaths{x} should match with schnitzDataPaths{x}.
+
+    % stored skeleton analysis
+    skeletonDataPaths={...
+        'H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\data\pos1cropa2-skeletonData.mat'};
+        % per frame the skeleton
+
+    % stored fluorescence data
+    fluorDataPaths={...
+        'H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\analysis\straightenedCells\2017-10-12pos1cropa2_straightFluorData.mat'};        
+
+    schnitzDataPaths={
+        'H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\data\pos1cropa2-Schnitz.mat'};
+end    
+
 %% convert schnitzcells data to ages per frame per cell
+
 if any(strcmp(RUNSECTIONSFILEFTS,{'all','getAges'}))
 
+    %%
     allAgesPerFrame = {};
     for datasetIndex = 1:numel(schnitzDataPaths)
 
@@ -60,6 +82,7 @@ end
 
 if any(strcmp(RUNSECTIONSFILEFTS,{'all','analyzeData'}))
 
+    %%
     PEAKTRESHOLD=400;
     figure(1); clf;
     figure(101); clf;
@@ -182,6 +205,117 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','analyzeData'}))
     
 end
 
+%% 
+if any(strcmp(RUNSECTIONSFILEFTS,{'all','nucleoidsMakePlotPretty'}))
+    
+    % Run analysis section first.
+    
+    hNucleoids=figure(102); clf; hold on;
+    
+    scatterXmicron{datasetIndex}=correspondingLengthsToLocations(indicesToSelect);
+    scatterYmicron{datasetIndex}=pileofXmicron(indicesToSelect)./correspondingLengthsToLocations(indicesToSelect);
+    %scatter(scatterXPx{datasetIndex},scatterYPx{datasetIndex},'.','Color',plotcolors(datasetIndex))    
+    scatter(scatterXmicron{datasetIndex},scatterYmicron{datasetIndex},3^2, 'k','filled','MarkerFaceColor','k','MarkerFaceAlpha',.2)
+    
+    xlabel('Cell length');
+    ylabel('Relative nucleoid location');
+    
+    xlim([0,25]);
+    
+    MW_makeplotlookbetter(20);
+    
+        % plot helping lines at 1/2n
+    if PLOTHELPINGLINES
+        N=5;
+        for windowIndex=1:(numel(WINDOWBORDERS)-1)
+            for j = 1:2:(windowIndex*2-1)
+                plot([WINDOWBORDERS(windowIndex), WINDOWBORDERS(windowIndex+1)], [(j)/(2*windowIndex) (j)/(2*windowIndex)],'-','Color',BARCOLORS(windowIndex,:),'LineWidth',8)
+            end
+        end
+    end
+    
+end
+
+%% 
+
+% Note that when an additional dataset is added there needs to be a loop
+% here!
+if any(strcmp(RUNSECTIONSFILEFTS,{'all','heightProfile'}))
+    
+MICRONSPERPIXEL=0.0438; % for nucleoids
+% MICRONSPERPIXEL=0.0431; % for Rutger data
+
+CELLNO=10;
+
+figure; clf; hold on;
+plot([2:numel(allFluorInterpolatedValues{1014}{CELLNO})+1].*MICRONSPERPIXEL, allFluorInterpolatedValues{1014}{CELLNO});
+plot(allpeakXMicrons{1014}{CELLNO},allpeakY{1014}{CELLNO},'o');
+
+%%
+    HEIGHT = 100;
+    maxLength=ceil(max([allLengthsOfBacteriaInMicronsMW{:}]));
+    myDisplayMatrix = zeros(maxLength, HEIGHT);
+        
+    counter=0; NperLength =zeros(1,maxLength);
+    for frIdx=1:numel(allFluorInterpolatedValues)
+        if ~isempty(allFluorInterpolatedValues{frIdx})
+            for cellIdx = 1:numel(allLengthsOfBacteriaInMicronsMW{frIdx})
+
+                counter=counter+1;
+
+                % Note that bins are a bit weird due to ceil function
+                roundedLength = ceil(allLengthsOfBacteriaInMicronsMW{frIdx}(cellIdx));
+
+                % count how many bacs of this length for averaging later
+                NperLength(roundedLength)=NperLength(roundedLength)+1;
+
+                resizedBac=imresize(allFluorInterpolatedValues{frIdx}{cellIdx},[1,HEIGHT],'Method','bilinear');
+
+                myDisplayMatrix(roundedLength,:) = myDisplayMatrix(roundedLength,:)+resizedBac;
+
+            end
+        end
+    end
+    for lengthIdx = 1:maxLength
+        myDisplayMatrix(lengthIdx,:) = myDisplayMatrix(lengthIdx,:)./NperLength(lengthIdx);
+    end
+    disp('Done working');
+    disp(['N = ' num2str(counter)]);
+
+    
+    %%
+    figure(302); clf; hold on;
+    imagesc(myDisplayMatrix');
+    xlim([1,maxLength]);
+    ylim([1,HEIGHT]);        
+    
+    blackColorMap = makeColorMap([1 1 1],[0 0 0]./255);%,[230 30 37]./255)
+    colormap(blackColorMap);
+    %colorbar;
+
+    inputSettings.rangeIn = [1,size(myDisplayMatrix,2)];
+    inputSettings.desiredSpacing = .25;
+    inputSettings.rangeOut = [0,1];
+    [tickLocationsOldNewMetric, correspdongingLabels] = labelremapping(inputSettings);
+
+    %set(gca,'XTick',[]);
+    set(gca,'YTick',tickLocationsOldNewMetric,'YTickLabel',correspdongingLabels);
+
+    xlabel('Length of cell (µm)');
+    ylabel(['Relative location along cell']);
+    
+    if PLOTHELPINGLINES
+        N=5;
+        for windowIndex=1:(numel(WINDOWBORDERS)-1)
+            for j = 1:2:(windowIndex*2-1)
+                plot([WINDOWBORDERS(windowIndex), WINDOWBORDERS(windowIndex+1)], HEIGHT*[(j)/(2*windowIndex) (j)/(2*windowIndex)],'-','Color',BARCOLORS(windowIndex,:),'LineWidth',8)
+            end
+        end
+    end
+    
+    MW_makeplotlookbetter(20);
+end
+
 %% Sanity check
 if any(strcmp(RUNSECTIONSFILEFTS,{'all','LengthVsDivisionLocation'}))
 
@@ -271,8 +405,15 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','LengthVsDivisionLocation'}))
     end
 
     %title('kde, density directed (pdf(x)*x)')
-    xlabel(['Length of cell (µm)']);
-    ylabel(['Relative FtsA peak locations']);
+    if ~exist(NUCLEOIDFLAG,'var') % default
+        % 
+        xlabel(['Length of cell (µm)']);
+        ylabel(['Relative FtsA peak locations']);
+    else % nucleoid labels
+        xlabel(['Length of cell (µm)']);
+        ylabel(['Relative nucleoid locations']);
+    end
+        
     %figure(); hist([scatterX{:}])
 
     maxX = max([scatterX{:}]);

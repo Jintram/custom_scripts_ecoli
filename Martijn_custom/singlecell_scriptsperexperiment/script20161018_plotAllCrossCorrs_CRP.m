@@ -282,6 +282,50 @@ fieldNamesCheckPerGroup
 disp('It might be a good idea to double-check the order of your fieldnames, since this depends on the order in the config. file.');
 % so far it has been R(C,Y), so R(const., CRP)
 
+%% Repeat for production-concentration correlation cross-correlations
+
+TOPLOTFIELDNAMESCOLORCORR={'rateConcentrationCC'};
+TITLESPECORR={'Wild type','Optimal cAMP (800uM)','Low cAMP (80uM)','High cAMP (5000uM)'};
+TITLESPECORRp2 = {', Constitutive',', CRP cAMP'};
+LEGENDNAMES={'Concentration-rate'};
+% note that handling of autocorrelations for growth rates is a bit awkward
+% as it is done twice for fluor1 and fluor2
+
+fieldNamesCheckPerGroup={};
+optionsStructPE=struct;
+gatheredPEs = struct;
+for groupIdx = 1:numel(GROUPSTOPLOT)
+    for dualColorIdx = 1:2
+        
+        % parameters that are used by plotting script
+        currentDataSetsToPlot = {GROUPSTOPLOT{groupIdx}};
+        DUALCOLORINDICES =  [dualColorIdx];
+        LINECOLORS = {Line1Colors(groupIdx,:)};
+
+        % plotting script
+        optionsStructPE.STOPRELOADING=1;
+        optionsStructPE.LEGENDNAMES=LEGENDNAMES;
+        [hCY,output]=plottingGeneral_v2_CCs(currentDataSetsToPlot,DUALCOLORINDICES,LINECOLORS,SELECTIONFIELD,TOPLOTFIELDNAMESCOLORCORR,optionsStructPE); 
+
+        % save average lines in struct also
+        gatheredPEs.(GROUPSTOPLOT{groupIdx}).data.(FLUORCOLORS{dualColorIdx}) = output;        
+        
+        % plot cosmetics
+        figure(hCY.Number); 
+        title([TITLESPECORR{groupIdx} TITLESPECORRp2{dualColorIdx}]);
+        xlim([-10*output.hrsPerDoublingMean,10*output.hrsPerDoublingMean]);                  
+            
+    end            
+    
+    % Tell user X-order of fields for R(X1,X2)
+    fieldNamesCheckPerGroup{groupIdx} = crossCorrData(output.idxsCrossCorrData).rateDualCrossCorrFieldNames;
+            
+end
+
+fieldNamesCheckPerGroup
+disp('It might be a good idea to double-check the order of your fieldnames, since this depends on the order in the config. file.');
+% so far it has been R(C,Y), so R(const., CRP)
+
 %% Plot autocorrelations in combined plot
 
 SUBDIR = 'overview_autocorr\';

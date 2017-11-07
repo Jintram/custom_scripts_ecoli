@@ -88,6 +88,20 @@ elseif strcmp(WHATDATA, 'temperature')
         }
     switchTimes = [450, 329];
     SPECIALCASE=0;
+elseif strcmp(WHATDATA, 'deltaMinTET')
+    datasetsPaths = ...
+        { ...
+        'H:\EXPERIMENTAL_DATA_2017\2017-09-22_asc1035_DeltaMinCDE\pos1cropb\data\pos1cropb-Schnitz.mat',...        
+        'H:\EXPERIMENTAL_DATA_2017\2017-09-22_asc1035_DeltaMinCDE\pos2cropa\data\pos2cropa-Schnitz.mat',...
+        'H:\EXPERIMENTAL_DATA_2017\2017-09-22_asc1035_DeltaMinCDE\pos2cropb\data\pos2cropb-Schnitz.mat',...
+        'H:\EXPERIMENTAL_DATA_2017\2017-09-22_asc1035_DeltaMinCDE\pos2cropc\data\pos2cropc-Schnitz.mat',...
+        'H:\EXPERIMENTAL_DATA_2017\2017-09-22_asc1035_DeltaMinCDE\pos3cropa\data\pos3cropa-Schnitz.mat',...
+            ...         
+            ... 
+        }
+    switchTimes = [5];
+        % frame 600=4:26, switch @4:26 (but 5min delay)
+    SPECIALCASE=0;
 elseif strcmp(WHATDATA, 'tetracycline')
     
     % Load data from gathered file:
@@ -104,8 +118,8 @@ elseif strcmp(WHATDATA, 'tetracycline')
     disp(['Note that certain datasets are selected (' num2str(ONESTOTAKE) ').']);
     switchTimes = ...
         ...[1373.5417      587.66667      261.13333        741.325      252.38333      987.86667        1017.95         997.05      881.90833      1018.7083         1394.6]; % based on 50% max growth rate
-        [1.2156    0.5064    0.0512    0.6032    0.0948    0.8585    0.7400    0.7954    0.7673    0.8160    1.2737]*1.0e+03; % based on 1/10th max. growth rate
-        %[890.9800  404.7500         0  529.7600  0]; % based on calculated switch times
+        ... [1.2156    0.5064    0.0512    0.6032    0.0948    0.8585    0.7400    0.7954    0.7673    0.8160    1.2737]*1.0e+03; % based on 1/10th max. growth rate
+        [890.9800  404.7500         0  529.7600  0]; % based on calculated switch times
         %warning('change this back!!');
         % switchTimes determined by 
         % script20161222_branchplottingrutgerdata
@@ -982,6 +996,7 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','rutgerPlotFinal'}))
     % now covered by a later figure (with color coding) and has been commented
     % out here..
 
+    %%
     ALPHA = .15; %.15;
     
     MINUTELIFETIMETRESHOLD=20;
@@ -1083,10 +1098,15 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','rutgerPlotFinal'}))
 
     % plot helping lines at 1/2n
     if PLOTHELPINGLINES
+        %%
         N=5;
         for windowIndex=1:(numel(WINDOWBORDERS)-1)
             for j = 1:2:(windowIndex*2-1)
-                plot([WINDOWBORDERS(windowIndex), WINDOWBORDERS(windowIndex+1)], [(j)/(2*windowIndex) (j)/(2*windowIndex)],'-','Color',BARCOLORS(windowIndex,:),'LineWidth',8)
+                if ~exist('THINHELPINGLINES')
+                    plot([WINDOWBORDERS(windowIndex), WINDOWBORDERS(windowIndex+1)], [(j)/(2*windowIndex) (j)/(2*windowIndex)],'-','Color',BARCOLORS(windowIndex,:),'LineWidth',8)
+                else
+                    plot([WINDOWBORDERS(windowIndex), WINDOWBORDERS(windowIndex+1)], [(j)/(2*windowIndex) (j)/(2*windowIndex)],'-','Color',BARCOLORS(windowIndex,:),'LineWidth',4)
+                end
             end
         end
     end        
@@ -1265,6 +1285,7 @@ end
 %% Size time evolution plot
 if any(strcmp(RUNSECTIONSFILADIV,{'all','sizeTraces'}))
 
+    %%
     hSizeTime = figure(12); clf; hold on;
 
     MARKERSIZE=8;
@@ -1303,7 +1324,18 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','sizeTraces'}))
         else
             markerColor=[.7 .7 .7]; 
         end
-        markerWidth = 8;
+        markerWidth = 4; % 8
+        
+        
+        % plot the lineages
+        % Get all traces of the lineages
+        [myTracesAll] = MW_gettracefromschnitzcellsreverse(schnitzcells,[],'time',{LENGTHFIELD});
+        for idxTrace = 1:numel(myTracesAll)
+            plot(myTracesAll(idxTrace).time-switchTimes(dataSetIndex),myTracesAll(idxTrace).(LENGTHFIELD),'-','Color',markerColor,'LineWidth',2);
+        end
+        
+        
+        % plot the dots
         hS=scatter(timeScatterData-switchTimes(dataSetIndex),lengthScatterData,'filled',...
                 'MarkerFaceColor',markerColor,'MarkerEdgeColor','none','MarkerFaceAlpha',1);
         set(hS, 'SizeData', markerWidth^2);
@@ -1312,8 +1344,8 @@ if any(strcmp(RUNSECTIONSFILADIV,{'all','sizeTraces'}))
         endSchnitzesIdxs = find([schnitzcells(:).D]==0);
         theEndTimes = arrayfun(@(x) schnitzcells(x).(TIMEFIELD)(end), endSchnitzesIdxs);
         theEndLengths = arrayfun(@(x) schnitzcells(x).(LENGTHFIELD)(end), endSchnitzesIdxs);
-        endOfLineages{dataSetIndex}= [theEndTimes; theEndLengths];
-
+        endOfLineages{dataSetIndex}= [theEndTimes; theEndLengths];       
+        
         % Now also make example traces
         if strcmp(WHATDATA,'temperature')
             % [myCurrentTraces, myCurrentDivisions,randomSelectedTracesIdxs] = MW_gettracefromschnitzcells(schnitzcells,STARTSCHNITZES,TIMEFIELD,LENGTHFIELD,'random'); 
