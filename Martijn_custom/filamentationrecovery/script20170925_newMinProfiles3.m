@@ -8,6 +8,8 @@ if ~exist('p','var') % if ~isfield(p,'micronsPerPixel')
     p.micronsPerPixel=   0.0438;
 end
 
+LINECOLOR = [65 148 68]./255 % green
+
 
 %% plotting all
 
@@ -20,6 +22,7 @@ counter=0;
 allBacterialLengths=[];
 %allFrameNrs=[6:13,14,16:22,24:32];
 allFrameNrs=[6:10,12,13,16:22,24:32]; % filtered out bad ones: 11, 14
+dmitryAdded=0; % whether Dmitry's data is added already
 for frameNr = allFrameNrs
 
 
@@ -69,51 +72,111 @@ for frameNr = allFrameNrs
 end
 
 %% Make combined plot
+MYSELECTION = [2,3,6,7,9,10,14,15,17,20,26];
 
-figure(101); clf; hold on;
+if exist('storedDataMinExperimentsDE','var')
+    if ~dmitryAdded
+        disp('Adding Dmitry''s data');
+        for i = 1:numel(storedDataMinExperimentsDE)
+           allBacterialLengths(end+1)=max(storedDataMinExperimentsDE(i).x);
 
-% make a color map for the signal strengths
-myColorMapIntensities = makeColorMap([1 0 0],[0 1 0],[0 0 1],100);
-sumyToMap = int32(99.*sumy./max(sumy)+1);
-
-% init some parameters
-[sortedLengths,sortedIndices] = sort(allBacterialLengths);
- 
-numelBacs = numel(sortedLengths);
-
-sqrtNumel = ceil(sqrt(numelBacs));
-
-for plotIdx1 = 1:sqrtNumel
-    for plotIdx2 = 1:sqrtNumel
-    
-        
-        plotNr =  (plotIdx1-1)*sqrtNumel+plotIdx2
-        if plotNr>numelBacs
-            break
+           allxvalues{end+1}=storedDataMinExperimentsDE(i).x';
+           allyvalues{end+1}=storedDataMinExperimentsDE(i).y';
+           
+           sumy(end+1)=1;           
         end
-        
-        % bacterium number (w. respect to defined by allFrameNrs)
-        theBac = sortedIndices(plotNr);
-       
-        % color for signal of minD-YFP
-        bacColor = myColorMapIntensities(sumyToMap(theBac),:);
-        
-        % plot the signal
-        ax=subplot(sqrtNumel,sqrtNumel,plotNr);
-        l=plot(allxvalues{theBac},allyvalues{theBac},'-','Color',bacColor);
-       
-        %regime=sum(WINDOWBORDERS<allBacterialLengths(theBac))+1;
-        
-        % cosmetics
-        title(['L=' num2str(allBacterialLengths(theBac))]);% ', N=' num2str(regime)]);
-        xlim([0,allBacterialLengths(theBac)])
-       
-        set(ax,'YTick',[]);
-        
+        dmitryAdded=1;
+        disp('Added Dmitry''s data!');
     end
 end
+%
 
-figure(102); colormap(myColorMapIntensities); colorbar;
+savedallBacterialLengths=allBacterialLengths;
+savedallxvalues     =allxvalues;
+savedallyvalues     =allyvalues;
+savedsumy           =sumy;
+for selectOnesWithPatternYesNo = 0:1
+
+    hMinDboth(selectOnesWithPatternYesNo+1)=figure(101+selectOnesWithPatternYesNo); clf; hold on;
+    
+    if selectOnesWithPatternYesNo
+        % a bit overcomplicated but when you base your selection on numbers
+        % in figure 101, those panels were already sorted by length, so we
+        % have to take this into account
+        finalSelection=sortedIndices(MYSELECTION);
+        
+        allBacterialLengths = allBacterialLengths(finalSelection);
+        allxvalues = allxvalues(finalSelection);
+        allyvalues = allyvalues(finalSelection);
+        sumy = sumy(finalSelection);
+    end
+    
+    % make a color map for the signal strengths
+    myColorMapIntensities = makeColorMap([1 0 0],[0 1 0],[0 0 1],100);
+    sumyToMap = int32(99.*sumy./max(sumy)+1);
+
+    % init some parameters
+    [sortedLengths,sortedIndices] = sort(allBacterialLengths);
+
+    numelBacs = numel(sortedLengths);
+
+    sqrtNumel1 = ceil(sqrt(numelBacs));
+    sqrtNumel2 = sqrtNumel1;
+    if (sqrtNumel1.*(sqrtNumel1-1))>=numelBacs % trick to get 'm fit a bit tighter 
+        sqrtNumel2=sqrtNumel1-1;
+    end
+    
+    counter=0;
+    for plotIdx1 = 1:sqrtNumel1
+        for plotIdx2 = 1:sqrtNumel2
+
+            counter=counter+1;
+
+            plotNr =  (plotIdx1-1)*sqrtNumel2+plotIdx2
+            if plotNr>numelBacs
+                break
+            end
+
+            % bacterium number (w. respect to defined by allFrameNrs)
+            theBac = sortedIndices(plotNr);
+
+            % color for signal of minD-YFP
+            bacColor = myColorMapIntensities(sumyToMap(theBac),:);
+
+            % plot the signal
+            ax=subplot(sqrtNumel1,sqrtNumel2,plotNr);
+            if ~selectOnesWithPatternYesNo                
+                l=plot(allxvalues{theBac},allyvalues{theBac},'-','Color',bacColor);
+                xlim([0,allBacterialLengths(theBac)]);
+                title(['#' num2str(counter) ', L=' num2str(allBacterialLengths(theBac))]);% ', N=' num2str(regime)]);
+            else
+                % make a pretty plot
+                l=plot(allxvalues{theBac},allyvalues{theBac}./max(allyvalues{theBac}),'-','Color',LINECOLOR,'LineWidth',2);
+                xticks([0,round(max(allxvalues{theBac}))]);
+                xlim([0,round(max(allxvalues{theBac}))]);
+                ylim([0,1]);
+                MW_makeplotlookbetter(20);
+            end
+
+            %regime=sum(WINDOWBORDERS<allBacterialLengths(theBac))+1;
+
+            % cosmetics                        
+            set(ax,'YTick',[]);
+
+        end
+    end
+
+end
+
+% restore all 
+allBacterialLengths=savedallBacterialLengths;
+allxvalues=savedallxvalues;
+allyvalues=savedallyvalues;
+sumy=savedsumy;
+
+hMinD=hMinDboth(2);
+
+figure(103); colormap(myColorMapIntensities); colorbar;
 
 %% 
 relativeL=50; N=50;

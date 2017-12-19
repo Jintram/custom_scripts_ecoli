@@ -1,14 +1,22 @@
 
-OUTPUTDIR = 'H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\analysis\straightenedCells\kymographsinglecell\';
+%OUTPUTDIR = 'H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\analysis\straightenedCells\kymographsinglecell\';
+OUTPUTDIR = [p.analysisDir 'straightenedCells\kymographsinglecell\'];
+
+if ~exist('OUTPUTDIR','dir')
+    mkdir(OUTPUTDIR);
+end
+
 OUTLINECOLOR = [48, 197, 221]/255;
 
 %% Load data
 
 %load('G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\analysis\straightenedCells\2016-04-07pos2crop_straightFluorData.mat')
 %load('G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\data\pos2crop-Schnitz.mat');
+%load('H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\data\pos1cropa2-Schnitz.mat');
+load([p.tracksDir p.movieName '-Schnitz.mat']);
 
-load('H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\data\pos1cropa2-Schnitz.mat');
-load('H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\analysis\straightenedCells\2017-10-12pos1cropa2_straightFluorData.mat');
+%load('H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\analysis\straightenedCells\2017-10-12pos1cropa2_straightFluorData.mat');
+load([p.analysisDir 'straightenedCells\' p.movieDate p.movieName '_straightFluorData.mat']);
 
 micronsPerPixel = 0.0431; % see G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos2crop_parameters.mat, p struct
 
@@ -178,6 +186,6 @@ for SCHNITZIDX = 1:numel(schnitzcells)
 
 end
 
-
+disp('All done');
 
 

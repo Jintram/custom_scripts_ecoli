@@ -21,6 +21,7 @@ combinedDataAdder.('sulA').alldatay = alldatay;
 combinedDataAdder.('sulA').meanValuesForBins = meanValuesForBins;
 combinedDataAdder.('sulA').binCenters = binCenters;
 combinedDataAdder.('sulA').stdValuesForBins = stdValuesForBins;
+combinedDataAdder.('sulA').stdErrValuesForBins = stdErrValuesForBins;
 
 %% Temperature
 WHATDATA = 'temperature';
@@ -38,9 +39,10 @@ combinedDataAdder.('temperature').alldatay = alldatay;
 combinedDataAdder.('temperature').meanValuesForBins = meanValuesForBins;
 combinedDataAdder.('temperature').binCenters = binCenters;
 combinedDataAdder.('temperature').stdValuesForBins = stdValuesForBins;
+combinedDataAdder.('temperature').stdErrValuesForBins = stdErrValuesForBins;
 
 
-%%
+%% Then tetracycline
 WHATDATA = 'tetracycline';
 NOSAVEPLEASE=1;
 LENGTHFIELD = 'length_fitNew';
@@ -59,16 +61,37 @@ combinedDataAdder.('tetracycline').alldatay = alldatay;
 combinedDataAdder.('tetracycline').meanValuesForBins = meanValuesForBins;
 combinedDataAdder.('tetracycline').binCenters = binCenters;
 combinedDataAdder.('tetracycline').stdValuesForBins = stdValuesForBins;
+combinedDataAdder.('tetracycline').stdErrValuesForBins = stdErrValuesForBins;
+
+%% Also do the deltamin one
+
+% deltaMinTET
+WHATDATA = 'deltaMinTET';
+NOSAVEPLEASE=1;
+LENGTHFIELD = 'length_skeleton';
+
+RUNSECTIONSFILADIV = 'loadData'; 
+script20160429_filamentRecoveryDivisionRatioss
+RUNSECTIONSFILADIV = 'adderLengthLifetime';
+script20160429_filamentRecoveryDivisionRatioss
+
+% combine data
+combinedDataAdder.(WHATDATA).alldatax = alldatax;
+combinedDataAdder.(WHATDATA).alldatay = alldatay;
+combinedDataAdder.(WHATDATA).meanValuesForBins = meanValuesForBins;
+combinedDataAdder.(WHATDATA).binCenters = binCenters;
+combinedDataAdder.(WHATDATA).stdValuesForBins = stdValuesForBins;
+combinedDataAdder.(WHATDATA).stdErrValuesForBins = stdErrValuesForBins;
 
 %%
-DATASETNAMES={'tetracycline','temperature','sulA'};
-LEGENDNAMES = {'Tetracycline','Temperature','SulA'};
+DATASETNAMES={'tetracycline','temperature','sulA','deltaMinTET'};
+LEGENDNAMES = {'Tetracycline','Temperature','SulA','deltaMinTET'};
 
-somecolors=linspecer(3);
-mycolors = [0, 0, 0; somecolors(2:3,:)];
+somecolors=linspecer(5);
+mycolors = [0, 0, 0; somecolors(2:4,:)];
 
 hAdderFigs=[];
-for dataIdx = 1:3
+for dataIdx = 1:4
     hAdderFigs(dataIdx) = figure(dataIdx); clf; hold on;
     
     x=combinedDataAdder.(DATASETNAMES{dataIdx}).alldatax;
@@ -80,7 +103,7 @@ for dataIdx = 1:3
     
     y=combinedDataAdder.(DATASETNAMES{dataIdx}).meanValuesForBins;
     x=combinedDataAdder.(DATASETNAMES{dataIdx}).binCenters;
-    err=combinedDataAdder.(DATASETNAMES{dataIdx}).stdValuesForBins;
+    err=combinedDataAdder.(DATASETNAMES{dataIdx}).stdErrValuesForBins;
 
     lErr=errorbar(x,y,err,...                
                 '-o','Color',mycolors(dataIdx,:),'MarkerSize',5,'LineWidth',2)
@@ -100,6 +123,7 @@ for dataIdx = 1:3
     xlim([0,40]);
     if dataIdx==1, xlim([0,20]); end
     ylim([0,6]);
+    if dataIdx==4, ylim([0,13]); end
 
     % 
     MW_makeplotlookbetter(20);

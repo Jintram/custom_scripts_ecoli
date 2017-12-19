@@ -13,18 +13,25 @@
 % - for next initiation, an additional # of initiators is needed that
 %   saturates all oris', hence delta=ori*delta0
 
+% I typically used perturbations of 2X up/down, or for larger ones 20X
+% up/down. For ori's I used factor of 20X up, 8X down.
 
+SAVEDIR = 'D:\Local_Data\Dropbox\Dropbox\Filamentation recovery\Submission_Current_Biology_round2\RebuttalFigs\AmirModel\';
+if ~exist('scriptExecCounter')
+    scriptExecCounter = 0;
+end
 
 %%
 % simulation parameters
 simpleVersion=1;
-silence=1;
+silence=1; % suppress messages to user
+perturbationTime = 25; % note the code under that if-statement should be adjusted to your needs!
 
 dt = 0.001;
-tau=80/60;
+tau=80/60; % I used 20 or 80 typically
 mu = 1/tau; % 1/tau=mu; mu in dbl/hr
 S0=2; % initiation volume
-ENDTIME=50;
+ENDTIME=250;
 CPERIODTIME=40/60; % Cooper & Helmstetter
 DPERIODTIME=20/60;
 deltaS=2;
@@ -37,20 +44,38 @@ DperiodCounters=[];
 % initial conditions
 t=0;
 chromos=1;
-S=2;
-oris=2^floor((CPERIODTIME+DPERIODTIME)/tau);
+%S=20*2 
+%oris=20*2^floor((CPERIODTIME+DPERIODTIME)/tau);
+%{
+oris=2*2^floor((CPERIODTIME+DPERIODTIME)/tau);
+S=deltaS*oris;
 CperiodCounters=[];
 for idx=1:floor(((CPERIODTIME+DPERIODTIME)/tau))
     CperiodCounters = [idx*tau CperiodCounters];
 end
+Sreference=S;
+%}
+
+% Initial conditions from eqiulibration run
+% For 3dbl/hr
+%{
+S = 21.7897;
+oris =    16;
+CperiodCounters = [0.8150    0.4810    0.1470];
+SreferenceEnd = 16.0893;
+%}
+% For 1dbl/hr
+S= 2.7345;
+oris=2;
+CperiodCounters =  0.2680;
+Sreference = 2.3802;
+
 
 % more initialization
 counter=0;
-Sreference=S;
-
 
 %% Calculate some expected quantities
-expectedSize = deltaS*2^((CPERIODTIME+DPERIODTIME)*mu); 
+expectedSize = deltaS*2^((CPERIODTIME+DPERIODTIME)*mu);
 disp(['Expected size=' num2str(expectedSize)]);
 expectedOris = 2^((CPERIODTIME+DPERIODTIME)*mu); 
 disp(['Expected ori''s=' num2str(expectedOris)]);
@@ -61,6 +86,7 @@ disp(['Expected ori''s=' num2str(expectedOris)]);
 disp('Simulation starting.');
 disp('----------------');
 %debugtracker=0;
+perturbationPerformedAlready = 0;
 while t<ENDTIME
    
     %%
@@ -174,39 +200,73 @@ while t<ENDTIME
         
     end    
     
+    if t(end)>perturbationTime & ~perturbationPerformedAlready
+        S(end)=S(end)*8;
+        oris(end)=oris(end)*8;
+        %oris(end)=oris(end)/8;
+        perturbationPerformedAlready=1;
+        disp(['Perturbing the cell at t=' num2str(t(end))]);
+    end
+    
     %debugtracker(end+1) = S(end)-Sreference;
 end
 disp('----------------');
 disp('Simulation done');
 
+%% 
+disp('Summary of end state');
+disp('--------------');
+SEnd=S(end)
+tEnd=t(end)
+orisEnd=oris(end)
+CperiodCountersEnd=CperiodCounters
+SreferenceEnd=Sreference
+disp('--------------');
+
+
 %%
 
 
-figure(1); clf; hold on;
-% expectations
-plot([min(t), max(t)],[expectedSize expectedSize],'--','LineWidth',2);
-plot([min(t), max(t)],[expectedOris expectedOris],'--','LineWidth',2);
+h1=figure(1); clf; hold on;
 % data
 plot(t,S,'LineWidth',2)
 plot(t,oris,'-','LineWidth',2)
+% expectations
+plot([min(t), max(t)],[expectedSize expectedSize],'--','LineWidth',2);
+plot([min(t), max(t)],[expectedOris expectedOris],'--','LineWidth',2);
 %plot(t,chromos,':','LineWidth',2)
 xlabel('Time (hrs)');
 ylabel('Size, S (um)');
 
 ylim([0, max([S,oris]*1.1)]);
+xlim([min(t), max(t)]);
 
 %plot(t,debugtracker,'-');
 
 %legend({'Expected size','Expected ori''s','Size','Chromosomes','Ori''s'});
-legend({'Expected size','Expected ori''s','Size','Ori''s'});
+%legend({'Expected size','Expected ori''s','Size','Ori''s'});
+legend({'Size','Ori''s','Expected size','Expected ori''s'});
 
 title(['Mu = ' num2str(mu) ' dbl/hr']);
 
 MW_makeplotlookbetter(20);
 
 
+%%
+disp('Saving figures');
+SIZE=[5.5,5.5];
+OFFSET = [2,2];
+set(h1,'Units','centimeters','Position',[OFFSET SIZE]*2)
+MW_makeplotlookbetter(8*2);%,optionalParameters);
 
+set(h1,'RendererMode','manual','Renderer','Painters');
 
+scriptExecCounter = scriptExecCounter +1; % just for naming params.
+
+saveas(h1, [SAVEDIR 'export_' num2str(scriptExecCounter) '.svg']);
+saveas(h1, [SAVEDIR 'export_' num2str(scriptExecCounter) '.fig']);
+
+%%
 disp('All done');
 
 

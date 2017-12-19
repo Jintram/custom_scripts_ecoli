@@ -1,5 +1,5 @@
 
-function [pdfsForBins, binCenters]=binnedpdfs(valuesx,valuesy,edgesForX,edgesForY)
+function [pdfsForBins, binCenters, dataPerBins]=binnedpdfs(valuesx,valuesy,edgesForX,edgesForY)
 % function [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins]=binnedaveraging(valuesx,valuesy,bins)
 %
 % INPUTS
@@ -36,6 +36,7 @@ end
 % loop over bins again
 pdfsForBins=NaN(numel(edgesForX)-1,numel(edgesForY)-1);
 nanFlag=0;
+dataPerBins={};
 for i = 1:numel(binnedValues)
     
     % get current binnedValues
@@ -50,6 +51,8 @@ for i = 1:numel(binnedValues)
     
     % Calculate pdf 
     pdfsForBins(i,:) = histcounts(currentBinnedvalues,edgesForY);
+    
+    dataPerBins{i} = currentBinnedvalues;
     
     %{
     % calculate mean for this bin

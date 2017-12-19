@@ -9,6 +9,8 @@ allDatasetsLengths = [];
 allDatasetsColors =[];
 for dataIdx = 1:numel(datasetsPaths)
     
+    schnitzcells=loadandrename(datasetsPaths{dataIdx});
+    
     % simply brute force this
     allWidths=[]; allLengths=[];
     myColors = linspecer(numel(schnitzcells));
@@ -20,7 +22,7 @@ for dataIdx = 1:numel(datasetsPaths)
     for schnitzIdx = 1:numel(schnitzcells)
 
         %%
-        lenghts = schnitzcells(schnitzIdx).length_skeleton;
+        lenghts = schnitzcells(schnitzIdx).(LENGTHFIELD);
         areas   = schnitzcells(schnitzIdx).area;
         widths  = areas./lenghts;
 

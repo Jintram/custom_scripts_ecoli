@@ -29,6 +29,7 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','loadData'}))
     schnitzDataPaths={
         'G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\data\pos2crop-Schnitz.mat',...
         'G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos3crop\data\pos3crop-Schnitz.mat'};
+    
 end    
     
 %% Data re. nucleoids
@@ -40,15 +41,22 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'loadNucleoidData'}))
 
     % stored skeleton analysis
     skeletonDataPaths={...
-        'H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\data\pos1cropa2-skeletonData.mat'};
+        'H:\EXPERIMENTAL_DATA_2017\2017-11-08_FilaRecovery_asc1106_hupA-mCherry\pos1cropd\data\pos1cropd-skeletonData.mat'};
+        % 'H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\data\pos1cropa2-skeletonData.mat'};
         % per frame the skeleton
 
     % stored fluorescence data
     fluorDataPaths={...
-        'H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\analysis\straightenedCells\2017-10-12pos1cropa2_straightFluorData.mat'};        
+        'H:\EXPERIMENTAL_DATA_2017\2017-11-08_FilaRecovery_asc1106_hupA-mCherry\pos1cropd\analysis\straightenedCells\2017-11-08pos1cropd_straightFluorData.mat'};
+        % 'H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\analysis\straightenedCells\2017-10-12pos1cropa2_straightFluorData.mat'};
 
-    schnitzDataPaths={
-        'H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\data\pos1cropa2-Schnitz.mat'};
+    schnitzDataPaths={...
+        'H:\EXPERIMENTAL_DATA_2017\2017-11-08_FilaRecovery_asc1106_hupA-mCherry\pos1cropd\data\pos1cropd-Schnitz.mat'};
+        %'H:\EXPERIMENTAL_DATA_2017\2017-10-12_hupA-mRuby2\pos1cropa2\data\pos1cropa2-Schnitz.mat'};
+        
+    slookupDataPaths={...
+        'H:\EXPERIMENTAL_DATA_2017\2017-11-08_FilaRecovery_asc1106_hupA-mCherry\pos1cropd\data\slookup.mat',...
+    };
 end    
 
 %% convert schnitzcells data to ages per frame per cell
@@ -57,9 +65,12 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','getAges'}))
 
     %%
     allAgesPerFrame = {};
+    totalNrSchnitzcells=0;
     for datasetIndex = 1:numel(schnitzDataPaths)
 
         load(schnitzDataPaths{datasetIndex});
+        totalNrSchnitzcells = totalNrSchnitzcells+numel(schnitzcells);
+        
         allAgesPerFrame{datasetIndex} = {};
         for schnitzIdx = 1:numel(schnitzcells)
             for frameIdx = 1:numel(schnitzcells(schnitzIdx).frame_nrs)
@@ -76,6 +87,8 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','getAges'}))
     
     end
         
+    disp(['N= ' num2str(totalNrSchnitzcells) ' schnitzcells loaded']);
+    
 end
 
 %%
@@ -138,12 +151,12 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','analyzeData'}))
             %disp(['adding ' num2str(numel(xpeaksFrame)) ' cells for frame ' num2str(framenr) '..']);
             pileofLengthsOfBacteriaInMicrons =...
                 [pileofLengthsOfBacteriaInMicrons lengthsFrame];
-
+            
             for cellno = 1:numel(xpeaksFrame)
 
                 %plot(xpeaksFrame)
                 if ~(isempty(xpeaksFrame) || isempty(meanYFrame))
-
+                    
                     % raw data
 
                     sizexpeaksParam = size(xpeaksFrame{cellno});
@@ -203,6 +216,8 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','analyzeData'}))
 
     end
     
+    disp(['A total of N= ' num2str(lengthsPerCell) ' cell images were analyzed']);
+    
 end
 
 %% 
@@ -237,6 +252,8 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','nucleoidsMakePlotPretty'}))
 end
 
 %% 
+% This can e.g. be used for the nucleoid data, to plot the average profile
+% of the nucleoids.
 
 % Note that when an additional dataset is added there needs to be a loop
 % here!
@@ -245,6 +262,15 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','heightProfile'}))
 MICRONSPERPIXEL=0.0438; % for nucleoids
 % MICRONSPERPIXEL=0.0431; % for Rutger data
 
+if numel(fluorDataPaths)>1
+    error('There are multiple datasets given, but the script will only process one..');
+        % Note: this can be easily resolved by adding a loop loading the
+        % multiple datasets..
+end
+load(fluorDataPaths{1});
+load(skeletonDataPaths{1});
+load(slookupDataPaths{1});
+
 CELLNO=10;
 
 figure; clf; hold on;
@@ -252,19 +278,31 @@ plot([2:numel(allFluorInterpolatedValues{1014}{CELLNO})+1].*MICRONSPERPIXEL, all
 plot(allpeakXMicrons{1014}{CELLNO},allpeakY{1014}{CELLNO},'o');
 
 %%
+
+    % This simply builds a matrix that with the rows indexes bacterial
+    % lengths (e.g. row 1=all bacteria smaller 1um, row 2=all bacteria
+    % 1-2um in length etc). The columns index the normalized bacterial
+    % length, images are resized towards 100px.
+
     HEIGHT = 100;
     maxLength=ceil(max([allLengthsOfBacteriaInMicronsMW{:}]));
     myDisplayMatrix = zeros(maxLength, HEIGHT);
         
     counter=0; NperLength =zeros(1,maxLength);
+    schnitzStats=cell(1,maxLength);
     for frIdx=1:numel(allFluorInterpolatedValues)
         if ~isempty(allFluorInterpolatedValues{frIdx})
             for cellIdx = 1:numel(allLengthsOfBacteriaInMicronsMW{frIdx})
 
-                counter=counter+1;
-
                 % Note that bins are a bit weird due to ceil function
-                roundedLength = ceil(allLengthsOfBacteriaInMicronsMW{frIdx}(cellIdx));
+                %roundedLength = ceil(allLengthsOfBacteriaInMicronsMW{frIdx}(cellIdx));
+                roundedLength = round(allLengthsOfBacteriaInMicronsMW{frIdx}(cellIdx));
+                if roundedLength==0
+                    warning('Bacterium with length between 0 and 0.5 µm ignored.');
+                    continue
+                else
+                    counter=counter+1;
+                end
 
                 % count how many bacs of this length for averaging later
                 NperLength(roundedLength)=NperLength(roundedLength)+1;
@@ -273,6 +311,10 @@ plot(allpeakXMicrons{1014}{CELLNO},allpeakY{1014}{CELLNO},'o');
 
                 myDisplayMatrix(roundedLength,:) = myDisplayMatrix(roundedLength,:)+resizedBac;
 
+                % statistics on how many unique cells went into this
+                currentSchnitz=slookup(frIdx,cellIdx);
+                schnitzStats{roundedLength}= [schnitzStats{roundedLength} currentSchnitz];
+                
             end
         end
     end
@@ -282,9 +324,19 @@ plot(allpeakXMicrons{1014}{CELLNO},allpeakY{1014}{CELLNO},'o');
     disp('Done working');
     disp(['N = ' num2str(counter)]);
 
+    %% calculate statistics on how many individual cells went into each
+    % datapoint
+    schnitzCounts=[];
+    for lengthIdx=1:maxLength
+        schnitzCounts(lengthIdx) = numel(unique(schnitzStats{lengthIdx}));
+    end
+    disp(['Per length, nr of unique schnitzes = ']);
+    schnitzCounts
     
+    disp(['Total unique schnitzes:' num2str(numel(unique([schnitzStats{:}])))]);
     %%
-    figure(302); clf; hold on;
+    hNucs1=figure(302); clf; hold on;
+    %subplot(2,1,2); hold on;
     imagesc(myDisplayMatrix');
     xlim([1,maxLength]);
     ylim([1,HEIGHT]);        
@@ -293,27 +345,96 @@ plot(allpeakXMicrons{1014}{CELLNO},allpeakY{1014}{CELLNO},'o');
     colormap(blackColorMap);
     %colorbar;
 
+    % Yticks
     inputSettings.rangeIn = [1,size(myDisplayMatrix,2)];
     inputSettings.desiredSpacing = .25;
     inputSettings.rangeOut = [0,1];
+    inputSettings.desiredDecimalsTicks=2;
     [tickLocationsOldNewMetric, correspdongingLabels] = labelremapping(inputSettings);
-
-    %set(gca,'XTick',[]);
     set(gca,'YTick',tickLocationsOldNewMetric,'YTickLabel',correspdongingLabels);
 
+    % Xticks
+    %{
+    inputSettings.rangeIn = [1,size(myDisplayMatrix,1)]-.5;
+    inputSettings.desiredSpacing = 5;
+    inputSettings.rangeOut = [0,30];
+    inputSettings.desiredDecimalsTicks=0;
+    [tickLocationsOldNewMetric, correspdongingLabels] = labelremapping(inputSettings);
+    set(gca,'XTick',tickLocationsOldNewMetric,'XTickLabel',correspdongingLabels);
+    %}
+    
     xlabel('Length of cell (µm)');
     ylabel(['Relative location along cell']);
     
+    MW_makeplotlookbetter(20);
+    
+    %
     if PLOTHELPINGLINES
         N=5;
         for windowIndex=1:(numel(WINDOWBORDERS)-1)
             for j = 1:2:(windowIndex*2-1)
-                plot([WINDOWBORDERS(windowIndex), WINDOWBORDERS(windowIndex+1)], HEIGHT*[(j)/(2*windowIndex) (j)/(2*windowIndex)],'-','Color',BARCOLORS(windowIndex,:),'LineWidth',8)
+                plot([WINDOWBORDERS(windowIndex), WINDOWBORDERS(windowIndex+1)], HEIGHT*[(j)/(2*windowIndex) (j)/(2*windowIndex)],'-','Color',BARCOLORS(windowIndex,:),'LineWidth',4)
             end
         end
     end
     
-    MW_makeplotlookbetter(20);
+    %% Now also give some stats
+    hNucs2=figure(303); clf; hold on;
+    %subplot(2,1,1);  hold on;
+    bar(1:maxLength, schnitzCounts,'FaceColor',[.7 .7 .7],'EdgeColor',[.7 .7 .7]);
+    set(gca,'yscale','log');
+    ylim([.1,max(schnitzCounts)*2]);
+    xlim([1,30]);
+    set(gca,'YTick',[1,10,100]);%,'YTickLabel',correspdongingLabels);
+    ylabel('Individuals');
+    MW_makeplotlookbetter(15);
+    plot([1,30],[1,1],':k','LineWidth',2);
+    %xlabel('Cell length (µm)');   
+    set(gca,'XTick',[]);%,'YTickLabel',correspdongingLabels);
+    
+    %% Now plot the number of expected nucleoids 
+    BIRTHLENGTH=1.8;
+    %BIRTHLENGTH=3;
+    myLength=1:maxLength;
+    myNon2powerNNumbers=myLength./BIRTHLENGTH;
+    possibleValues=[0 2.^[0:6]];
+    flooredNearest2PowerN=[];
+    for idx=1:numel(myNon2powerNNumbers)
+        thePowerIdx=sum(myNon2powerNNumbers(idx)>possibleValues);
+        flooredNearest2PowerN(idx)=possibleValues(thePowerIdx);
+    end
+    [myNon2powerNNumbers;
+    flooredNearest2PowerN]
+
+    % find regime boundaries
+    regimeBoundaries=1+find(flooredNearest2PowerN(2:end)-flooredNearest2PowerN(1:end-1));
+
+    % A better (simpler) way?
+    disp('A simpler method for calculating the boundaries (i.e. not the # of nucleoids that fit this length)..');
+    nucleoidNumberSimple   = 2.^[0:4];
+    regimeBoundariesSimple = BIRTHLENGTH*nucleoidNumberSimple;
+    
+    %% 
+    figure(304); clf; hold on;
+    plot(1:maxLength,flooredNearest2PowerN);
+    plot(regimeBoundariesSimple(2:end),zeros(1,numel(regimeBoundariesSimple(2:end))),'^');
+    for idx=2:numel(regimeBoundariesSimple)
+        currentBoundary=regimeBoundariesSimple(idx);
+        text(currentBoundary,5,num2str(currentBoundary));
+    end
+    
+    
+    %% also plot in nucleoid figure
+    if exist('PLOTEXPECTEDNRNUCLEOIDS');
+        figure(302);
+        %figure(400); hold on;
+        for idx=2:numel(regimeBoundariesSimple)
+            currentBoundary=regimeBoundariesSimple(idx);
+            plot([currentBoundary currentBoundary],[1,HEIGHT],':','LineWidth',2,'Color',[1 1 1])
+            text(currentBoundary,HEIGHT+5,num2str(nucleoidNumberSimple(idx)));%,'Color',[.5 .5 .5]);
+        end
+        MW_makeplotlookbetter(20);
+    end
 end
 
 %% Sanity check
@@ -405,7 +526,7 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','LengthVsDivisionLocation'}))
     end
 
     %title('kde, density directed (pdf(x)*x)')
-    if ~exist(NUCLEOIDFLAG,'var') % default
+    if ~exist('NUCLEOIDFLAG','var') % default
         % 
         xlabel(['Length of cell (µm)']);
         ylabel(['Relative FtsA peak locations']);
@@ -439,7 +560,7 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','LengthVsDivisionLocation'}))
         N=5;
         for windowIndex=1:(numel(WINDOWBORDERS)-1)
             for j = 1:2:(windowIndex*2-1)
-                plot([WINDOWBORDERS(windowIndex), WINDOWBORDERS(windowIndex+1)], [(j)/(2*windowIndex) (j)/(2*windowIndex)],'-','Color',BARCOLORS(windowIndex,:),'LineWidth',8)
+                plot([WINDOWBORDERS(windowIndex), WINDOWBORDERS(windowIndex+1)], [(j)/(2*windowIndex) (j)/(2*windowIndex)],'-','Color',BARCOLORS(windowIndex,:),'LineWidth',4)
             end
         end
     end
@@ -643,6 +764,8 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','compareDivisionsWRings'}))
     disp(num2str(ftsData.sumRatioCounts{REGIME}));
 
 end
+
+
 %% more sanity checks
 
 %load (['G:\EXPERIMENTAL_DATA_2016\a_incoming\2016-04-07\pos' num2str(datasetIndex) 'crop\data\pos' num2str(datasetIndex) 'crop-Schnitz.mat']);

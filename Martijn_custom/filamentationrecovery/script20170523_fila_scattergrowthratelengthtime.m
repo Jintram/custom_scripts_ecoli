@@ -15,6 +15,7 @@ end
 
 %
 % loop over datasets
+totalpoints=0;
 for dataSetIndex = 1:numel(datasetsPaths)
 
     %%
@@ -85,8 +86,10 @@ for dataSetIndex = 1:numel(datasetsPaths)
     xlabel('Cell length (\mum)');
     ylabel('Growth rate (dbl/hr)'); 
    
+    totalpoints=totalpoints+numel(allLenData);
 end
    
+disp(['Plot contains ' num2str(totalpoints) ' points.']);
 
 % color bar
 hTheColorbarWithScatter = figure;

@@ -97,7 +97,7 @@ plot(binCenters,counts);
     binnedaveraging({allDatasetsLengths},{allDatasetsWidths},BINEDGES);
 
 %%
-hBacWidths=figure; clf; hold on;
+hBacWidths=figure(4); clf; hold on;
 scatter(allDatasetsLengths,allDatasetsWidths,...
      3^2,[.5 .5 .5],'filled','MarkerFaceAlpha',.5);
 scatter(binCenters,meanValuesForBins,...
@@ -119,6 +119,15 @@ for i=1:numel(BINEDGES(BINEDGES<XCUTOFFSCATTER))
     end
 end
 plot(BINEDGES,zeros(numel(BINEDGES),1)','^','MarkerFaceColor',myColor,'MarkerEdgeColor',myColor,'MarkerSize',4)
+
+figure(4);hold on;
+%linspecer(3)
+%W=.72;
+W=.74;
+CAPSIZE=W^2/2;
+CAPSIZE=W^2-(W/2)^2*pi;
+plot([[1:30].*W-CAPSIZE]./[1:30],'LineWidth',2,'Color',[0.9153    0.2816    0.2878]);
+ylim([0,1]);
 
 %%
 disp('Two sample t-test');

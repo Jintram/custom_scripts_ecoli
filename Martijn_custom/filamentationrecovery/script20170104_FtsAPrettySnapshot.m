@@ -2,10 +2,14 @@
 % Script that makes a snapshot image from the FtsA data set.
 % 
 % Note: the currently used torquoise color is [48/255, 197/255, 221/255];
+% Note: For this dataset, micronsPerPixel: 0.0431
+
+MICRONSPERPIXEL = 0.0431;
 
 %%
 
 load('G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\segmentation\pos2cropseg137.mat');
+%load('G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\segmentation\pos2cropseg141.mat');
 
 % normalize both phsub and yreg
 yregnorm = double(yreg); 
@@ -148,5 +152,12 @@ outim(find([zeroesImgSize; zeroesImgSize; TheFadeoutIndx]'))=...
 % 
 imshow(outim,[]);
 hFig3a = h5;
+
+hold on;
+plot([size(outim,2) size(outim,2)]-11-[0,1]./MICRONSPERPIXEL,[size(outim,1) size(outim,1)]-11,'LineWidth',4,'Color',[1 1 1]);
+    % note that coordinates are in pixels.
+
+
+
 
 
