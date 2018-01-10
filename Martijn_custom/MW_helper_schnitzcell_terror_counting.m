@@ -10,16 +10,30 @@ for i = 1:numel(schnitzcells)
 end
 
 %% check for NaN values
+FIELDSOFINTEREST = {'G6_mean','muP5_fitNew_cycCor','dG5_cycCor'};
 
-FIELDOFINTEREST = 'G6_mean';
-FIELDOFINTEREST = 'schnitzcells.muP5_fitNew_atG6';
-FIELDOFINTEREST = 'muP5_fitNew_cycCor';
+disp('===');
+listAllBadOnes=[];
+for idx=1:numel(FIELDSOFINTEREST)
+    
+    FIELDOFINTEREST=FIELDSOFINTEREST{idx};
 
+    disp(['NaN values for ' FIELDOFINTEREST ':']);
 
-disp('NaN values:');
-
-for i = 1:numel(schnitzcells)
-    if any( isnan(schnitzcells(i).(FIELDOFINTEREST)) );
-        disp(num2str(i)); 
+    listOfBadOnes=[];
+    for i = 1:numel(schnitzcells)
+        if any( isnan(schnitzcells(i).(FIELDOFINTEREST)) );
+            %disp(num2str(i)); 
+            listOfBadOnes(end+1)=i;
+        end
     end
+
+    disp(num2str(listOfBadOnes));
+    listAllBadOnes=[listAllBadOnes listOfBadOnes];
+    
 end
+listAllBadOnes=unique(listAllBadOnes);
+disp(['All: ' 10 num2str(listAllBadOnes)]);
+
+
+

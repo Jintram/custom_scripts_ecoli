@@ -437,6 +437,123 @@ plot(allpeakXMicrons{1014}{CELLNO},allpeakY{1014}{CELLNO},'o');
     end
 end
 
+%% Let's calculate cellular volume per # of nucleoid peaks
+
+if any(strcmp(RUNSECTIONSFILEFTS,{'all','volumePerNucleoid'}))
+    
+
+    MICRONSPERPIXEL=0.0438; % for nucleoids
+    % MICRONSPERPIXEL=0.0431; % for Rutger data
+
+    if numel(fluorDataPaths)>1
+        error('There are multiple datasets given, but the script will only process one..');
+            % Note: this can be easily resolved by adding a loop loading the
+            % multiple datasets..
+    end
+
+    load(fluorDataPaths{1});
+    load(skeletonDataPaths{1});
+    load(slookupDataPaths{1});
+
+    CELLNO=10;
+
+    %% Now let's see how many peaks we have
+    peakCount=[]; allCellLengths = []; cellLengthsForPeakNr = cell(1,100);
+    for frIdx = 1:numel(allpeakY)
+
+        if ~isempty(allpeakY{frIdx})
+            for cellIdx = 1:numel(allpeakY{frIdx})
+
+                currentPeakCount = numel(allpeakY{frIdx}{cellIdx});
+
+                % Create the summary parameters
+                peakCount = [peakCount currentPeakCount];
+                allCellLengths = [allCellLengths allLengthsOfBacteriaInMicronsMW{frIdx}(cellIdx)];
+
+                cellLengthsForPeakNr{currentPeakCount} = [cellLengthsForPeakNr{currentPeakCount} allLengthsOfBacteriaInMicronsMW{frIdx}(cellIdx)];
+
+            end
+        end
+
+    end
+    
+    maxPeakCount = max(peakCount);
+    theLineColors = linspecer(maxPeakCount);
+    
+    %% 1st figure (length vs. l0)
+    hLengthPerNucleoid1=figure(401); clf; hold on;
+    matchingCountColors = theLineColors(peakCount,:);
+    scatter(allCellLengths, allCellLengths./peakCount,7^2,matchingCountColors,'.');
+    xlabel('Cellular length, L (µm)');
+    ylabel('L / N_{nucleoid} (µm)');
+
+    %% 2nd figure (distribution of l0 per nucleoid regime)
+    hLengthPerNucleoid2=figure(402); clf; hold on;
+    hLengthPerNucleoidLegend=figure(403); clf; hold on;        
+    lineHandles=[]; descriptions = {};
+    PDFlinesX={}; PDFlinesY={};
+    lineHandlesLegend = [];
+    for currentPeakCount = 1:maxPeakCount
+
+        % Calculate 
+        [N,edges] = histcounts(cellLengthsForPeakNr{currentPeakCount}./currentPeakCount);
+        centers = (edges(2:end)+edges(1:end-1))./2;
+        dx = edges(2)-edges(1);
+
+
+        if sum(N)>10
+
+            % Normalize
+            NNormalized = N./(sum(N).*dx);
+
+            % Plot in actual figure            
+            figure(hLengthPerNucleoid2);
+            lineHandles(end+1)=plot(centers,NNormalized,'-','Color',theLineColors(currentPeakCount,:),'LineWidth',1);
+            % Plot in figure used later only to get legend
+            figure(hLengthPerNucleoidLegend);
+            lineHandlesLegend(end+1)=plot(centers,NNormalized,'-','Color',theLineColors(currentPeakCount,:),'LineWidth',1);
+            
+            % Add description for legend
+            if currentPeakCount==1
+                descriptions{end+1} = [num2str(currentPeakCount) ' nucleoid'];
+            else
+                descriptions{end+1} = [num2str(currentPeakCount) ' nucleoids'];
+            end
+
+            % currently not used, but save data for later usage
+            PDFlinesX{currentPeakCount}=centers;
+            PDFlinesY{currentPeakCount}=NNormalized;
+            
+        end
+
+    end
+
+    % cosmetics    
+    figure(hLengthPerNucleoid2);
+    xlabel('L / N_{nucleoid} (µm)');
+    ylabel(['Probability' 10 '(normalized)']);
+
+    figure(hLengthPerNucleoidLegend);
+    xlabel('L / N_{nucleoid} (µm)');
+    ylabel(['Probability' 10 '(normalized)']);
+    legend(lineHandlesLegend,descriptions,'Location','eastoutside');
+    %% 
+    hLengthPerNucleoid3=figure(404); clf; hold on;
+    histogram(peakCount);
+    xlabel('Number of nucleoids');
+    ylabel('Counts');
+
+    %% The ratio is expected to be equal, so one could also look at the reverse..
+    %{
+    hLengthPerNucleoid1=figure(405); clf; hold on;
+    matchingCountColors = theLineColors(peakCount,:);
+    scatter(allCellLengths, peakCount./allCellLengths,7^2,matchingCountColors,'.');
+    xlabel('Cellular length, L (µm)');
+    ylabel('N_{nucleoid}/L (µm)');
+    %}
+    
+end
+
 %% Sanity check
 if any(strcmp(RUNSECTIONSFILEFTS,{'all','LengthVsDivisionLocation'}))
 
