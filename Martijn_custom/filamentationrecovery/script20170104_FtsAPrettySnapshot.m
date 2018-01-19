@@ -8,7 +8,7 @@ MICRONSPERPIXEL = 0.0431;
 
 %%
 
-load('G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\segmentation\pos2cropseg137.mat');
+load('G:\EXPERIMENTAL_DATA_2016\2016-04-07_FilaRecovery_asc777\pos2crop\segmentation\pos2cropseg137.mat');
 %load('G:\EXPERIMENTAL_DATA_2016\2016-04-07_asc777_temperatureRecovery\pos2crop\segmentation\pos2cropseg141.mat');
 
 % normalize both phsub and yreg

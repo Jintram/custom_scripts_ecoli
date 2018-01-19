@@ -484,8 +484,8 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','volumePerNucleoid'}))
     hLengthPerNucleoid1=figure(401); clf; hold on;
     matchingCountColors = theLineColors(peakCount,:);
     scatter(allCellLengths, allCellLengths./peakCount,7^2,matchingCountColors,'.');
-    xlabel('Cellular length, L (µm)');
-    ylabel('L / N_{nucleoid} (µm)');
+    xlabel('Cell length, L (µm)');
+    ylabel('L / N_{n} (µm)');
 
     %% 2nd figure (distribution of l0 per nucleoid regime)
     hLengthPerNucleoid2=figure(402); clf; hold on;
@@ -530,12 +530,13 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','volumePerNucleoid'}))
 
     % cosmetics    
     figure(hLengthPerNucleoid2);
-    xlabel('L / N_{nucleoid} (µm)');
-    ylabel(['Probability' 10 '(normalized)']);
-
+    xlabel('L / N_{n} (µm)');
+    ylabel(['Probability']);% 10 '(normalized)']);
+    ylim([0, max([PDFlinesY{:}])]);
+    
     figure(hLengthPerNucleoidLegend);
-    xlabel('L / N_{nucleoid} (µm)');
-    ylabel(['Probability' 10 '(normalized)']);
+    xlabel('L / N_{n} (µm)');
+    ylabel(['Probability']);% 10 '(normalized)']);
     legend(lineHandlesLegend,descriptions,'Location','eastoutside');
     %% 
     hLengthPerNucleoid3=figure(404); clf; hold on;
@@ -551,6 +552,30 @@ if any(strcmp(RUNSECTIONSFILEFTS,{'all','volumePerNucleoid'}))
     xlabel('Cellular length, L (µm)');
     ylabel('N_{nucleoid}/L (µm)');
     %}
+    
+    %% Another figure: simply cell length against nucleoid number
+    hLengthPerNucleoid5=figure(406); clf; hold on;
+    matchingCountColors = theLineColors(peakCount,:);
+    scatter(allCellLengths, peakCount,7^2,matchingCountColors,'.');
+    
+    % Fitting a line
+    %selectedIndices=find(peakCount>1);
+    %fittedCoeff = polyfit(allCellLengths(selectedIndices),peakCount(selectedIndices),1);
+    %fittedCoeff = polyfit(allCellLengths,peakCount,1);
+    fittedLineX = 0:30;
+    %fittedLineY = fittedLineX.*fittedCoeff(1) + fittedCoeff(2);
+    fitOnlyCx = mean(peakCount./allCellLengths);
+    fittedLineY = fitOnlyCx.*fittedLineX;
+    plot(fittedLineX,fittedLineY,'-k','LineWidth',2);
+    
+    xlabel('Cell length, L (µm)');
+    ylabel('N_{n} (µm)');
+    
+    ylim([0,max(peakCount)+1]);
+    xlim([0,max(fittedLineX)]);    
+    
+    disp(['Nn/L= ' num2str(fitOnlyCx) '; L/Nn=' num2str(1/fitOnlyCx) '.']);
+    disp(['N=' num2str(numel(peakCount))]);
     
 end
 

@@ -23,6 +23,7 @@ function h=subtightplot(m,n,p,gap,marg_h,marg_w,varargin)
 %
 % Comment MW:
 % subtightplot(1,3,i,[0.08,0.08],0.2,0.07)
+% subtightplot(1,3,1,[0.12,0.12],[0.10 0.05],[0.1 0.1])
 % subtightplot(nrx,nry,i,[inbetween_in_x,inbetween_in_y],margin_side_y,margin_side_x)
 
 if (nargin<4) || isempty(gap),    gap=0.01;  end

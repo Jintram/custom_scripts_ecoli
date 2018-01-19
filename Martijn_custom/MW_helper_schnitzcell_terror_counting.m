@@ -11,6 +11,7 @@ end
 
 %% check for NaN values
 FIELDSOFINTEREST = {'G6_mean','muP5_fitNew_cycCor','dG5_cycCor'};
+FIELDSOFINTEREST = {'C6_mean','muP5_fitNew_cycCor','dC5_cycCor','Y6_mean','dY5_cycCor'};
 
 disp('===');
 listAllBadOnes=[];
