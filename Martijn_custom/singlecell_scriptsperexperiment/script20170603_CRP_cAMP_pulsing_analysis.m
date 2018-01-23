@@ -2,7 +2,12 @@
 
 
 
-OUTPUTFOLDER = 'U:\PROJECTS\A_CRPcAMP\figures_matlab\pulsing\';
+OUTPUTFOLDER = 'U:\THESIS\Thesis\ChapterX_CRP\Figures\matlabExport_pulsing\';
+
+% put old version of figures in separate folder
+if ~exist([OUTPUTFOLDER 'moreandold\'])
+    mkdir([OUTPUTFOLDER 'moreandold\'])
+end
 
 %{
 CUSTOMXLIM=[0,500];
@@ -10,7 +15,8 @@ CUSTOMYLIM=[0,1.2];
 %}
 
 %%
-load('H:\EXPERIMENTAL_DATA_2017\2017-03-22_asc1004_cAMP_pulsing\pos2smallcrop2\data\pos2smallcrop2-Schnitz.mat');
+% Load the schnitzcells file
+load('H:\EXPERIMENTAL_DATA_2017\2017-03-22_CRP_asc1004_cAMP_pulsing\pos2smallcrop2\data\pos2smallcrop2-Schnitz.mat');
 
 % for comparison I could also load the older data from
 %load('G:\EXPERIMENTAL_DATA_2016\2016-12-08_asc990_lac\pos2crop\data\pos2crop-Schnitz.mat')
@@ -36,7 +42,7 @@ FIELDY='Y6_mean'
 FIELDY='muP9_fitNew_cycCor'
 %size([schnitzcells.muP9_fitNew_cyccor])
 
-TITLES  = {'CRP signal','Const. signal','Growth rate','CRP production rate','Constitutive prod. rate'};
+TITLES  = {'Concentration CRP label','Concentration constitutive label','Growth rate (dbl/hr)','CRP label production','constitutive label prodution'};
 XFIELDS = {'time_atY','time_atC','time_atY','time_atdY','time_atdC'};
 YFIELDS = {'Y6_mean','C6_mean','muP9_fitNew_cycCor','dY5_sum','dC5_sum'};
 
@@ -61,6 +67,7 @@ figure(1); figure(2); figure(3);
 figure(4); figure(5);
 
 outputSimple=[]; theYLim = [];
+meanLineHandles = []; pointHandles = [];
 for fieldIndex = 1:numel(XFIELDS)
     %%
     
@@ -89,12 +96,12 @@ for fieldIndex = 1:numel(XFIELDS)
     
     %%
     h1=figure(fieldIndex); clf; hold on;
-    title(TITLES(fieldIndex));
+    %title(TITLES(fieldIndex));
     
-    plot(allX,allY,'.');
+    pointHandles(end+1) = plot(allX,allY,'.');
 
     noNanIdx = ~isnan(meanValuesForBins);
-    plot(binCenters(noNanIdx),meanValuesForBins(noNanIdx),'-k','LineWidth',3);
+    meanLineHandles(end+1)=plot(binCenters(noNanIdx),meanValuesForBins(noNanIdx),'-k','LineWidth',3);
 
     
     xlim([0,max(allX)]);
@@ -107,11 +114,12 @@ for fieldIndex = 1:numel(XFIELDS)
     %end
 
     xlabel('Time (hrs)');
+    ylabel(TITLES{fieldIndex});
 
     MW_makeplotlookbetter(20);
 
     if exist('OUTPUTFOLDER','var')
-        saveas(h1,[OUTPUTFOLDER 'fig' num2str(fieldIndex+1) '.tif'])
+        saveas(h1,[OUTPUTFOLDER 'moreandold\fig' num2str(fieldIndex+1) '.tif'])
     end
 
     %%
@@ -167,19 +175,31 @@ for dataIdx=1:5
 
         switchColor = myThreeColors(cAMPSwitchTimes{idx}{2}+1,:);
 
-        lines(end+1)=plot([switchTimesHrsCorrected(idx) switchTimesHrsCorrected(idx)],lineY,':o','MarkerSize',10,...
+        lines(end+1)=plot([switchTimesHrsCorrected(idx) switchTimesHrsCorrected(idx)],lineY,':o','MarkerSize',5,...
             'MarkerFaceColor',switchColor,'Color',switchColor,'MarkerEdgeColor',switchColor);
 
     end
     legend(lines(1:2),{'2100uM cAMP','43uM'});
     
     if exist('OUTPUTFOLDER','var')
-        saveas(h1,[OUTPUTFOLDER 'fig' num2str(dataIdx+1) '.tif'])
+        saveas(h1,[OUTPUTFOLDER 'moreandold\fig' num2str(dataIdx+1) '.tif'])
     end
+    
+    set(meanLineHandles(dataIdx),'LineWidth',1);
+    %set(pointHandles(dataIdx)));
+
+    MW_makeplotlookbetter(10,[],[12.8 19.2/3]/2,1);
+    
+    figureName=['averagetimetraces_' num2str(dataIdx)];
+    saveas(h1,[OUTPUTFOLDER 'tif_' figureName '.tif']);
+    saveas(h1,[OUTPUTFOLDER 'svg_' figureName '.svg']);
+    saveas(h1,[OUTPUTFOLDER 'fig_' figureName '.fig']);
 end
 
 
 %% correlation functions
+% Note that these are a bit redundant, as they will be influenced by the
+% external perturbation timescales.
 
 SETS = {[1,3],[2,3],[1,2]}
 SETNAMES = {'R(CRP,\mu)','R(\sigma70,\mu)','R(CRP,\sigma70)'};
@@ -227,7 +247,7 @@ for setIdx= 1:numel(SETS)
     MW_makeplotlookbetter(20);
     
     if exist('OUTPUTFOLDER','var')
-        saveas(h1,[OUTPUTFOLDER 'fig' num2str(numel(XFIELDS)+1+setIdx) '.tif'])
+        saveas(h1,[OUTPUTFOLDER 'moreandold\fig' num2str(numel(XFIELDS)+1+setIdx) '.tif'])
     end
     
 end
@@ -252,11 +272,11 @@ for setIdx= 1:numel(SETSscatter)
     allY2{setIdx}=outputSimple.(YFIELDS{currentSet(2)}).ally;
     
     MYCOLOR=[0.2157 0.4941 0.7216];
-    scatter(allY1{setIdx},allY2{setIdx},3^2,'filled',...
+    scatterHandle = scatter(allY1{setIdx},allY2{setIdx},3^2,'filled',...
                         'MarkerEdgeColor','None',...
                         'MarkerFaceColor',MYCOLOR,...
-                        'MarkerFaceAlpha',.2,...
-                        'MarkerEdgeAlpha',.2);
+                        'MarkerFaceAlpha',.1,...
+                        'MarkerEdgeAlpha',.1);
 
     %{
     plot(allY1,allY2,'.');
@@ -273,8 +293,10 @@ for setIdx= 1:numel(SETSscatter)
     %xlim([]);
     ylim([0,2]);
 
-    toShow = counts>50;
-    errorbar(binCenters(toShow),meanValuesForBins(toShow),stdValuesForBins(toShow),'k-','LineWidth',2)
+    toShow = find(counts>50);
+    avgLineHandle=plot(binCenters(toShow),meanValuesForBins(toShow),'k-','LineWidth',2)
+    avgErrHandle=errorbar(binCenters(toShow(1:3:end)),meanValuesForBins(toShow(1:3:end)),stdValuesForBins(toShow(1:3:end)),'k','LineWidth',2,'LineStyle','none','CapSize',0);
+    
 
 	if exist('OUTPUTFOLDER','var')
         saveas(h1,[OUTPUTFOLDER 'fig' num2str(numel(XFIELDS)+1+numel(SETS)+setIdx) '.tif'])
@@ -288,16 +310,29 @@ for setIdx= 1:numel(SETSscatter)
     [fittedLineX,fittedLineY] = polyinterpolate(xval,yval,3,20);
 
     % plot that interpolation
-    plot(fittedLineX,fittedLineY,'r-','LineWidth',3);
+    fitLineHandle=plot(fittedLineX,fittedLineY,'r-','LineWidth',3);
     
     % if CRP plot, give top
     if setIdx==1
         topIndex = find(max(fittedLineY)==fittedLineY);
         TopY = fittedLineY(topIndex);
         TopX = fittedLineX(topIndex);
-        plot(TopX,TopY,'sr','MarkerSize',15,'LineWidth',2);
+        plot(TopX,TopY,'sr','MarkerSize',7,'LineWidth',2);
         disp(['Top of curve is at: ' num2str(TopX) ',' num2str(TopY)]);
     end
+    
+    % Added later for thesis
+    set(fitLineHandle,'LineWidth',1);
+    set(avgLineHandle,'LineWidth',1);
+    set(avgErrHandle,'LineWidth',1);    
+    %set(scatterHandle,
+    
+    MW_makeplotlookbetter(10,[],[12.8/2 19.2/3]/2,1);
+    
+    figureName=['scattersoftraces_' num2str(dataIdx)];
+    saveas(h1,[OUTPUTFOLDER 'tif_' figureName '.tif']);
+    saveas(h1,[OUTPUTFOLDER 'svg_' figureName '.svg']);
+    saveas(h1,[OUTPUTFOLDER 'fig_' figureName '.fig']);
 end
 
 referenceFigNumber=numel(XFIELDS)+1+numel(SETS)+numel(SETSscatter);
@@ -356,8 +391,8 @@ end
 % save figs
 if exist('OUTPUTFOLDER','var')
     for h = 23:24
-        saveas(h,[OUTPUTFOLDER 'fig' num2str(h) '.tif'])
-        saveas(h,[OUTPUTFOLDER 'fig' num2str(h) '.tif'])
+        saveas(h,[OUTPUTFOLDER 'moreandold\fig' num2str(h) '.tif'])
+        saveas(h,[OUTPUTFOLDER 'moreandold\fig' num2str(h) '.tif'])
     end
 end
 
@@ -386,7 +421,7 @@ scatter(normalizedSignals,allGROWTH,3^2,'filled',...
                         'MarkerFaceColor',MYCOLOR,...
                         'MarkerFaceAlpha',.2,...
                         'MarkerEdgeAlpha',.2);
-errorbar(binCentersYCRP(toShow),meanValuesForBinsCRP(toShow),stdValuesForBinsCRP(toShow),'k-','LineWidth',2)
+lerr=errorbar(binCentersYCRP(toShow),meanValuesForBinsCRP(toShow),stdValuesForBinsCRP(toShow),'k-','LineWidth',2)
 
 xlim([min(binCentersYCRP(toShow))-binDistance/2,max(binCentersYCRP(toShow))+binDistance/2]);
 ylim([0,2]);
@@ -397,9 +432,17 @@ xlabel('CRP normalized by constitutive');
 ylabel('Growth rate (dbl/hr)');
 
 if exist('OUTPUTFOLDER','var')
-    saveas(h1,[OUTPUTFOLDER 'fig' num2str(101) '.tif'])
+    saveas(h1,[OUTPUTFOLDER 'moreandold\fig' num2str(101) '.tif'])
 end
 
+MW_makeplotlookbetter(10,[],[12.8 19.2/3]/2,1);
+
+set(lerr,'LineWidth',1,'CapSize',0);
+
+figureName=['towbinoptimum'];
+saveas(h1,[OUTPUTFOLDER 'tif_' figureName '.tif']);
+saveas(h1,[OUTPUTFOLDER 'svg_' figureName '.svg']);
+saveas(h1,[OUTPUTFOLDER 'fig_' figureName '.fig']);
 
 
 %% How does the system evolve over time?
@@ -432,8 +475,9 @@ timeColors = makeColorMap([0 0 1], [0 0 0], lastIdx);
 timeColors = colormap(parula(lastIdx));
 %arrowPlot(CRPvalues,growthvalues,'number',10,'color',[0 0 0]); hold on;
 switchcount=0; switchH = [];
+timeLineHandles=[];
 for timeIdx = 1:lastIdx    
-    plot([CRPvalues(timeIdx) CRPvalues(timeIdx+1)],[growthvalues(timeIdx) growthvalues(timeIdx+1)],'x-','Color',timeColors(timeIdx,:),'LineWidth',2)
+    timeLineHandles(end+1)=plot([CRPvalues(timeIdx) CRPvalues(timeIdx+1)],[growthvalues(timeIdx) growthvalues(timeIdx+1)],'x-','Color',timeColors(timeIdx,:),'LineWidth',2)
     
     if ismember(timeIdx, switchIndices)
         switchcount=switchcount+1;
@@ -451,7 +495,7 @@ if ~isempty(switchH) % just for special case when looking at other data
     legend(switchH(1:2),{'2100uM cAMP','43uM'});
 end
 
-xlabel('cAMP.CRP reporter');
+xlabel('CRP reporter concentration');
 ylabel('Growth rate');
 
 colormap(timeColors);
@@ -476,8 +520,17 @@ if exist('CUSTOMYLIM','var')
 end
 
 if exist('OUTPUTFOLDER','var')
-    saveas(h1,[OUTPUTFOLDER 'fig' num2str(referenceFigNumber+1) '.tif'])
+    saveas(h1,[OUTPUTFOLDER 'moreandold\fig' num2str(referenceFigNumber+1) '.tif'])
 end
+
+MW_makeplotlookbetter(10,[],[12.8 19.2/3]/2,1);
+
+set(switchH,'MarkerSize',7);%'LineWidth',1,'CapSize',0);
+
+figureName=['timeevolution'];
+saveas(h1,[OUTPUTFOLDER 'tif_' figureName '.tif']);
+saveas(h1,[OUTPUTFOLDER 'svg_' figureName '.svg']);
+saveas(h1,[OUTPUTFOLDER 'fig_' figureName '.fig']);
 
 % Find the closest timepoints at which the switch happened
 
@@ -497,18 +550,46 @@ YFIELDSTRACES = {'muP9_fitNew_all','C6_mean_all','Y6_mean_all'}
 % obtain traces for all of them
 [myTraces] = MW_gettracefromschnitzcellsreverse(schnitzcells,lastSchnitzes,TIMEFIELD,YFIELDSTRACES);
 
-%% plot traces
+%% plot single traces
 
-IDX=10;
+sixcolors=linspecer(6);
+
+traceIdx=10;
+%IDX=120;
 
 h1=figure(50); clf; hold on; 
-divisionPointsToPlot = find(myTraces(IDX).divisionIndices);
-plot(myTraces(IDX).time./60,...
-    myTraces(IDX).muP9_fitNew_all,'-','LineWidth',2);
-plot(myTraces(IDX).time(divisionPointsToPlot)./60,...
-     myTraces(IDX).muP9_fitNew_all(divisionPointsToPlot),'s','LineWidth',3);
 
-xlim([0,max(myTraces(IDX).time./60)]); 
+%
+for traceIdx = 1:numel(myTraces)
+
+    divisionPointsToPlot = find(myTraces(traceIdx).divisionIndices);
+    l=plot(myTraces(traceIdx).time./60,...
+        myTraces(traceIdx).muP9_fitNew_all,'-','LineWidth',1,'Color',[.7 .7 .7]);
+    %alpha(l,.1);
+    
+    %{
+    l=plot(myTraces(traceIdx).time(divisionPointsToPlot)./60,...
+         myTraces(traceIdx).muP9_fitNew_all(divisionPointsToPlot),'s','LineWidth',1,'Color',[.5 .5 .5]);
+    %}
+end
+
+%
+nrHighlights=3;
+for countIdx = 1:nrHighlights
+    traceIdx=ceil(rand(1,1).*numel(myTraces));
+    
+    divisionPointsToPlot = find(myTraces(traceIdx).divisionIndices);
+    
+    plot(myTraces(traceIdx).time./60,...
+        myTraces(traceIdx).muP9_fitNew_all,'-','LineWidth',1,'Color',sixcolors(countIdx+3,:));
+    
+    plot(myTraces(traceIdx).time(divisionPointsToPlot)./60,...
+         myTraces(traceIdx).muP9_fitNew_all(divisionPointsToPlot),'s','LineWidth',1,'Color','k','MarkerFaceColor',sixcolors(countIdx+3,:));
+     
+end
+
+%
+xlim([0,max(myTraces(traceIdx).time./60)]); 
 theYLim = [-1,3];
 ylim(theYLim);
  
@@ -519,43 +600,66 @@ for idx=1:numel(switchTimesHrsCorrected)
 
     switchColor = myThreeColors(cAMPSwitchTimes{idx}{2}+1,:);
 
-    lines(end+1)=plot([switchTimesHrsCorrected(idx) switchTimesHrsCorrected(idx)],lineY,':o','MarkerSize',10,...
+    lines(end+1)=plot([switchTimesHrsCorrected(idx) switchTimesHrsCorrected(idx)],lineY,':o','MarkerSize',5,...
         'MarkerFaceColor',switchColor,'Color',switchColor,'MarkerEdgeColor',switchColor);
 
 end
 legend(lines(1:2),{'2100uM cAMP','43uM'});
 
 % cosmetics
-MW_makeplotlookbetter(20);
+title('Single cell');
 xlabel('Time');
 ylabel('Growth rate (dbl/hr)');
 
-saveas(h1,[OUTPUTFOLDER 'fig' num2str(referenceFigNumber+2) '.tif'])
+saveas(h1,[OUTPUTFOLDER 'moreandold\fig' num2str(referenceFigNumber+2) '.tif'])
+
+MW_makeplotlookbetter(10,[],[12.8 19.2/3]/2,1);
+
+
+figureName=['timeevolutionsinglecellgrowth'];
+saveas(h1,[OUTPUTFOLDER 'tif_' figureName '.tif']);
+saveas(h1,[OUTPUTFOLDER 'svg_' figureName '.svg']);
+saveas(h1,[OUTPUTFOLDER 'fig_' figureName '.fig']);
 
 %% now plot time evolution for single cells
-IDX=13;
+traceIdx=13;
 
-figure(60);
+%traceIdx=ceil(rand(1,1).*numel(myTraces));
+randomTraces = [13 144 49]; 
 
-selectionIdxs=~isnan(myTraces(IDX).Y6_mean_all);
+figure(60); 
 
-time = myTraces(IDX).time(selectionIdxs)./60;
-y1   = myTraces(IDX).Y6_mean_all(selectionIdxs);
-y2   = myTraces(IDX).muP9_fitNew_all(selectionIdxs);
+for countIdx = 1:nrHighlights
+    
+    traceIdx=randomTraces(countIdx);        
 
-highlightPointCategories=valuesOfSwitchDisplayed;
+    selectionIdxs=~isnan(myTraces(traceIdx).Y6_mean_all);
 
-figNr=60;
-h = timeevolutionplot(time,y1,y2,switchIndices,highlightPointCategories,figNr);
+    time = myTraces(traceIdx).time(selectionIdxs)./60;
+    y1   = myTraces(traceIdx).Y6_mean_all(selectionIdxs);
+    y2   = myTraces(traceIdx).muP9_fitNew_all(selectionIdxs);
 
-schnitzEnd = myTraces(IDX).lineageSchnitzNrs(end);
-title(['Trace that ends in schnitz ' num2str(schnitzEnd)])
+    highlightPointCategories=valuesOfSwitchDisplayed;
 
-% saving the figure
-SIZE=[8.8,5.8]; OFFSET = [2,2]; set(h,'Units','centimeters','Position',[OFFSET SIZE]*2);
-set(h,'RendererMode','manual','Renderer','Painters');
+    figNr=60;
+    h1 = timeevolutionplot(time,y1,y2,switchIndices,highlightPointCategories,figNr);
 
-saveas(h1,[OUTPUTFOLDER 'fig' num2str(figNr) '.tif'])
+    schnitzEnd = myTraces(traceIdx).lineageSchnitzNrs(end);
+    title(['Trace that ends in schnitz ' num2str(schnitzEnd)])
+
+    % saving the figure
+    %SIZE=[8.8,5.8]; OFFSET = [2,2]; set(h,'Units','centimeters','Position',[OFFSET SIZE]*2);
+    %set(h,'RendererMode','manual','Renderer','Painters');
+    
+    saveas(h1,[OUTPUTFOLDER 'moreandold\fig' num2str(figNr) '_' num2str(countIdx) '.tif'])
+    
+    MW_makeplotlookbetter(10,[],[12.8 19.2/3]/2,1);
+    
+    figureName=['timetracesinglecell' num2str(traceIdx)];
+    saveas(h1,[OUTPUTFOLDER 'tif_' figureName '.tif']);
+    saveas(h1,[OUTPUTFOLDER 'svg_' figureName '.svg']);
+    saveas(h1,[OUTPUTFOLDER 'fig_' figureName '.fig']);
+end
 
 %% Calculate noise parameters
 
@@ -627,11 +731,11 @@ for highLowWindowIndex = 1:2
 end
 
 % define the cases we want to plot:
-TFIELDS2 = {'selectedProdTime',      'selectedProdTime',         'selectedTime',     'selectedTime',         'selectedTime',     'selectedProdTime'};
-XFIELDS2 = {'selectedProdCRP',       'selectedProdConsti',       'selectedCRP',      'selectedConsti',       'selectedCRP',      'selectedProdCRP'};
-YFIELDS2 = {'selectedProdGrowth',    'selectedProdGrowth',       'selectedGrowth',   'selectedGrowth',       'selectedConsti',   'selectedProdConsti'};
-NAMESX  = {'Production CRP',        'Production consti.',       'CRP label',        'Consitutive label',    'CRP label',        'Prod. CRP'};
-NAMESY  = {'Growth (dbl/hr)',       'Growth (dbl/hr)',          'Growth (dbl/hr)',  'Growth (dbl/hr)',      'Consti. label',    'Prod. consti.'};
+TFIELDS2 = {'selectedProdTime',      'selectedProdTime',            'selectedTime',            'selectedTime',                                  'selectedTime',                 'selectedProdTime'};
+XFIELDS2 = {'selectedProdCRP',       'selectedProdConsti',           'selectedCRP',             'selectedConsti',                               'selectedCRP',                  'selectedProdCRP'};
+YFIELDS2 = {'selectedProdGrowth',    'selectedProdGrowth',            'selectedGrowth',           'selectedGrowth',                           'selectedConsti',                 'selectedProdConsti'};
+NAMESX  = {'Production CRP label',   'Production constitutive label',  'Concentration CRP label',        'Concentration constitutive label',    'Concentration CRP label',        'Production CRP label'};
+NAMESY  = {'Growth (dbl/hr)',       'Growth (dbl/hr)',          'Growth (dbl/hr)',  'Growth (dbl/hr)',      'Constitutive label concentration',    'Production constitutive label'};
 
 % For loop
 myThreeColors = linspecer(3);
@@ -643,7 +747,7 @@ for caseIdx = 1:numel(TFIELDS2)
     storedFitLines={};
     for highLowWindowIndex = 1:2
         %
-        figure(70+caseIdx); hold on;
+        h1=figure(70+caseIdx); hold on;
         currentAxis=subplot(2,1,highLowWindowIndex); hold on;
 
         if highLowWindowIndex==1
@@ -704,9 +808,7 @@ for caseIdx = 1:numel(TFIELDS2)
         %if ~isempty(strfind(currentYField,'Growth')), myBins=[0:.1:2]; end
         [meanValuesForBins, binCenters,stdValuesForBins,stdErrValuesForBins, counts] = ...
                 binnedaveraging({Xsignal},{Ysignal},myBins);
-
-        MW_makeplotlookbetter(20);       
-
+        
         toShow = counts>50;
         %errorbar(binCenters(toShow),meanValuesForBins(toShow),stdValuesForBins(toShow),'k-','LineWidth',2)
         fitLines(end+1)=plot(binCenters(toShow),meanValuesForBins(toShow),'-s','Color',MYCOLOR/2,'LineWidth',2);
@@ -735,6 +837,8 @@ for caseIdx = 1:numel(TFIELDS2)
 
         set(hC, 'YTickLabel',correspondingLabels, 'XTick',tickLocationsOldMetric)
         
+        MW_makeplotlookbetter(10,[],[12.8 19.2/3*2]/2,1);
+        
     end
 
     for highLowWindowIndex=1:2
@@ -753,6 +857,10 @@ for caseIdx = 1:numel(TFIELDS2)
 
     %legend(sL,{'43uM','2100uM cAMP'});
     
+    figureName=['highlowplots_case' num2str(caseIdx)];
+    saveas(h1,[OUTPUTFOLDER 'tif_' figureName '.tif']);
+    saveas(h1,[OUTPUTFOLDER 'svg_' figureName '.svg']);
+    saveas(h1,[OUTPUTFOLDER 'fig_' figureName '.fig']);
 
 end
 

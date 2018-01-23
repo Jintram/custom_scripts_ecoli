@@ -17,7 +17,7 @@ for timeIdx = 1:lastIdx
     if ismember(timeIdx, highlightpoints)
         switchcount=switchcount+1;
         switchColor = categorieColors(highlightPointCategories(switchcount)+1,:);
-        switchH(end+1)=plot(y1(timeIdx),y2(timeIdx),'s','MarkerSize',15,'LineWidth',3,'Color',switchColor); %'MarkerFaceColor','k',
+        switchH(end+1)=plot(y1(timeIdx),y2(timeIdx),'s','MarkerSize',7,'LineWidth',3,'Color',switchColor); %'MarkerFaceColor','k',
     end
     
     arrowu=y1(timeIdx+1) -y1(timeIdx);
